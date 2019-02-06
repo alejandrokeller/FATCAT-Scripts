@@ -38,7 +38,7 @@ server_address = ('FatCat', 10000)
 sock = 0
 
 # Variables
-dirname = "/home/pi/data/syncaod/fatcat/"
+dirname = "data/"
 pathname = os.path.dirname(sys.argv[0])
 headerpath = os.path.abspath(pathname)
 headerfile=headerpath + "/TCA_Columns.txt"

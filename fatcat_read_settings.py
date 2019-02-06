@@ -6,7 +6,7 @@ import datetime
           
 execfile("tca.py")
 
-def create_status_file( path = "/home/pi/data/syncaod/fatcat/logs/status/", name = "fatcat_status.txt" ): 
+def create_status_file( path = "logs/status/", name = "fatcat_status.txt" ): 
     #This function creates a new datafile name
     prefix = time.strftime("%Y%m%d-%H%M%S-")
     newname = path + prefix + name

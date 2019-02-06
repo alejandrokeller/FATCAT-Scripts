@@ -34,7 +34,7 @@ class Datafile(object):
         self.eventfileSuffix = "-eventdata.csv"
         self.datafile   = datafile.name
         self.csvfile    = datafile
-        self.eventDir = "/home/pi/data/syncaod/fatcat/events/"
+        self.eventDir = "events/"
         self.date       = time.strftime("%Y-%m-%d")
         self.lines2skip = 5                         # skip file headers plus first two lines due to uknown errors
         self.skipedlines = []
