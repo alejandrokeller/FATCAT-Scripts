@@ -4,7 +4,7 @@ import os, sys
 import datetime
 from sense_hat import SenseHat
 
-from tcp_class_widgets import send_string
+from tcp_interface_class import send_string
 
 execfile("extras/tca.py")
 execfile("extras/tca_sense_variables.py")
