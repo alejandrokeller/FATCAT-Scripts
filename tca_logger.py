@@ -3,6 +3,7 @@
 import os, sys
 import datetime
 from sense_hat import SenseHat
+import configparser
 
 from tcp_interface_class import send_string
 
@@ -33,12 +34,25 @@ def sense_sensor_string():
     sensor_data = '{:.1f}'.format(humidity) + '\t' + '{:.1f}'.format(temp) + '\t' + '{:.1f}'.format(pressure)
     return sensor_data
 
+# READ ini file
+config_file = 'config.ini'
+if os.path.exists(config_file):
+    config = configparser.ConfigParser()
+    config.read(config_file)
+    data_path = eval(config['GENERAL_SETTINGS']['DATA_PATH']) + '/'
+    server_name = eval(config['TCP_INTERFACE']['HOST_NAME'])
+else:
+    data_path = 'data/'  # if ini file cannot be found
+    server_name = 'localhost'
+    print >>sys.stderr, 'Could not find the configuration file {0}'.format(config_file)
+
+
 # Connect the socket to the port where the server is listening
-server_address = ('localhost', 10000)
+server_address = (server_name, 10000)
 sock = 0
 
 # Variables
-dirname = "data/"
+dirname = data_path
 pathname = os.path.dirname(sys.argv[0])
 headerpath = os.path.abspath(pathname)
 headerfile=headerpath + "/extras/TCA_Columns.txt"
