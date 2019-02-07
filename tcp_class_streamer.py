@@ -36,7 +36,7 @@ class Visualizer(object):
 
         # init socket
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # Create a TCP/IP socket
-        self.server_address = ('FatCat', 10000)
+        self.server_address = ('localhost', 10000)
         print >>sys.stderr, 'starting up on %s port %s' % self.server_address
         self.sock.bind(self.server_address) # Bind the socket to the port
         self.sock.listen(1) # Listen for incoming connections

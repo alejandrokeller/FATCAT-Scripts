@@ -8,10 +8,10 @@ import os, sys
 from tcp_class import send_string
 
 # Connect the socket to the port where the server is listening
-server_address = ('FatCat', 10000)
+server_address = ('localhost', 10000)
 sock = 0
 
-datafile = "extras/SampleData.txt"
+datafile = "SampleData.txt"
 fi = open(datafile, "r")
 
 i = 0

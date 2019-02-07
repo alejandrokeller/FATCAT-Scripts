@@ -34,7 +34,7 @@ def sense_sensor_string():
     return sensor_data
 
 # Connect the socket to the port where the server is listening
-server_address = ('FatCat', 10000)
+server_address = ('localhost', 10000)
 sock = 0
 
 # Variables
