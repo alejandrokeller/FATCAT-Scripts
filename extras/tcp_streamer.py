@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+# python script for testing the transmission of data over TCP
+# The script uses aa sample datafile instead of using the intrument's data
 
 import time
 import os, sys
