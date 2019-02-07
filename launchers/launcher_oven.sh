@@ -1,5 +1,5 @@
 #!/bin/sh
-# launcher.sh
+# launcher_oven.sh
 # navigate to home directory, then to this directory, then execute python script, then back home
 
 cd /FATCAT-scripts/commands
