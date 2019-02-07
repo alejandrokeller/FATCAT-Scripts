@@ -6,7 +6,7 @@ import ast             # for datastring parsing
 from collections import namedtuple
 import numpy as np
 import time            # required by the uploadData function
-from fatcat_uploader import Uploader # httpsend command for uploading data
+from extras/fatcat_uploader import Uploader # httpsend command for uploading data
 #import math
 #from scipy.integrate import simps
 

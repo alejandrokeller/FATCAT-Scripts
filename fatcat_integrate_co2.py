@@ -6,8 +6,8 @@ import ast             # for datastring parsing
 from collections import namedtuple
 import numpy as np
 import time, datetime  # required by the uploadData function
-from fatcat_uploader import Uploader # httpsend command for uploading data
-from fatcat_uploader import FileUploader # httpsend command for uploading data
+from extras/fatcat_uploader import Uploader # httpsend command for uploading data
+from extras/fatcat_uploader import FileUploader # httpsend command for uploading data
 #import math
 #from scipy.integrate import simps   ### if simpson's rule integration (instead of trapezoidal) is required.
 import re              # for regular expression matching
