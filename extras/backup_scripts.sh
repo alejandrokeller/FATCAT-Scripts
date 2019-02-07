@@ -1,7 +1,7 @@
 #!/bin/bash
 
-BACKUPDIR=/home/pi/data/syncaod/TCA/scripts
-SCRIPTDIR=/home/pi/TCA
+BACKUPDIR=/FATCAT-scripts/logs/scripts
+SCRIPTDIR=/FATCAT-scripts
 
 # Check if backup directory exists
 if [ ! -d "$BACKUPDIR" ];
@@ -17,4 +17,4 @@ OFILE="$BACKUPDIR/pythonscripts_$(date +%Y%m%d_%H%M%S)"
 OFILEFINAL=$OFILE.zip
 
 cd $SCRIPTDIR
-zip $OFILEFINAL ./*
+zip $OFILEFINAL ./* ./commands/* ./launchers/* ./extras/*
