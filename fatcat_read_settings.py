@@ -3,6 +3,7 @@
 import argparse      # for argument parsing
 import os, sys
 import datetime
+import configparser
 
 execfile("extras/tca.py")
 
@@ -64,6 +65,15 @@ if __name__ == "__main__":
             "Z?"  # Response:"STATUSBYTE HEX = %X \r\n"
             ]
     
+    # READ ini file
+    config_file = 'config.ini'
+    if os.path.exists(config_file):
+        config = configparser.ConfigParser()
+        config.read(config_file)
+        logs_path = eval(config['GENERAL_SETTINGS']['LOGS_PATH']) + '/status/'
+    else:
+        logs_path = './logs/status/'
+        print >>sys.stderr, 'Could not find the configuration file {0}'.format(config_file)
     
     ser = open_tca_port()
     stop_datastream(ser)
@@ -74,7 +84,7 @@ if __name__ == "__main__":
 
     print fatcat_status
 
-    newname = create_status_file()
+    newname = create_status_file(path=logs_path)
     print >>sys.stderr, "Writing to Datafile: " + newname
     fo = open(newname, "a")
     fo.write(fatcat_status)
