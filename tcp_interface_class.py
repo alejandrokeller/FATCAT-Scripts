@@ -10,9 +10,10 @@ execfile("extras/tca.py")
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 import socket
-import sys
+import sys, os
 import ast # for datastring parsing
 import numpy as np
+import configparser
 
 from collections import namedtuple
 
@@ -48,11 +49,11 @@ def send_string(line, server_address, sock = 0):
     return sock
 
 class Visualizer(object):
-    def __init__(self):
+    def __init__(self, host_name='localhost'):
 
         # init socket
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # Create a TCP/IP socket
-        self.server_address = ('localhost', 10000)
+        self.server_address = (host_name, 10000)
         print >>sys.stderr, 'starting up on %s port %s' % self.server_address
         self.sock.bind(self.server_address) # Bind the socket to the port
         self.sock.listen(1) # Listen for incoming connections
@@ -69,9 +70,9 @@ class Visualizer(object):
         pg.setConfigOption('foreground', 'w')
 
         #init data structure
-        self.numSamples = 2400 
+        self.numSamples = 2400
         self.datastring = ""
-        
+
         self.keys = [
             "runtime",
             "spoven",
@@ -474,7 +475,18 @@ class Visualizer(object):
 if __name__ == '__main__':
     import sys
 
-    vis = Visualizer()
+    # READ ini file
+    config_file = 'config.ini'
+    if os.path.exists(config_file):
+        config = configparser.ConfigParser()
+        config.read(config_file)
+        host_name = eval(config['TCP_INTERFACE']['HOST_NAME'])
+    else:
+        host_name = 'localhost'
+        print >>sys.stderr, 'Could not find the configuration file {0}'.format(config_file)
+
+
+    vis = Visualizer(host_name=host_name)
 
     timer = QtCore.QTimer()
     timer.timeout.connect(vis.update)

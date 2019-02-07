@@ -1,14 +1,28 @@
 #!/usr/bin/env python
 # python script for testing the transmission of data over TCP
-# The script uses aa sample datafile instead of using the intrument's data
+# The script uses a sample datafile instead of using the intrument's data
 
 import time
 import os, sys
+import configparser
 
-from ../tcp_interface_class import send_string
+sys.path.append('../')
+
+from tcp_interface_class import send_string
+
+# READ ini file
+config_file = '../config.ini'
+if os.path.exists(config_file):
+    config = configparser.ConfigParser()
+    config.read(config_file)
+    host_name = eval(config['TCP_INTERFACE']['HOST_NAME'])
+else:
+    host_name = 'localhost'
+    print >>sys.stderr, 'Could not find the configuration file {0}'.format(config_file)
+
 
 # Connect the socket to the port where the server is listening
-server_address = ('localhost', 10000)
+server_address = (host_name, 10000)
 sock = 0
 
 datafile = "SampleData.txt"
