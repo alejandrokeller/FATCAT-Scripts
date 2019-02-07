@@ -1,13 +1,16 @@
 #!/usr/bin/env python
 
-import argparse        # for argument parsing
+import configparser, argparse        # for argument parsing
 import os, sys
 import ast             # for datastring parsing
 from collections import namedtuple
 import numpy as np
 import time, datetime  # required by the uploadData function
-from extras/fatcat_uploader import Uploader # httpsend command for uploading data
-from extras/fatcat_uploader import FileUploader # httpsend command for uploading data
+
+sys.path.append('./extras/')
+
+from fatcat_uploader import Uploader # httpsend command for uploading data
+from fatcat_uploader import FileUploader # httpsend command for uploading data
 #import math
 #from scipy.integrate import simps   ### if simpson's rule integration (instead of trapezoidal) is required.
 import re              # for regular expression matching
@@ -27,14 +30,14 @@ class EventError(Exception):
         return repr(self.value)
 
 class Datafile(object):
-    def __init__(self, datafile): # datafile is a valid filepointer
+    def __init__(self, datafile, events_path = 'data/events/'): # datafile is a valid filepointer
 
         #init data structure
         self.datastring = ""
         self.eventfileSuffix = "-eventdata.csv"
         self.datafile   = datafile.name
         self.csvfile    = datafile
-        self.eventDir = "data/events/"
+        self.eventDir = events_path
         self.date       = time.strftime("%Y-%m-%d")
         self.lines2skip = 5                         # skip file headers plus first two lines due to uknown errors
         self.skipedlines = []
@@ -507,6 +510,8 @@ if __name__ == "__main__":
                     help='Use this date for the generated result table (DATE=Today if omitted). Format: YYYY-MM-DD')
     parser.add_argument('--startindex', required=False, dest='istart', type=int,
                     help='Use this if you want to start uploading data at an index other than the first (i.e. i>0). This option is for errors in the uploading process')
+    parser.add_argument('--inifile', required=False, dest='INI', default='config.ini',
+                    help='Path to configuration file (config.ini if omitted)')
 
     args = parser.parse_args()
 
@@ -521,8 +526,18 @@ if __name__ == "__main__":
     else:
         startIndex = 0
 
+    config_file = args.INI
+    if os.path.exists(config_file):
+        config = configparser.ConfigParser()
+        config.read(config_file)
+        events_path = eval(config['GENERAL_SETTINGS']['EVENTS_PATH']) + '/'
+    else:
+        events_path = './data/events/'  # if ini file cannot be found
+        print >>sys.stderr, 'Could not find the configuration file {0}'.format(config_file)
+
+
     with args.datafile as file:
-        mydata = Datafile(file)
+        mydata = Datafile(file, events_path=events_path)
 
         try:
             if args.all:
