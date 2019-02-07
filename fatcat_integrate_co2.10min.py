@@ -483,8 +483,8 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Process FatCat datafiles.')
     parser.add_argument('datafile', metavar='file', type=argparse.FileType('r'),
-                    nargs='?', default="SampleData.txt",
-                    help='file to be processed')
+                    nargs='?', default="extras/SampleData.txt",
+                    help='file to be processed. Leave empty to test with extras/SampleData.txt')
     head_parser = parser.add_mutually_exclusive_group(required=False)
     head_parser.add_argument('--header', dest='head', action='store_true',
                     help='include file header in output (default)')

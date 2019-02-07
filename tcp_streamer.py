@@ -9,7 +9,7 @@ from tcp_class import send_string
 server_address = ('FatCat', 10000)
 sock = 0
 
-datafile = "SampleData.txt"
+datafile = "extras/SampleData.txt"
 fi = open(datafile, "r")
 
 i = 0
