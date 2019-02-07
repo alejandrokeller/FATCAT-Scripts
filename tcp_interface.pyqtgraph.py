@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# Obsolete!
+# Displays an interface with the measurement data
+# the interface is constructed using pyqtgraph objets.
+# Newer version performs this task using widgets
 
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
