@@ -5,7 +5,7 @@
 import time
 import os, sys
 
-from tcp_class import send_string
+from ../tcp_class_widgets import send_string
 
 # Connect the socket to the port where the server is listening
 server_address = ('localhost', 10000)
