@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+#
+# listens to a TCP broadcast and displays data using Ppyqt widgets
+# provides also a buttons interface for interacting with the 
+# measurement instrument
 
 execfile("extras/tca.py")
 
