@@ -1,5 +1,6 @@
+logs/**
 logs/status/**
 logs/scripts/**
-events/**
+data/events/**
 data/**
 *.pyc
