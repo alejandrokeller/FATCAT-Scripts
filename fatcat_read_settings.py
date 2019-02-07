@@ -3,8 +3,8 @@
 import argparse      # for argument parsing
 import os, sys
 import datetime
-          
-execfile("tca.py")
+
+execfile("extras/tca.py")
 
 def create_status_file( path = "logs/status/", name = "fatcat_status.txt" ): 
     #This function creates a new datafile name

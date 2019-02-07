@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 import argparse      # for argument parsing
-          
-execfile("tca.py")
+
+execfile("../extras/tca.py")
 
 if __name__ == "__main__":
 

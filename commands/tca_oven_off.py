@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-execfile("../tca.py")
+execfile("../extras/tca.py")
 
 ser = open_tca_port()
 

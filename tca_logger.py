@@ -6,8 +6,8 @@ from sense_hat import SenseHat
 
 from tcp_class import send_string
 
-execfile("tca.py")
-execfile("tca_sense_varables.py")
+execfile("extras/tca.py")
+execfile("extras/tca_sense_varables.py")
 
 def create_data_file( path, header = "extras/TCA_Columns.txt", name = "zero-air-licor_before_pump.txt" ): 
     #This function creates column headers for a new datafile

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-execfile("tca.py")
+execfile("extras/tca.py")
 
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg

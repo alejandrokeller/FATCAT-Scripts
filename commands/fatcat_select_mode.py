@@ -3,8 +3,8 @@
 import argparse      # for argument parsing
 import os, sys
 import datetime
-          
-execfile("tca.py")
+
+execfile("../extras/tca.py")
 
 def send_command(ser, query):
     # This function sends a query to port 'ser' and returns the instrument response
