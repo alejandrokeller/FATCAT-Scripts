@@ -5,7 +5,13 @@ import os, sys
 import datetime
 import configparser
 
-execfile("extras/tca.py")
+import time
+import serial
+import serial.tools.list_ports
+
+sys.path.append('./extras/')
+from tca import serial_ports
+from tca import open_tca_port
 
 def create_status_file( path = "logs/status/", name = "fatcat_status.txt" ): 
     #This function creates a new datafile name
@@ -71,14 +77,16 @@ if __name__ == "__main__":
         config = configparser.ConfigParser()
         config.read(config_file)
         logs_path = eval(config['GENERAL_SETTINGS']['LOGS_PATH']) + '/status/'
+        port_name = eval(config['SERIAL_SETTINGS']['SERIAL_PORT_DESCRIPTION'])
     else:
         logs_path = './logs/status/'
+        port_name = 'nano-TD'
         print >>sys.stderr, 'Could not find the configuration file {0}'.format(config_file)
-    
-    ser = open_tca_port()
+
+    ser = open_tca_port(port_name=port_name)
     stop_datastream(ser)
     fatcat_status = ""
-    
+
     for q in queries:
         fatcat_status += query_status(ser, q)
 

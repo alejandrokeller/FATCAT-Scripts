@@ -5,8 +5,6 @@
 # provides also a buttons interface for interacting with the 
 # measurement instrument
 
-execfile("extras/tca.py")
-
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 import socket
@@ -14,6 +12,15 @@ import sys, os
 import ast # for datastring parsing
 import numpy as np
 import configparser
+
+import time
+import serial
+import serial.tools.list_ports
+
+sys.path.append('./extras/')
+from tca import serial_ports
+from tca import open_tca_port
+
 
 from collections import namedtuple
 
@@ -49,7 +56,7 @@ def send_string(line, server_address, sock = 0):
     return sock
 
 class Visualizer(object):
-    def __init__(self, host_name='localhost'):
+    def __init__(self, host_name='localhost', port_name='nano-TD'):
 
         # init socket
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # Create a TCP/IP socket
@@ -60,6 +67,9 @@ class Visualizer(object):
         print >>sys.stderr, 'waiting for a connection'
         self.connection, self.client_address = self.sock.accept() # Wait for a connection
         print >>sys.stderr, 'connection from', self.client_address
+
+        # other variables
+        self.serial_port_description = port_name
 
         # init pyqt
         self.app = QtGui.QApplication([])
@@ -401,7 +411,7 @@ class Visualizer(object):
 
     def togglePump(self):
         # find out which serial port is connected
-        ser = open_tca_port()
+        ser = open_tca_port(port_name = self.serial_port_description)
         if self.statusVarsData.pump[-1]:
             ser.write('U0000')
         else:
@@ -410,7 +420,7 @@ class Visualizer(object):
 
     def toggleBand(self):
         # find out which serial port is connected
-        ser = open_tca_port()
+        ser = open_tca_port(port_name=self.serial_port_description)
         if self.statusVarsData.band[-1]:
             ser.write('B0000')
         else:
@@ -419,7 +429,7 @@ class Visualizer(object):
 
     def toggleValve(self):
         # find out which serial port is connected
-        ser = open_tca_port()
+        ser = open_tca_port(port_name=self.serial_port_description)
         if self.statusVarsData.valve[-1]:
             ser.write('V0000')
         else:
@@ -428,7 +438,7 @@ class Visualizer(object):
 
     def toggleLicor(self):
         # find out which serial port is connected
-        ser = open_tca_port()
+        ser = open_tca_port(port_name=self.serial_port_description)
         if self.statusVarsData.licor[-1]:
             ser.write('L0000')
         else:
@@ -437,7 +447,7 @@ class Visualizer(object):
 
     def toggleOven(self):
         # find out which serial port is connected
-        ser = open_tca_port()
+        ser = open_tca_port(port_name=self.serial_port_description)
         if self.statusVarsData.oven[-1]:
             ser.write('O0000')
         else:
@@ -446,7 +456,7 @@ class Visualizer(object):
 
     def toggleRes2(self):
         # find out which serial port is connected
-        ser = open_tca_port()
+        ser = open_tca_port(port_name=self.serial_port_description)
         if self.statusVarsData.res2[-1]:
             ser.write('E0000')
         else:
@@ -455,7 +465,7 @@ class Visualizer(object):
 
     def startSample(self):
         # find out which serial port is connected
-        ser = open_tca_port()
+        ser = open_tca_port(port_name=self.serial_port_description)
         ser.write('U0000')
         ser.write('V0000')
         ser.write('E1000')
@@ -464,7 +474,7 @@ class Visualizer(object):
 
     def startZeroAir(self):
         # find out which serial port is connected
-        ser = open_tca_port()
+        ser = open_tca_port(port_name=self.serial_port_description)
         ser.write('L1000')
         ser.write('E0000')
         ser.write('V1000')
@@ -481,12 +491,14 @@ if __name__ == '__main__':
         config = configparser.ConfigParser()
         config.read(config_file)
         host_name = eval(config['TCP_INTERFACE']['HOST_NAME'])
+        port_name = eval(config['SERIAL_SETTINGS']['SERIAL_PORT_DESCRIPTION'])
     else:
         host_name = 'localhost'
+        port_name = 'nano-TD'
         print >>sys.stderr, 'Could not find the configuration file {0}'.format(config_file)
 
 
-    vis = Visualizer(host_name=host_name)
+    vis = Visualizer(host_name=host_name, port_name=port_name)
 
     timer = QtCore.QTimer()
     timer.timeout.connect(vis.update)

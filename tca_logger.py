@@ -1,13 +1,18 @@
 #!/usr/bin/env python
 
 import os, sys
-import datetime
+import datetime, time
 from sense_hat import SenseHat
 import configparser
 
 from tcp_interface_class import send_string
 
-execfile("extras/tca.py")
+import serial
+import serial.tools.list_ports
+sys.path.append('./extras/')
+from tca import serial_ports
+from tca import open_tca_port
+
 execfile("extras/tca_sense_variables.py")
 
 def create_data_file( path, header = "extras/TCA_Columns.txt", name = "zero-air-licor_before_pump.txt" ): 
@@ -41,9 +46,11 @@ if os.path.exists(config_file):
     config.read(config_file)
     data_path = eval(config['GENERAL_SETTINGS']['DATA_PATH']) + '/'
     server_name = eval(config['TCP_INTERFACE']['HOST_NAME'])
+    port_name = eval(config['SERIAL_SETTINGS']['SERIAL_PORT_DESCRIPTION'])
 else:
     data_path = 'data/'  # if ini file cannot be found
     server_name = 'localhost'
+    port_name = 'nano-TD'
     print >>sys.stderr, 'Could not find the configuration file {0}'.format(config_file)
 
 
@@ -65,7 +72,7 @@ sense_count = 3
 if use_sense:
 	sense = SenseHat()
 	sense.show_letter(error_letter)
-ser = open_tca_port(use_sense)
+ser = open_tca_port(use_sense=use_sense, port_name=port_name)
 
 counter=0
 filedate = datetime.datetime.now()
@@ -87,7 +94,7 @@ while 1:
        if use_sense:
            sense.show_letter(error_letter)
        time.sleep(5)
-       ser = open_tca_port(use_sense)
+       ser = open_tca_port(use_sense=use_sense,port_name=port_name)
     except KeyboardInterrupt:
        timestamp = time.strftime("%y.%m.%d-%H:%M:%S ")
        print timestamp + "aborted by user!"
@@ -110,7 +117,7 @@ while 1:
        if use_sense:
            sense.show_letter(error_letter)
        time.sleep(5)
-       ser = open_tca_port()       
+       ser = open_tca_port(port_name=port_name)
 
     if tca_string <> "":
        if use_sense:

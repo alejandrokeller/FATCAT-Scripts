@@ -2,9 +2,14 @@
 
 import argparse      # for argument parsing
 import os, sys
-import datetime
+import datetime, time
+import configparser
 
-execfile("../extras/tca.py")
+import serial
+import serial.tools.list_ports
+sys.path.append('../extras/')
+from tca import serial_ports
+from tca import open_tca_port
 
 def send_command(ser, query):
     # This function sends a query to port 'ser' and returns the instrument response
@@ -22,9 +27,21 @@ if __name__ == "__main__":
                     help='set valves/pumps to sample mode.')
     mode_parser.add_argument('--analysis', dest='sample', action='store_false',
                     help='set valves/pumps to zero air.')
+    parser.add_argument('--inifile', required=False, dest='INI', default='../config.ini',
+                    help='Path to configuration file (../config.ini if omitted)')
     #parser.set_defaults(sample=True)
 
     args = parser.parse_args()
+
+    config_file = args.INI
+    if os.path.exists(config_file):
+        config = configparser.ConfigParser()
+        config.read(config_file)
+        port_name = eval(config['SERIAL_SETTINGS']['SERIAL_PORT_DESCRIPTION'])
+    else:
+        port_name = 'nano-TD'
+        print >>sys.stderr, 'Could not find the configuration file {0}'.format(config_file)
+
 
     if args.sample:
         queries = [
@@ -42,7 +59,7 @@ if __name__ == "__main__":
             ]
     
     
-    ser = open_tca_port()
+    ser = open_tca_port(port_name = port_name)
     for q in queries:
         send_command(ser, q)
     ser.close()

@@ -1,6 +1,15 @@
 #!/usr/bin/env python
 
 import argparse      # for argument parsing
+import configparser
+import time
+import os, sys
+
+import serial
+import serial.tools.list_ports
+sys.path.append('../extras/')
+from tca import serial_ports
+from tca import open_tca_port
 
 execfile("../extras/tca.py")
 
@@ -21,12 +30,23 @@ if __name__ == "__main__":
                     help='Stop or restarts datastream (off or on); response to commands are still transmitted.')
     parser.add_argument('--valve', required=False, dest='valve_status',
                     help='Set the status of the valve (on or off)')
+    parser.add_argument('--inifile', required=False, dest='INI', default='../config.ini',
+                    help='Path to configuration file (../config.ini if omitted)')
 
     args = parser.parse_args()
 
-    ser = open_tca_port()
+    config_file = args.INI
+    if os.path.exists(config_file):
+        config = configparser.ConfigParser()
+        config.read(config_file)
+        port_name = eval(config['SERIAL_SETTINGS']['SERIAL_PORT_DESCRIPTION'])
+    else:
+        port_name = 'nano-TD'
+        print >>sys.stderr, 'Could not find the configuration file {0}'.format(config_file)
 
-    timestamp = time.strftime("%y.%m.%d-%H:%M:%S ")    
+    ser = open_tca_port(port_name=port_name)
+
+    timestamp = time.strftime("%y.%m.%d-%H:%M:%S ")
 
     if args.flowrate > 20:
         print "ERROR: valid flow range is 0 to 20 dl per minute." 
