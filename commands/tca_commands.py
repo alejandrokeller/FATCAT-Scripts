@@ -18,6 +18,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Send serial commands to FATCAT.')
     parser.add_argument('--set-flow', required=False, dest='flowrate', type=int,
                     help='Set the instrument flow in deciliter per minute (0 to 20)')
+    parser.add_argument('--set-flow2', required=False, dest='flowrate2', type=int,
+                    help='Set the instrument flow in deciliter per minute (0 to 170)')
     parser.add_argument('--countdown', required=False, dest='seconds', type=int,
                     help='Set burn cycle time in seconds (0-80)')
     parser.add_argument('--band', required=False, dest='band_status',
@@ -54,6 +56,16 @@ if __name__ == "__main__":
         if args.flowrate > 0:
             flow = 'F{:04d}'.format(args.flowrate)
             print timestamp + "Setting pump flow rate to " + flow 
+            ser.write(flow)
+        else:
+            print "ERROR: flow must be larger than 0."
+
+    if args.flowrate2 > 170:
+        print "ERROR: valid flow range is 0 to 20 dl per minute." 
+    elif args.flowrate:
+        if args.flowrate > 0:
+            flow = 'C{:04d}'.format(args.flowrate)
+            print timestamp + "Setting external pump flow rate to " + flow 
             ser.write(flow)
         else:
             print "ERROR: flow must be larger than 0."
