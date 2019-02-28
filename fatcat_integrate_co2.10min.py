@@ -30,7 +30,7 @@ class EventError(Exception):
         return repr(self.value)
 
 class Datafile(object):
-    def __init__(self, datafile, events_path = 'data/events/'): # datafile is a valid filepointer
+    def __init__(self, datafile, events_path = 'data/events/', integral_length = 630): # datafile is a valid filepointer
 
         #init data structure
         self.datastring = ""
@@ -61,7 +61,7 @@ class Datafile(object):
 #        print >>sys.stderr, '{0} lines counted.\nEvent(s) found {1}'.format(self.numSamples, self.results.index)
 
         self.baselinelength    =   5 # time for baseline calculation in seconds
-        self.integrationlength = 630 # length of integration in seconds
+        self.integrationlength = integral_length # length of integration in seconds
         #self.uploadDelay       =   5 # seconds to wait between each db insert command
 
         self.filekeys = [
@@ -512,6 +512,8 @@ if __name__ == "__main__":
                     help='Use this if you want to start uploading data at an index other than the first (i.e. i>0). This option is for errors in the uploading process')
     parser.add_argument('--inifile', required=False, dest='INI', default='config.ini',
                     help='Path to configuration file (config.ini if omitted)')
+    parser.add_argument('--intlength', dest='intlength', type=int, default=630,
+                    help='Set the length of the integration time in seconds (default 630s)')
 
     args = parser.parse_args()
 
@@ -525,6 +527,11 @@ if __name__ == "__main__":
         startIndex = args.istart
     else:
         startIndex = 0
+        
+    if args.intlength:
+        integral_length = args.intlength
+    else:
+        integral_length = 630
 
     config_file = args.INI
     if os.path.exists(config_file):
@@ -537,7 +544,7 @@ if __name__ == "__main__":
 
 
     with args.datafile as file:
-        mydata = Datafile(file, events_path=events_path)
+        mydata = Datafile(file, events_path=events_path, integral_length = integral_length)
 
         try:
             if args.all:
