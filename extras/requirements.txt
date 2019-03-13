@@ -2,4 +2,3 @@ poster
 numpy
 configparser==3.5.0
 pyqtgraph
-pyside
