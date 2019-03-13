@@ -20,7 +20,7 @@ $ sudo mkdir data data/events logs
 ```bash
 $ pip install -r extras/requirements.txt
 ```
-6. Install PySide (for python3 use the `python3-pyside` meta package)
+6. Install PySide (for python3 use the `python3-pyside` meta package):
 ```bash
 $ sudo apt-get install python-pyside
 ```
