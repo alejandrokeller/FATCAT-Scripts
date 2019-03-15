@@ -26,7 +26,7 @@ class Uploader(object):
         data = urllib.urlencode(data)
         post_request = urllib2.Request(self.post_url,data,self.headers)
 
-        post_request.get_data()
+        # post_request.get_data()
 
         try:
             post_response = urllib2.urlopen(post_request)
@@ -49,7 +49,7 @@ class FileUploader(object):
         datagen, headers = multipart_encode(data)
         post_request = urllib2.Request(self.post_url,datagen,headers)
 
-        post_request.get_data()
+        # post_request.get_data()
 
         try:
             post_response = urllib2.urlopen(post_request)
