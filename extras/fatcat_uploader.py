@@ -57,9 +57,10 @@ class FileUploader(object):
             post_response.close()
         except urllib2.URLError as e:
             print >>sys.stderr, "URL Error: ", e.reason
-        except (KeyboardInterrupt, SystemExit) as e:
-            print >>sys.stderr, "fatcat_uploader: ", e.reason
-            raise
+        except KeyboardInterrupt:
+            print >>sys.stderr, "fatcat_uploader: Shutdown request...exiting"
+            sys.exit(0)
+            # raise
 
 if __name__ == "__main__":
 
