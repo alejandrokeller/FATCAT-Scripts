@@ -12,10 +12,13 @@ import serial.tools.list_ports
 sys.path.append('./extras/')
 from tca import serial_ports
 from tca import open_tca_port
+from fatcat_read_settings import stop_datastream
+from fatcat_read_settings import start_datastream
+from fatcat_read_settings import query_status
 
 execfile("extras/tca_sense_variables.py")
 
-def create_data_file( path, header = "extras/TCA_Columns.txt", name = "zero-air-licor_before_pump.txt" ): 
+def create_data_file( path, header = "extras/TCA_Columns.txt", name = "FATCAT.txt" ): 
     #This function creates column headers for a new datafile
     fo      = open(header, "r")
     header  = fo.read()
@@ -74,9 +77,18 @@ if use_sense:
 	sense.show_letter(error_letter)
 ser = open_tca_port(use_sense=use_sense, port_name=port_name)
 
+# Fetch the serial number and establish filename
+stop_datastream(ser)
+str = query_status(ser, query='N?').strip() # get serial number
+start_datastream(ser)
+for s in str.split("="):
+    if s.isdigit(): # parse the number
+        serial_number = s
+datafilename = 'FATCAT-SN' + serial_number + '.txt'
+
 counter=0
 filedate = datetime.datetime.now()
-newname = create_data_file(dirname, header=headerfile)
+newname = create_data_file(dirname, header=headerfile, name=datafilename)
 print "Writing to Datafile: " + newname
 print "Using header file: " + headerfile
 x=''
@@ -148,7 +160,7 @@ while 1:
        x=''
        counter=0
        filedate = newdate
-       newname = create_data_file(dirname, header=headerfile)
+       newname = create_data_file(dirname, header=headerfile, name=datafilename)
        print "Writing to Datafile: " + newname
     elif counter >= buffersize:
        if use_sense:

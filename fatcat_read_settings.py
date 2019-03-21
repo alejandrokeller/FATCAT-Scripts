@@ -22,7 +22,7 @@ def create_status_file( path = "logs/status/", name = "fatcat_status.txt" ):
 def query_status(ser, query):
     # This function sends a query to port 'ser' and returns the instrument response
     timestamp = time.strftime("%Y.%m.%d-%H:%M:%S ")
-    print >>sys.stderr, timestamp + "Sending command '" + q + "'"
+    print >>sys.stderr, timestamp + "Sending command '" + query + "'"
     ser.write(query)
     answer = ""
     while not answer.endswith("\n"):
