@@ -5,7 +5,7 @@
 ### **Installation**
 1. Clone repository:
 ```bash
-$ git clone https://github.com/alejandrokeller/FATCAT-Scripts
+$ git clone https://github.com/alejandrokeller/FATCAT-scripts
 ```
 2. Travel to cloned folder:
 ```bash
