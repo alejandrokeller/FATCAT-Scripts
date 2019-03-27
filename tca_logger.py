@@ -80,6 +80,7 @@ ser = open_tca_port(use_sense=use_sense, port_name=port_name)
 # Fetch the serial number and establish filename
 stop_datastream(ser)
 str = query_status(ser, query='N?').strip() # get serial number
+print >>sys.stderr, "Answer to serial number query: '" + str + "'"
 start_datastream(ser)
 for s in str.split("="):
     if s.isdigit(): # parse the number
