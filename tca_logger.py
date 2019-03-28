@@ -79,10 +79,6 @@ ser = open_tca_port(use_sense=use_sense, port_name=port_name)
 
 # Fetch the serial number and establish filename
 stop_datastream(ser)
-ser.reset_input_buffer() # flush serial port
-# sleep(1) for 100 millisecond delay
-# 100ms dely
-time.sleep(.1)
 str = query_status(ser, query='N?').strip() # get serial number
 print >>sys.stderr, "Answer to serial number query: '" + str + "'"
 start_datastream(ser)
