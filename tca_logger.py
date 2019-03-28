@@ -82,7 +82,7 @@ stop_datastream(ser)
 ser.flush() # flush serial port
 # sleep(1) for 100 millisecond delay
 # 100ms dely
-sleep(.1)
+time.sleep(.1)
 str = query_status(ser, query='N?').strip() # get serial number
 print >>sys.stderr, "Answer to serial number query: '" + str + "'"
 start_datastream(ser)
