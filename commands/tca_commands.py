@@ -56,17 +56,17 @@ if __name__ == "__main__":
         flow = 'F{:04d}'.format(args.flowrate)
         print timestamp + "Setting pump flow rate to " + flow 
         ser.write(flow)
-    elif args.flowrate < 0:
-        print "ERROR: flow must be larger than 0."
+#    elif args.flowrate < 0:
+#        print "ERROR: flow must be larger than 0."
 
     if args.eflowrate > 170:
-        print "ERROR: valid flow range is 0 to 20 dl per minute." 
+        print "ERROR: valid flow range is 0 to 170 dl per minute." 
     elif args.eflowrate >= 0:
         flow = 'C{:04d}'.format(args.eflowrate)
         print timestamp + "Setting external pump flow rate to " + flow 
         ser.write(flow)
-    elif args.eflowrate < 0:
-        print "ERROR: flow must be larger than 0."
+#    elif args.eflowrate < 0:
+#        print "ERROR: flow must be larger than 0."
 
     if args.seconds > 80:
         print "ERROR: valid countdown range is 0 to 80 seconds."
