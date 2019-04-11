@@ -43,6 +43,8 @@ class Datafile(object):
         self.skipedlines = []
 
         self.numSamples, events = self.countAndFetchEvents(lines_to_skip = self.lines2skip)
+        if events[-1] >= self.numSamples:
+           events = events[:len(events)-1]
         self.numEvents  = len(events)
 
         self.eventDaytime = []
