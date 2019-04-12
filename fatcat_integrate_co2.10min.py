@@ -42,7 +42,7 @@ class Datafile(object):
         self.lines2skip = 5                         # skip file headers plus first two lines due to uknown errors
         self.skipedlines = []
 
-        print >>sys.stderr, 'Counting events in datafile "{0}"'.format(self.datafile)
+        print >>sys.stderr, '{1}\nCounting events in datafile "{0}"'.format(self.datafile, time.asctime( time.localtime(time.time()) ))
         self.numSamples, events = self.countAndFetchEvents(lines_to_skip = self.lines2skip)
         if events[-1] >= self.numSamples:
            events = events[:len(events)-1]
