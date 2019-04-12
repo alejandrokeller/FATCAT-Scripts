@@ -61,7 +61,7 @@ class Datafile(object):
         self.results     = self.eventResult._make(np.zeros(
                            (np.shape(self.eventKeys)[0],self.numEvents)))
         self.results     = self.results._replace(**{"index":events})
-        print >>sys.stderr, '{0} lines of data.\n Event(s) found at index(es): {1}'.format(self.numSamples, self.results.index)
+        print >>sys.stderr, '{0} lines of data.\n{2} event(s) found at index(es): {2}'.format(self.numSamples, len(self.results.index), self.results.index)
 
         self.baselinelength    =   5 # time for baseline calculation in seconds
         self.integrationlength = integral_length # length of integration in seconds
