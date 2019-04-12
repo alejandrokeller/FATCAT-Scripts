@@ -42,6 +42,7 @@ class Datafile(object):
         self.lines2skip = 5                         # skip file headers plus first two lines due to uknown errors
         self.skipedlines = []
 
+        print >>sys.stderr, 'Counting events in datafile "{0}"}.format(self.datafile)
         self.numSamples, events = self.countAndFetchEvents(lines_to_skip = self.lines2skip)
         if events[-1] >= self.numSamples:
            events = events[:len(events)-1]
@@ -60,7 +61,7 @@ class Datafile(object):
         self.results     = self.eventResult._make(np.zeros(
                            (np.shape(self.eventKeys)[0],self.numEvents)))
         self.results     = self.results._replace(**{"index":events})
-        print >>sys.stderr, '{0} data entries, and {1} event(s) found in file'.format(self.numSamples, self.results.index)
+        print >>sys.stderr, '{0} lines of data.\n Event(s) found at index(es): {1}'.format(self.numSamples, self.results.index)
 
         self.baselinelength    =   5 # time for baseline calculation in seconds
         self.integrationlength = integral_length # length of integration in seconds
