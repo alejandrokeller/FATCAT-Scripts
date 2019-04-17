@@ -28,6 +28,8 @@ if __name__ == "__main__":
                     help='Set the status of the licor (on or off)')
     parser.add_argument('--pump', required=False, dest='pump_status',
                     help='Set the status of the pump (on or off)')
+    parser.add_argument('--extpump', required=False, dest='ext_pump_status',
+                    help='Set the status of the pump (on or off)')
     parser.add_argument('--data', required=False, dest='datastream_status',
                     help='Stop or restarts datastream (off or on); response to commands are still transmitted.')
     parser.add_argument('--valve', required=False, dest='valve_status',
@@ -87,6 +89,15 @@ if __name__ == "__main__":
         ser.write('U0000')
     elif args.pump_status:
         print "ERROR: Valid pump-status: on and off."
+        
+    if args.ext_pump_status == 'on':
+        print timestamp + "Switching external pump ON."
+        ser.write('E1000')
+    elif args.ext_pump_status == 'off':
+        print timestamp + "Switching external pump OFF."
+        ser.write('E0000')
+    elif args.ext_pump_status:
+        print "ERROR: Valid ext_pump-status: on and off."
 
     if args.datastream_status == 'on':
         print timestamp + "Restarting datastream."
