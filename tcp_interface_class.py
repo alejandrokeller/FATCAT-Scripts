@@ -80,7 +80,7 @@ class Visualizer(object):
         pg.setConfigOption('foreground', 'w')
 
         #init data structure
-        self.numSamples = 2400
+        self.numSamples = 1200
         self.datastring = ""
 
         self.keys = [
