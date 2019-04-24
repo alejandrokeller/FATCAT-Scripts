@@ -132,7 +132,7 @@ class Visualizer(object):
         self.statusVarsData = self.statusData._make(np.zeros((np.shape(self.statusKeys)[0],self.numSamples)))
 
         # setup plots
-        self.deltaT = 0.25 # s, sampling time
+        self.deltaT = 0.5 # s, sampling time
         self.pen = pg.mkPen('y', width=1)
         self.t = np.linspace(-self.deltaT*self.numSamples, 0, self.numSamples)
 
