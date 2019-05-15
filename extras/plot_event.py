@@ -7,11 +7,12 @@ import pandas as pd
 
 sys.path.append('../')
 
-def load_df(path):
+def load_df(inpath, outpath):
     df = pd.read_csv(path)
 
     sample_data_table = FF.create_table(df.head())
-    py.iplot(sample_data_table, filename='sample-data-table')
+    filename = outpath + 'sample-data-table'
+    py.iplot(sample_data_table, filename=filename)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Graph generator for fatcat event files.')
@@ -27,10 +28,12 @@ if __name__ == "__main__":
         config = configparser.ConfigParser()
         config.read(config_file)
         events_path = eval(config['GENERAL_SETTINGS']['EVENTS_PATH']) + '/'
+        output_path = eval(config['GENERAL_SETTINGS']['EVENTS_PATH']) + '/graph/'
     else:
         events_path = '~/fatcat-files/data/events/'  # if ini file cannot be found
+        output_path = '~/fatcat-files/data/events/graph/'
         print >>sys.stderr, 'Could not find the configuration file {0}'.format(config_file)
 
     with args.datafile as file:
         path = event_path + file
-        load_df(path = path)
+        load_df(inpath = path, outpath = output_path)
