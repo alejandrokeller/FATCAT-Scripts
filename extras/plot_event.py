@@ -8,7 +8,7 @@ import pandas as pd
 sys.path.append('../')
 
 def load_df(path):
-    df = pd.read_csv('sample-data.csv')
+    df = pd.read_csv(path)
 
    sample_data_table = FF.create_table(df.head())
    py.iplot(sample_data_table, filename='sample-data-table')
