@@ -21,7 +21,7 @@ class Datafile(object):
         self.rawdata    = self.csvfile.readline().rstrip('\n') # second line points to raw data
 
     def load_df(self):
-        self.df = pd.read_csv(self.eventDir, header=[2,3])
+        self.df = pd.read_csv(self.csvfile, header=[2,3])
         
         sample_data_table = FF.create_table(df.head())
         filename = self.outputDir + 'sample-data-table'
