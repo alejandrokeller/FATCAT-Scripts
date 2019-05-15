@@ -10,10 +10,9 @@ sys.path.append('../')
 def load_df(path):
     df = pd.read_csv(path)
 
-   sample_data_table = FF.create_table(df.head())
-   py.iplot(sample_data_table, filename='sample-data-table')
-    
-    
+    sample_data_table = FF.create_table(df.head())
+    py.iplot(sample_data_table, filename='sample-data-table')
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Graph generator for fatcat event files.')
     parser.add_argument('datafile', metavar='file', type=argparse.FileType('r'),
