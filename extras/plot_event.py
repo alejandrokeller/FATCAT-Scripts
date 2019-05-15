@@ -19,12 +19,12 @@ class Datafile(object):
         self.date       = time.strftime("%Y-%m-%d")
         self.internname = self.csvfile.readline().rstrip('\n') # first line contains the original filename
         self.rawdata    = self.csvfile.readline().rstrip('\n') # second line points to raw data
-
-    def load_df(self):
-        self.df = pd.read_csv(self.csvfile, header=[2,3])
         
-        sample_data_table = FF.create_table(df.head())
-        filename = self.outputDir + 'sample-data-table'
+        self.df = pd.read_csv(self.csvfile, header=[2,3])      # loads the datafile
+
+    def generate_data_table(self, table_name = 'sample-data-table'):
+        sample_data_table = FF.create_table(self.df.head())
+        filename = self.outputDir + table_name
         py.iplot(sample_data_table, filename=filename)
 
 if __name__ == "__main__":
@@ -49,4 +49,4 @@ if __name__ == "__main__":
 
     with args.datafile as file:
         mydata = Datafile(file, output_path = output_path)
-        mydata.load_df()
+        mydata.generate_data_table()
