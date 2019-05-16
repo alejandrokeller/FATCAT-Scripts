@@ -1,9 +1,5 @@
 import configparser, argparse # for argument parsing
-import time, os
-
-import plotly.plotly as py
-import plotly.graph_objs as go
-import plotly.figure_factory as FF
+import time,os
 
 import numpy as np
 import pandas as pd
@@ -15,17 +11,25 @@ class Datafile(object):
         self.datastring = ""
         self.datafile   = datafile.name
         self.csvfile    = datafile
-        self.outputDir   = output_path
+        self.outputDir  = output_path
         self.date       = time.strftime("%Y-%m-%d")
         self.internname = self.csvfile.readline().rstrip('\n') # first line contains the original filename
         self.rawdata    = self.csvfile.readline().rstrip('\n') # second line points to raw data
-        
-        self.df = pd.read_csv(self.csvfile, header=[2,3])      # loads the datafile
+        self.keys       = self.csvfile.readline().rstrip('\n').replace(" ","").split(',')
+        self.units      = self.csvfile.readline().rstrip('\n').replace(" ","").split(',')
+        self.csvfile.seek(0, 0)
 
-    def generate_data_table(self, table_name = 'sample-data-table'):
-        sample_data_table = FF.create_table(self.df.head())
-        filename = self.outputDir + table_name
-        py.iplot(sample_data_table, filename=filename)
+        self.df = pd.read_csv(self.csvfile, header=[2], skiprows=[3])      # loads the datafile
+        self.df.columns=self.keys
+
+        self.keys.append('elapsed-time') # add a new column with the analysis time
+        self.units.append('s')
+        self.df['elapsed-time'] = self.df['runtime']-self.df['runtime'][0]
+
+        # some debugging
+        # print self.df.head(5)
+        # print self.keys
+        # print self.units
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Graph generator for fatcat event files.')
@@ -49,4 +53,3 @@ if __name__ == "__main__":
 
     with args.datafile as file:
         mydata = Datafile(file, output_path = output_path)
-        mydata.generate_data_table()
