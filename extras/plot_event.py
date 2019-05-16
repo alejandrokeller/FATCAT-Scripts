@@ -39,9 +39,13 @@ class Datafile(object):
         # print self.keys
         # print self.units
 
-    def create_plot(self, x='elapsed-time', y='dtc', style='ggplot', format='pdf'):
+    def create_plot(self, x='elapsed-time', y='dtc', style='ggplot', format='pdf', err=False):
         plt.style.use('ggplot')
-        plt.plot(self.df[x], self.df[y])
+        if err:
+            yerr = y + "-sd"
+            plt.errorbar(self.df[x], self.df[y], yerr=self.df[yerr])
+        else:
+            plt.plot(self.df[x], self.df[y])
         xlabel = x + ' (' + self.units[self.keys.index(x)] + ')'
         ylabel = y + ' (' + self.units[self.keys.index(y)] + ')'
         plt.title(self.internname)
@@ -51,17 +55,25 @@ class Datafile(object):
         plt.savefig(filename)
         plt.show()
 
-    def create_dualplot(self, x='elapsed-time', y1='toven', y2='dtc', style='ggplot', format='pdf'):
+    def create_dualplot(self, x='elapsed-time', y1='toven', y2='dtc', style='ggplot', format='pdf', y1err=False, y2err=False):
         plt.style.use('ggplot')
         
         plt.subplot(2,1,1)
-        plt.plot(self.df[x], self.df[y1])
+        if y1err:
+            yerr = y1 + "-sd"
+            plt.errorbar(self.df[x], self.df[y1], yerr=self.df[yerr])
+        else:
+            plt.plot(self.df[x], self.df[y1])
         ylabel = y1 + ' (' + self.units[self.keys.index(y1)] + ')'
         plt.title(self.internname)
         plt.ylabel(ylabel)
         
         plt.subplot(2,1,2)
-        plt.plot(self.df[x], self.df[y2])
+        if y2err:
+            yerr = y2 + "-sd"
+            plt.errorbar(self.df[x], self.df[y2], yerr=self.df[yerr])
+        else:
+            plt.plot(self.df[x], self.df[y2])
         xlabel = x + ' (' + self.units[self.keys.index(x)] + ')'
         ylabel = y2 + ' (' + self.units[self.keys.index(y2)] + ')'
         plt.xlabel(xlabel)
@@ -123,9 +135,9 @@ if __name__ == "__main__":
         all_keys = []
         units_list = []
         for k in baseline_keys:
-            sd_keys.append(k + ' sd')
+            sd_keys.append(k + '-sd')
             all_keys.append(k)
-            all_keys.append(k + ' sd')
+            all_keys.append(k + '-sd')
 
         file_list = "List of files:" # some text for the file header
         
@@ -175,7 +187,7 @@ if __name__ == "__main__":
         print filename
         file = open(filename, 'r')
         mydata = Datafile(file, output_path = baseline_path)
-        mydata.create_dualplot(style=plot_style, format=plot_format)
+        mydata.create_dualplot(style=plot_style, format=plot_format, y1err=True, y2err=True)
 
     else:
         for file in args.datafile:
