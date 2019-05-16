@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+# python script for plotting event files
+# The script can also be used for generating an "average" event, e.g., to determine the baseline
+
 import configparser, argparse # for argument parsing
 import time, os, glob
 
@@ -25,9 +29,10 @@ class Datafile(object):
         self.df = pd.read_csv(self.csvfile, header=[2], skiprows=[3])      # loads the datafile
         self.df.columns=self.keys
 
-        self.keys.append('elapsed-time') # add a new column with the analysis time
-        self.units.append('s')
-        self.df['elapsed-time'] = self.df['runtime']-self.df['runtime'][0]
+        if not 'elapsed-time' in self.keys:
+           self.keys.append('elapsed-time') # add a new column with the analysis time
+           self.units.append('s')
+           self.df['elapsed-time'] = self.df['runtime']-self.df['runtime'][0]
 
         # some debugging
         # print self.df.head(5)
@@ -79,15 +84,19 @@ if __name__ == "__main__":
     if os.path.exists(config_file):
         config = configparser.ConfigParser()
         config.read(config_file)
-        events_path = eval(config['GENERAL_SETTINGS']['EVENTS_PATH']) + '/'
-        output_path = eval(config['GENERAL_SETTINGS']['EVENTS_PATH']) + '/graph/'
-        plot_style = eval(config['GRAPH_SETTINGS']['PLOT_STYLE'])
-        plot_format = eval(config['GRAPH_SETTINGS']['FILE_FORMAT'])
+        events_path   = eval(config['GENERAL_SETTINGS']['EVENTS_PATH']) + '/'
+        output_path   = eval(config['GENERAL_SETTINGS']['EVENTS_PATH']) + '/graph/'
+        plot_style    = eval(config['GRAPH_SETTINGS']['PLOT_STYLE'])
+        plot_format   = eval(config['GRAPH_SETTINGS']['FILE_FORMAT'])
+        baseline_path = eval(config['DATA_ANALYSIS']['BASELINE_PATH']) + '/'
+        baseline_file = eval(config['DATA_ANALYSIS']['BASELINE_FILE'])
     else:
-        events_path = '~/fatcat-files/data/events/'  # if ini file cannot be found
-        output_path = events_path + 'graph/'
-        plot_style = 'ggplot'
-        plot_format = 'pdf'
+        events_path   = '~/fatcat-files/data/events/'  # if ini file cannot be found
+        output_path   = events_path + 'graph/'
+        plot_style    = 'ggplot'
+        plot_format   = 'pdf'
+        baseline_path = '~/fatcat-files/data/baseline/'
+        baseline_file = 'zero_event.csv'
         print >>sys.stderr, 'Could not find the configuration file {0}'.format(config_file)
 
     if not args.datafile:
@@ -95,7 +104,81 @@ if __name__ == "__main__":
         latest_event = max(list_of_events, key=os.path.getctime)
         args.datafile = [open(latest_event, 'r')]
 
-    for file in args.datafile:
-        mydata = Datafile(file, output_path = output_path)
-#        mydata.create_plot(style=plot_style, format=plot_format)
+    if 1:
+
+        # CREATE a DataFrame to Hold the mean value.
+        baseline_keys = [
+            'elapsed-time',
+            'toven',
+            'pco2',
+            'co2',
+            'flow',
+            'countdown',
+            'co2-event',
+            'dtc']
+#        baseline = pd.DataFrame(columns=baseline_keys)
+
+        # CREATE keys for stand. dev. and final csv file
+        sd_keys = []
+        all_keys = []
+        units_list = []
+        for k in baseline_keys:
+            sd_keys.append(k + ' sd')
+            all_keys.append(k)
+            all_keys.append(k + ' sd')
+
+        file_list = "List of files:" # some text for the file header
+        
+        df_list = [] # create a list object to hold the DataFrames
+        n = 0
+
+        # CREATE a DataFrame to hold the final csv data file
+        baseline = pd.DataFrame(columns=all_keys)
+        
+        for file in args.datafile:
+            mydata = Datafile(file, output_path = output_path) # output path is not needed because data will not be plotted
+            file_list = file_list + ' ' + mydata.internname
+            df_list.append(mydata.df)  # append to the DF list to make the standard dev. calculation 
+            
+            for k in baseline_keys: # sum up all dataframes
+                if n == 0:
+                    baseline[k] = mydata.df[k]
+                else:
+                    baseline[k] = baseline[k] + mydata.df[k]
+            n = n + 1
+
+        for k in baseline_keys:
+            baseline[k] = baseline[k]/n # divide through n to calculate mean
+
+            key = sd_keys[baseline_keys.index(k)] # get the relevant sd_key
+            baseline[key] = baseline[k]*0 # initialize sd calculation
+            for df in df_list:
+                baseline[key] = baseline[key] + (df[k] - baseline[k])**2 # sum suare difference to mean
+
+            baseline[key] = (baseline[key]/n)**.5 # calculate std. dev. from the sum of square difference
+
+            # Create list of units to be exported to the CSV-file
+            unit = mydata.units[mydata.keys.index(k)]
+            units_list.append(unit)
+            units_list.append(unit)
+
+        file_list = "Average datafile: " + str(n) + " entries\n" + file_list + "\n" + ",".join(all_keys) + "\n" + ",".join(units_list)
+
+        filename = baseline_path + baseline_file
+        with open(filename, 'w') as f:
+            f.write(file_list)
+            baseline.to_csv(f, index=False, header=False)
+            f.close()
+
+        # Reopen newly created file for plotting
+        print "reopening file:"
+        print filename
+        file = open(filename, 'r')
+        mydata = Datafile(file, output_path = baseline_path)
         mydata.create_dualplot(style=plot_style, format=plot_format)
+
+    else:
+        for file in args.datafile:
+            mydata = Datafile(file, output_path = output_path)
+#            mydata.create_plot(style=plot_style, format=plot_format)
+            mydata.create_dualplot(style=plot_style, format=plot_format)
