@@ -14,7 +14,7 @@ $ cd FATCAT-scripts
 3. Open config.ini and check **[configuration file](#configuration-file)**.
 4. Create required data and logs directories:
 ```bash
-$ sudo mkdir data data/events logs
+$ sudo mkdir data data/events logs data/baseline
 ```
 5. Install python requirements:
 ```bash
