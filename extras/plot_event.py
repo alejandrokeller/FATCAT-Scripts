@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 #print(plt.style.available)
 
 class Datafile(object):
-    def __init__(self, datafile, output_path = 'data/events/graph/'): # datafile is a valid filepointer
+    def __init__(self, datafile, output_path = 'data/events/graph/', baseline = pd.DataFrame()): # datafile is a valid filepointer
         
         #init data structure
         self.ppmtoug = 12.01/22.4 # factor to convert C in ppm to ug/lt at 0 degC and 1atm
@@ -206,6 +206,14 @@ if __name__ == "__main__":
         error_interval = 4
         print >>sys.stderr, 'Could not find the configuration file {0}'.format(config_file)
 
+    # open the baseline DataFrame if it exists
+    filename = baseline_path + baseline_file
+    if os.path.isfile(filename):
+        f = open(filename, 'r')
+        baseline = Datafile(f).df
+    else:
+        baseline = pd.DataFrame()
+
     if not args.datafile:
         list_of_events = glob.glob(events_path + '*.csv') # * means all if need specific format then *.csv
         latest_event = max(list_of_events, key=os.path.getctime)
@@ -216,16 +224,16 @@ if __name__ == "__main__":
         filename = create_baseline_file(files=args.datafile, baseline_path=baseline_path, baseline_file=baseline_file)
 
         # Reopen newly created file for plotting
-        file = open(filename, 'r')
-        mydata = Datafile(file, output_path = baseline_path)
+        f = open(filename, 'r')
+        mydata = Datafile(f, output_path = baseline_path)
         if args.tplot:
             mydata.create_dualplot(style=plot_style, format=plot_format, y1err=True, y2err=True, error_interval = error_interval)
         else:
             mydata.create_plot(style=plot_style, format=plot_format, err=True, error_interval = error_interval)
 
     else:
-        for file in args.datafile:
-            mydata = Datafile(file, output_path = output_path)
+        for f in args.datafile:
+            mydata = Datafile(f, output_path = output_path, baseline = baseline)
             if args.tplot:
                 mydata.create_dualplot(style=plot_style, format=plot_format)
             else:
