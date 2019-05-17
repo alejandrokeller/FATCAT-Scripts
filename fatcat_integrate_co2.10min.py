@@ -321,7 +321,7 @@ class Datafile(object):
                 elapsedTime = self.results.runtime[eventIndex] - self.fileData.runtime[i1]
             else:
                 i1 += 1
-            self.results.baseline[eventIndex] = np.mean(self.fileData.co2[i1:i0])
+            self.results.baseline[eventIndex] = np.mean(self.fileData.co2[i1:i0]).round(3)
 
     def calculateAllBaseline(self):
 
@@ -351,15 +351,17 @@ class Datafile(object):
                print >>sys.stderr, 'End of file reachead while integrating last event ({0})!'.format(self.eventDaytime[eventIndex])
            i1 -= 1
 
-       co2     = (self.fileData.co2[i0:i1]-self.results.baseline[eventIndex])*ppmtoug
-       runtime = self.fileData.runtime[i0:i1]/60
+       co2     = (self.fileData.co2[i0:i1]-self.results.baseline[eventIndex])
+       runtime = self.fileData.runtime[i0:i1]
        flow    = self.fileData.flow[i0:i1]
-       deltatc  = co2*np.mean(flow)               ### Evaluate TC using the average flow
-       #deltatc  = co2*flow                        ### Evaluate TC using real time flow (noise about 2-4%)
-       #tc_s = simps(deltatc, runtime)             ### Integrate using simpson's rule
-       tc_t = np.trapz(deltatc, x=runtime)        ### Integrate using trapezoidal rule
+       #deltatc  = co2*np.mean(flow)*ppmtoug        ### Evaluate TC using the average flow
+       deltatc  = co2*flow*ppmtoug                 ### Evaluate TC using real time flow (noise about 2-4%)
+       #tc_s = simps(deltatc, runtime)/60           ### Integrate using simpson's rule
+       tc_t = np.trapz(deltatc, x=runtime)/60      ### Integrate using trapezoidal rule
 
-       self.results.tc[eventIndex] = tc_t
+       co2 = co2.round(3)
+       deltatc = deltatc.round(3)
+       self.results.tc[eventIndex] = tc_t.round(3)
        self.results.maxtoven[eventIndex] = max(self.fileData.toven[i0:i1])
 
        self.saveEvent(i0, i1, deltatc, co2)
