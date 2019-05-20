@@ -35,12 +35,13 @@ class Datafile(object):
             self.units.append('s')
             self.df['elapsed-time'] = self.df['runtime']-self.df['runtime'][0]
 
-        ppmtoug = 12.01/22.4 # factor to convert C in ppm to ug/lt at 0 degC and 1atm
         ## recalculate dtc using real time flow instead of the average flow
+        #ppmtoug = 12.01/22.4 # factor to convert C in ppm to ug/lt at 0 degC and 1atm
         #self.df['dtc'] = self.df['co2-event']*self.df['flow']*ppmtoug ### Evaluate TC using real time flow
         if recalculate_co2:
-            ## recalculate co2-event using the (mean) flow and dtc
-            self.df['co2-event'] = self.df['dtc']/(self.df['flow'].mean()*ppmtoug) ### Evaluate TC using (mean) flow
+            ## recalculate co2-event using real time flow and dtc
+            ppmtoug = 12.01/22.4 # factor to convert C in ppm to ug/lt at 0 degC and 1atm
+            self.df['co2-event'] = self.df['dtc']/(self.df['flow'].mean()*ppmtoug) ### Evaluate TC using real time flow
             self.df['co2-event'] = self.df['co2-event'].round(1)
             self.df['dtc'] = self.df['dtc'].round(3)
 
@@ -54,17 +55,14 @@ class Datafile(object):
             "tc",
             "tc-baseline"
             ]
-        self.imax=240
         self.results = {
             "date": self.extract_date(),
             "time": self.df['time'][0] if 'time' in self.df else '-',
             "runtime": self.df['runtime'][0] if 'runtime' in self.df else '-',
             "co2-base": (self.df['co2'].mean() - self.df['co2-event'].mean()).round(2),
             "maxtemp": max(self.df['toven']),
-            "tc": (np.trapz(self.df.loc[0:self.imax,'dtc'], x=self.df.loc[0:self.imax,'elapsed-time'])/60).round(3),
-            #"tc": (np.trapz(self.df['dtc'], x=self.df['elapsed-time'])/60).round(3),
-            "tc-baseline": (np.trapz(self.df.loc[0:self.imax,'dtc-baseline'], x=self.df.loc[0:self.imax,'elapsed-time'])/60).round(3) if 'dtc-baseline' in self.df else '-'
-            #"tc-baseline": (np.trapz(self.df['dtc-baseline'], x=self.df['elapsed-time'])/60).round(3) if 'dtc-baseline' in self.df else '-'
+            "tc": (np.trapz(self.df['dtc'], x=self.df['elapsed-time'])/60).round(3),
+            "tc-baseline": (np.trapz(self.df['dtc-baseline'], x=self.df['elapsed-time'])/60).round(3) if 'dtc-baseline' in self.df else '-'
             }
         self.result_units = {
             "date": 'yyyy-mm-dd',
@@ -93,10 +91,9 @@ class Datafile(object):
             self.df['dtc-baseline'] = self.df['dtc']-baseline['dtc']
 
             # calculate the integral of the newly created column
-            #self.results["tc-baseline"] = (np.trapz(self.df['dtc-baseline'], x=self.df['elapsed-time'])/60).round(3)
-            self.results["tc-baseline"] = (np.trapz(self.df.loc[0:self.imax,'dtc-baseline'], x=self.df.loc[0:self.imax,'elapsed-time'])/60).round(3)
+            self.results["tc-baseline"] = (np.trapz(self.df['dtc-baseline'], x=self.df['elapsed-time'])/60).round(3)
 
-    def create_plot(self, x='elapsed-time', y='dtc', y2='dtc-baseline', style='ggplot', format='pdf', err=False, error_interval = 4, mute = False):
+    def create_plot(self, x='elapsed-time', y='dtc', y2='dtc-baseline', style='ggplot', format='pdf', err=False, error_interval = 4):
         plt.style.use('ggplot')
         if err:
             yerr = y + "-sd"
@@ -113,12 +110,10 @@ class Datafile(object):
         plt.ylabel(ylabel)
         filename = self.outputDir + self.internname.replace('.','_') + '_' + y + '.' + format
         plt.savefig(filename)
-        if not mute:
-            plt.show()
-        plt.clf()
+        plt.show()
 
     def create_dualplot(self, x='elapsed-time', y1='toven', y2='dtc', y3='dtc-baseline',
-                        style='ggplot', format='pdf', y1err=False, y2err=False, error_interval = 4, mute = False):
+                        style='ggplot', format='pdf', y1err=False, y2err=False, error_interval = 4):
         plt.style.use('ggplot')
         
         plt.subplot(2,1,1)
@@ -148,16 +143,13 @@ class Datafile(object):
 
         filename = self.outputDir + self.internname.replace('.','_') + '_' + y1 + '_' + y2 + '.' + format
         plt.savefig(filename)
-        if not mute:
-            plt.show()
-        plt.clf()
+        plt.show()
 
 class ResultsList(object):
     def __init__(self):
         # create a dataframe to hold results and a list for the units
         self.summary = pd.DataFrame()
-        self.summary_keys = []
-        self.summary_units = []
+        self.units = []
         self.files = []
         self.n = 0
 
@@ -187,19 +179,17 @@ class ResultsList(object):
         # CREATE a DataFrame to hold the final csv data file
         self.df_concat = pd.DataFrame(columns=self.average_keys)
 
-    def append_event(self, datafile):
+    def append_event(self, datafile, store_data = False):
         self.files.append(datafile.internname)
         if self.summary.empty: 
             self.summary = pd.DataFrame(columns=datafile.result_keys).append(datafile.results, ignore_index = True)
-            self.summary_keys = datafile.result_keys
-            for k in self.summary_keys:
-                self.summary_units.append(datafile.result_units[k])
+            self.units = datafile.result_units
 
-            for k in self.average_keys:
-                # Create list of units to be exported to average event the CSV-file
-                unit = datafile.units[datafile.keys.index(k)]
-                self.all_units.append(unit)
-                self.all_units.append(unit)
+#            for k in self.average_keys:
+#                # Create list of units to be exported to average event the CSV-file
+#                unit = datafile.result_units[datafile.keys.index(k)]
+#                self.all_units.append(unit)
+#                self.all_units.append(unit)
 
         else:
             self.summary = self.summary.append(datafile.results, ignore_index = True)
@@ -253,53 +243,80 @@ def is_date(string, fuzzy=False):
     except ValueError:
         return False
 
-def create_baseline_file(files, baseline_path, baseline_file, summary_path):
+def create_baseline_file(files, baseline_path, baseline_file):
+    # CREATE a DataFrame to Hold the mean value.
+    baseline_keys = [
+        'elapsed-time',
+        'toven',
+        'pco2',
+        'co2',
+        'flow',
+        'countdown',
+        'co2-event',
+        'dtc']
+
+    # CREATE keys for stand. dev. and final csv file
+    sd_keys = []
+    all_keys = []
+    units_list = []
+    for k in baseline_keys:
+        sd_keys.append(k + '-sd')
+        all_keys.append(k)
+        all_keys.append(k + '-sd')
+    
+    df_list = [] # create a list object to hold the DataFrames
 
     # create a ResultsList object to hold the event key data
     results = ResultsList()
 
+    # CREATE a DataFrame to hold the final csv data file
+    baseline = pd.DataFrame(columns=all_keys)
+    
     for f in files:
         mydata = Datafile(f) # output path is not needed because data will not be plotted
         results.append_event(mydata)
 
+        df_list.append(mydata.df)  # append to the DF list to make the standard dev. calculation 
+        
+        for k in baseline_keys: # sum up all dataframes
+            if results.n == 1:
+                baseline[k] = mydata.df[k]
+            else:
+                baseline[k] = baseline[k] + mydata.df[k]
+
+    n = results.n
+    for k in baseline_keys:
+        baseline[k] = baseline[k]/n # divide through n to calculate mean
+
+        key = sd_keys[baseline_keys.index(k)] # get the relevant sd_key
+        baseline[key] = baseline[k]*0 # initialize sd calculation
+        for df in df_list:
+            baseline[key] = baseline[key] + (df[k] - baseline[k])**2 # sum suare difference to mean
+
+        baseline[key] = (baseline[key]/n)**.5 # calculate std. dev. from the sum of square difference
+
+        # Create list of units to be exported to the CSV-file
+        unit = mydata.units[mydata.keys.index(k)]
+        units_list.append(unit)
+        units_list.append(unit)
+
     header = baseline_file + "\nAverage datafile: " + str(len(results.files)) + " entries:" + " ".join(results.files) + "\n"
-    header = header + ",".join(results.all_keys) + "\n" + ",".join(results.all_units) + "\n"
+    header = header + ",".join(all_keys) + "\n" + ",".join(units_list) + "\n"
 
     filename = baseline_path + baseline_file
     with open(filename, 'w') as f:
         f.write(header)
-        results.build_average_df().to_csv(f, index=False, header=False)
+        baseline.to_csv(f, index=False, header=False)
         f.close()
 
-    # write the results table to the summary file and include the stats in file header
-    stats_df = generate_df_stats(results.summary)
-    header1 = "Points used for average file:" + baseline_file + "\nSource files:" + " ".join(results.files) + "\n\n"
-    header2 = "\n" + ",".join(results.summary_keys) + "\n" + ",".join(results.summary_units) + "\n"
-    with open(summary_path, 'w') as f:
-        f.write(header1)
-        stats_df.to_csv(f, index=True, header=True)
-        f.write(header2)
-        results.summary.to_csv(f, index=False, header=False)
-        f.close()
-
-    print stats_df.head()
+    #print results.summary.head(10)
+    print results.build_mean().head()
+    print results.build_average_df().head()
+    print baseline.head()
+    
         
     return filename
 
-def generate_df_stats(mydata):
-    mydata = mydata.drop(['runtime','time', 'date'], axis=1) # drop unnecesary fields
-    stats_df = pd.DataFrame()
-    
-    stats_df['mean']   = mydata.mean()
-    stats_df['std']    = mydata.std()
-    stats_df['3*std']  = (3*mydata.std())
-    stats_df['median'] = mydata.median()
-    stats_df['max']    = mydata.max()
-    stats_df['min']    = mydata.min()
-    
-    stats_df = stats_df.round(2)
-    
-    return stats_df
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Graph generator for fatcat event files.')
@@ -319,14 +336,12 @@ if __name__ == "__main__":
     t_parser.add_argument('--no-temperature', dest='tplot', action='store_false',
                             help='only plot delta-TC')
     parser.set_defaults(tplot=True)
-##    fix_parser = parser.add_mutually_exclusive_group(required=False)
-##    fix_parser.add_argument('--fix-co2', dest='fix', action='store_true',
-##                            help='fix the co2-event in the event file')
-##    fix_parser.add_argument('--normal', dest='fix', action='store_false',
-##                            help='leave event-file as is (default)')
-##    parser.set_defaults(fix=False)
-    parser.add_argument('--mute-graphs', help='Do not plot the data to screen', action='store_true')
-    parser.add_argument('--fix-co2', dest='fix', help='fix the co2-event in the event file', action='store_true')
+    fix_parser = parser.add_mutually_exclusive_group(required=False)
+    fix_parser.add_argument('--fix-co2', dest='fix', action='store_true',
+                            help='fix the co2-event in the event file')
+    fix_parser.add_argument('--normal', dest='fix', action='store_false',
+                            help='leave event-file as is (default)')
+    parser.set_defaults(fix=False)
     
     args = parser.parse_args()
     
@@ -341,8 +356,6 @@ if __name__ == "__main__":
         error_interval = eval(config['GRAPH_SETTINGS']['ERROR_EVERY'])
         baseline_path = eval(config['DATA_ANALYSIS']['BASELINE_PATH']) + '/'
         baseline_file = eval(config['DATA_ANALYSIS']['BASELINE_FILE'])
-        summary_path = eval(config['DATA_ANALYSIS']['SUMMARY_PATH']) + '/'
-        summary_file = eval(config['DATA_ANALYSIS']['SUMMARY_FILE'])
     else:
         events_path   = '~/fatcat-files/data/events/'  # if ini file cannot be found
         output_path   = events_path + 'graph/'
@@ -350,12 +363,8 @@ if __name__ == "__main__":
         plot_format   = 'pdf'
         baseline_path = '~/fatcat-files/data/baseline/'
         baseline_file = 'zero_event.csv'
-        summary_path = '~/fatcat-files/data/baseline/'
-        summary_file = 'summary_output.csv'
         error_interval = 4
         print >>sys.stderr, 'Could not find the configuration file {0}'.format(config_file)
-
-    summary_full_path = summary_path + summary_file
 
     # open the baseline DataFrame if it exists
     filename = baseline_path + baseline_file
@@ -370,6 +379,9 @@ if __name__ == "__main__":
         latest_event = max(list_of_events, key=os.path.getctime)
         args.datafile = [open(latest_event, 'r')]
 
+    # create a dataframe to hold results and a list for the units
+    results_df = pd.DataFrame()
+    result_units = []
     # create a ResultsList object to hold the event key data
     results = ResultsList()
 
@@ -385,7 +397,7 @@ if __name__ == "__main__":
                 fw.close()
             
     elif args.zero:
-        filename = create_baseline_file(files=args.datafile, baseline_path=baseline_path, baseline_file=baseline_file, summary_path = summary_full_path)
+        filename = create_baseline_file(files=args.datafile, baseline_path=baseline_path, baseline_file=baseline_file)
 
         # Reopen newly created file for plotting
         f = open(filename, 'r')
@@ -401,23 +413,16 @@ if __name__ == "__main__":
             if 'dtc' in baseline:
                 mydata.add_baseline(baseline = baseline)
             results.append_event(mydata)
+            ## insert data in results dataframe and units list
+            #if results_df.empty: 
+            #    results_df = pd.DataFrame(columns=mydata.result_keys).append(mydata.results, ignore_index = True)
+            #    result_units = mydata.result_units
+            #else:
+            #    results_df = results_df.append(mydata.results, ignore_index = True)
 
             if args.tplot:
-                mydata.create_dualplot(style=plot_style, format=plot_format, mute = args.mute_graphs)
+                mydata.create_dualplot(style=plot_style, format=plot_format)
             else:
-                mydata.create_plot(style=plot_style, format=plot_format, mute = args.mute_graphs)
-
-        # write the results table to the summary file and include the stats in file header
-        stats_df = generate_df_stats(results.summary)
-        header1 = "Source files:" + " ".join(results.files) + "\n\n"
-        header2 = "\n" + ",".join(results.summary_keys) + "\n" + ",".join(results.summary_units) + "\n"
-        with open(summary_full_path, 'w') as f:
-            f.write(header1)
-            stats_df.to_csv(f, index=True, header=True)
-            f.write(header2)
-            results.summary.to_csv(f, index=False, header=False)
-            f.close()
-
-        print stats_df.head()
-##        pd.set_option('display.max_rows', None)
-        print results.summary.tail(20)
+                mydata.create_plot(style=plot_style, format=plot_format)
+        #print results_df
+        print results.summary.head(10)
