@@ -8,15 +8,17 @@ import time, os, glob
 
 import numpy as np
 import pandas as pd
+from pandas.plotting import register_matplotlib_converters
 
 import matplotlib.pyplot as plt
 #print(plt.style.available)
 
 class Datafile(object):
-    def __init__(self, datafile, output_path = 'data/events/graph/', recalculate_co2 = False): # datafile is a valid filepointer
+    def __init__(self, datafile, output_path = 'data/events/graph/', recalculate_co2 = False, tmax=0): # datafile is a valid filepointer
         
         #init data structure
         self.datastring = ""
+        self.tmax       = tmax # time period in seconds used to integrate
         self.datafile   = datafile.name
         self.outputDir  = output_path
         self.date       = time.strftime("%Y-%m-%d")
@@ -54,17 +56,29 @@ class Datafile(object):
             "tc",
             "tc-baseline"
             ]
-        self.imax=240
+
+        # Create a subset of the DataFrame and load data up to the desired integral time
+        self.tc_keys = ['elapsed-time', 'dtc']
+        if 'dtc-baseline' in self.df:
+            tc_keys.append('dtc-baseline') 
+        if self.tmax == 0:
+            self.tc_df = self.df.loc[:,self.tc_keys]
+        else:
+            self.tc_df = (self.df[(self.df['elapsed-time'] <= self.tmax)])[self.tc_keys]
+
+        # Create the results DataSeries, integrating dtc and, if available, dtc-baseline
         self.results = {
             "date": self.extract_date(),
             "time": self.df['time'][0] if 'time' in self.df else '-',
             "runtime": self.df['runtime'][0] if 'runtime' in self.df else '-',
             "co2-base": (self.df['co2'].mean() - self.df['co2-event'].mean()).round(2),
             "maxtemp": max(self.df['toven']),
-            "tc": (np.trapz(self.df.loc[0:self.imax,'dtc'], x=self.df.loc[0:self.imax,'elapsed-time'])/60).round(3),
+            #"tc": (np.trapz(self.df.loc[0:self.imax,'dtc'], x=self.df.loc[0:self.imax,'elapsed-time'])/60).round(3),
             #"tc": (np.trapz(self.df['dtc'], x=self.df['elapsed-time'])/60).round(3),
-            "tc-baseline": (np.trapz(self.df.loc[0:self.imax,'dtc-baseline'], x=self.df.loc[0:self.imax,'elapsed-time'])/60).round(3) if 'dtc-baseline' in self.df else '-'
+            "tc": (np.trapz(self.tc_df['dtc'], x=self.tc_df['elapsed-time'])/60).round(3),
+            #"tc-baseline": (np.trapz(self.df.loc[0:self.imax,'dtc-baseline'], x=self.df.loc[0:self.imax,'elapsed-time'])/60).round(3) if 'dtc-baseline' in self.df else '-'
             #"tc-baseline": (np.trapz(self.df['dtc-baseline'], x=self.df['elapsed-time'])/60).round(3) if 'dtc-baseline' in self.df else '-'
+            "tc-baseline": (np.trapz(self.tc_df['dtc-baseline'], x=self.tc_df['elapsed-time'])/60).round(3) if 'dtc-baseline' in self.df else '-'
             }
         self.result_units = {
             "date": 'yyyy-mm-dd',
@@ -94,10 +108,17 @@ class Datafile(object):
 
             # calculate the integral of the newly created column
             #self.results["tc-baseline"] = (np.trapz(self.df['dtc-baseline'], x=self.df['elapsed-time'])/60).round(3)
-            self.results["tc-baseline"] = (np.trapz(self.df.loc[0:self.imax,'dtc-baseline'], x=self.df.loc[0:self.imax,'elapsed-time'])/60).round(3)
+            #self.results["tc-baseline"] = (np.trapz(self.df.loc[0:self.imax,'dtc-baseline'], x=self.df.loc[0:self.imax,'elapsed-time'])/60).round(3)
+            self.tc_keys = ['elapsed-time', 'dtc', 'dtc-baseline']
+            if self.tmax == 0:
+                self.tc_df = self.df.loc[:,self.tc_keys]
+            else:
+                self.tc_df = (self.df[(self.df['elapsed-time'] <= self.tmax)])[self.tc_keys]
+            self.results["tc-baseline"] = (np.trapz(self.tc_df['dtc-baseline'], x=self.tc_df['elapsed-time'])/60).round(3)
 
     def create_plot(self, x='elapsed-time', y='dtc', y2='dtc-baseline', style='ggplot', format='pdf', err=False, error_interval = 4, mute = False):
         plt.style.use('ggplot')
+        plot = plt.figure(figsize=(12, 6))
         if err:
             yerr = y + "-sd"
             plt.errorbar(self.df[x], self.df[y], yerr=self.df[yerr], errorevery=error_interval)
@@ -105,7 +126,7 @@ class Datafile(object):
             plt.plot(self.df[x], self.df[y])
             if y2 in self.df:
                 plt.plot(self.df[x], self.df[y2])
-                plt.legend((y2, y3), loc='upper right')
+                plt.legend((y, y2), loc='upper right')
         xlabel = x + ' (' + self.units[self.keys.index(x)] + ')'
         ylabel = y + ' (' + self.units[self.keys.index(y)] + ')'
         plt.title(self.internname)
@@ -115,12 +136,13 @@ class Datafile(object):
         plt.savefig(filename)
         if not mute:
             plt.show()
-        plt.clf()
+        plt.close(plot)
 
     def create_dualplot(self, x='elapsed-time', y1='toven', y2='dtc', y3='dtc-baseline',
                         style='ggplot', format='pdf', y1err=False, y2err=False, error_interval = 4, mute = False):
         plt.style.use('ggplot')
-        
+
+        dualplot = plt.figure(figsize=(12, 6))
         plt.subplot(2,1,1)
         if y1err:
             yerr = y1 + "-sd"
@@ -150,7 +172,7 @@ class Datafile(object):
         plt.savefig(filename)
         if not mute:
             plt.show()
-        plt.clf()
+        plt.close(dualplot)
 
 class ResultsList(object):
     def __init__(self):
@@ -239,6 +261,60 @@ class ResultsList(object):
 
         return df
 
+def box_plot(x, y, units, title, filename, style='ggplot', format='pdf', mute = False, date_format='%Y-%m-%d'):
+    plt.style.use('ggplot')
+
+    # definitions for the axes
+    left, width = 0.06, 0.7
+    bottom, height = 0.1, 0.8
+    spacing = 0.005
+
+    register_matplotlib_converters()
+    x = pd.to_datetime(x, format=date_format)
+    # create a dataframe with 'date' as index for display purposes
+    #join_df = pd.concat([x,y], axis=1)
+    #join_df.set_index('date', inplace=True)
+
+    rect_scatter = [left, bottom, width, height]
+    rect_box = [left + width + spacing, bottom, 1 - (2*left + width + spacing), height]
+
+    # start with a rectangular Figure
+    box = plt.figure("boxplot", figsize=(12, 6))
+
+    ax_scatter = plt.axes(rect_scatter)
+    ax_scatter.tick_params(direction='in', top=True, right=True)
+    ax_box = plt.axes(rect_box)
+    ax_box.tick_params(direction='in', labelleft=False)
+
+    # the scatter plot:
+    ax_scatter.scatter(x, y)
+    #ax_scatter.scatter(join_df.index, join_df)
+    ax_scatter.set(xlabel='date', ylabel=y.name + ' (' + units + ')', title=title)
+
+    # now determine nice limits by hand:
+    binwidth = 0.25
+    lim0 = y.min()
+    lim1 = y.max()
+    extra_space = (lim1 - lim0)/10
+    ax_scatter.set_ylim((lim0-extra_space, lim1+extra_space))
+
+    ax_box.boxplot(y)
+
+    ax_box.set_ylim(ax_scatter.get_ylim())
+
+    filename = filename.replace('.','_') + '_' + y.name + '-boxplot.' + format
+    plt.savefig(filename)
+    if not mute:
+        plt.show()
+    else:
+        plt.close(box)
+
+def get_first(iterable, default=-1):
+    if iterable:
+        for item in iterable:
+            return item
+    return default
+
 def is_date(string, fuzzy=False):
     """
     Return whether the string can be interpreted as a date.
@@ -253,13 +329,13 @@ def is_date(string, fuzzy=False):
     except ValueError:
         return False
 
-def create_baseline_file(files, baseline_path, baseline_file, summary_path):
+def create_baseline_file(files, baseline_path, baseline_file, summary_path, tmax=0):
 
     # create a ResultsList object to hold the event key data
     results = ResultsList()
 
     for f in files:
-        mydata = Datafile(f) # output path is not needed because data will not be plotted
+        mydata = Datafile(f, tmax=tmax) # output path is not needed because data will not be plotted
         results.append_event(mydata)
 
     header = baseline_file + "\nAverage datafile: " + str(len(results.files)) + " entries:" + " ".join(results.files) + "\n"
@@ -273,7 +349,7 @@ def create_baseline_file(files, baseline_path, baseline_file, summary_path):
 
     # write the results table to the summary file and include the stats in file header
     stats_df = generate_df_stats(results.summary)
-    header1 = "Points used for average file:" + baseline_file + "\nSource files:" + " ".join(results.files) + "\n\n"
+    header1 = "Points used for average file:" + baseline_file + ", tmax=" + str(tmax) + "\nSource files:" + " ".join(results.files) + "\n\n"
     header2 = "\n" + ",".join(results.summary_keys) + "\n" + ",".join(results.summary_units) + "\n"
     with open(summary_path, 'w') as f:
         f.write(header1)
@@ -283,6 +359,7 @@ def create_baseline_file(files, baseline_path, baseline_file, summary_path):
         f.close()
 
     print stats_df.head()
+    box_plot(x = results.summary['date'], y = results.summary['tc'], title = 'Baseline data', units = 'ug-C', filename = summary_path)
         
     return filename
 
@@ -319,12 +396,6 @@ if __name__ == "__main__":
     t_parser.add_argument('--no-temperature', dest='tplot', action='store_false',
                             help='only plot delta-TC')
     parser.set_defaults(tplot=True)
-##    fix_parser = parser.add_mutually_exclusive_group(required=False)
-##    fix_parser.add_argument('--fix-co2', dest='fix', action='store_true',
-##                            help='fix the co2-event in the event file')
-##    fix_parser.add_argument('--normal', dest='fix', action='store_false',
-##                            help='leave event-file as is (default)')
-##    parser.set_defaults(fix=False)
     parser.add_argument('--mute-graphs', help='Do not plot the data to screen', action='store_true')
     parser.add_argument('--fix-co2', dest='fix', help='fix the co2-event in the event file', action='store_true')
     
@@ -343,6 +414,7 @@ if __name__ == "__main__":
         baseline_file = eval(config['DATA_ANALYSIS']['BASELINE_FILE'])
         summary_path = eval(config['DATA_ANALYSIS']['SUMMARY_PATH']) + '/'
         summary_file = eval(config['DATA_ANALYSIS']['SUMMARY_FILE'])
+        tmax = eval(config['DATA_ANALYSIS']['INTEGRAL_LENGTH'])
     else:
         events_path   = '~/fatcat-files/data/events/'  # if ini file cannot be found
         output_path   = events_path + 'graph/'
@@ -352,6 +424,7 @@ if __name__ == "__main__":
         baseline_file = 'zero_event.csv'
         summary_path = '~/fatcat-files/data/baseline/'
         summary_file = 'summary_output.csv'
+        tmax = 0
         error_interval = 4
         print >>sys.stderr, 'Could not find the configuration file {0}'.format(config_file)
 
@@ -385,7 +458,7 @@ if __name__ == "__main__":
                 fw.close()
             
     elif args.zero:
-        filename = create_baseline_file(files=args.datafile, baseline_path=baseline_path, baseline_file=baseline_file, summary_path = summary_full_path)
+        filename = create_baseline_file(files=args.datafile, baseline_path=baseline_path, baseline_file=baseline_file, summary_path = summary_full_path, tmax = tmax)
 
         # Reopen newly created file for plotting
         f = open(filename, 'r')
@@ -397,9 +470,12 @@ if __name__ == "__main__":
 
     else:
         for f in args.datafile:
-            mydata = Datafile(f, output_path = output_path)
+            mydata = Datafile(f, output_path = output_path, tmax = tmax)
             if 'dtc' in baseline:
                 mydata.add_baseline(baseline = baseline)
+                box_y = 'tc-baseline'
+            else:
+                box_y = 'tc'
             results.append_event(mydata)
 
             if args.tplot:
@@ -419,5 +495,7 @@ if __name__ == "__main__":
             f.close()
 
         print stats_df.head()
-##        pd.set_option('display.max_rows', None)
         print results.summary.tail(20)
+        
+        filename = summary_path + summary_file.replace('.','_') + '-boxplot.' + plot_format
+        box_plot(results.summary['date']+' '+results.summary['time'], results.summary[box_y], 'ug-C', 'Total Carbon', filename, format=plot_format, date_format='%Y-%m-%d %H:%M:%S')
