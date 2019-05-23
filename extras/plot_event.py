@@ -215,10 +215,15 @@ class ResultsList(object):
 
         # CREATE a DataFrame to hold the final csv data file
         self.df_concat = pd.DataFrame(columns=self.average_keys)
+        self.df_list = []
 
     def append_event(self, datafile):
         self.files.append(datafile.internname)
-        if self.summary.empty: 
+        if self.summary.empty:
+            # update columns if baseline corrected column exists
+            if 'dtc-baseline' in datafile.df:
+                self.average_keys.append('dtc-baseline')
+                self.df_concat = pd.DataFrame(columns=self.average_keys)
             self.summary = pd.DataFrame(columns=datafile.result_keys).append(datafile.results, ignore_index = True)
             self.summary_keys = datafile.result_keys
             for k in self.summary_keys:
@@ -239,6 +244,7 @@ class ResultsList(object):
             subset_df[k] = datafile.df[k]
 
         # concatenate them
+        self.df_list.append(subset_df)
         self.df_concat = pd.concat((self.df_concat, subset_df))
         
         self.n = self.n + 1
