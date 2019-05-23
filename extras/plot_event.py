@@ -123,7 +123,7 @@ class Datafile(object):
                 self.tc_df = (self.df[(self.df['elapsed-time'] <= self.tmax)])[self.tc_keys]
             self.results["tc-baseline"] = (np.trapz(self.tc_df['dtc-baseline'], x=self.tc_df['elapsed-time'])/60).round(3)
 
-    def create_plot(self, x='elapsed-time', y='dtc', y2='dtc-baseline', style='ggplot', format='pdf', err=False, error_interval = 4, mute = False):
+    def create_plot(self, x='elapsed-time', y='dtc', y2='dtc-baseline', style='ggplot', format='svg', err=False, error_interval = 4, mute = False):
         plt.style.use('ggplot')
         plot = plt.figure(figsize=(12, 6))
         if err:
@@ -146,7 +146,7 @@ class Datafile(object):
         plt.close(plot)
 
     def create_dualplot(self, x='elapsed-time', y1='toven', y2='dtc', y3='dtc-baseline',
-                        style='ggplot', format='pdf', y1err=False, y2err=False, error_interval = 4, mute = False):
+                        style='ggplot', format='svg', y1err=False, y2err=False, error_interval = 4, mute = False):
         plt.style.use('ggplot')
 
         dualplot = plt.figure(figsize=(12, 6))
