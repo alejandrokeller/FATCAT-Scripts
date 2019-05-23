@@ -92,10 +92,17 @@ class Datafile(object):
 
     def extract_date(self):
         date = self.internname[:10]
-        if is_date(date):
+        try: 
+            parse(date, fuzzy=False)
             return date
-        else:
+
+        except ValueError:
             return '-'
+        
+##        if is_date(date):
+##            return date
+##        else:
+##            return '-'
 
     def add_baseline(self, baseline):
         if 'dtc' in baseline:
@@ -309,25 +316,19 @@ def box_plot(x, y, units, title, filename, style='ggplot', format='pdf', mute = 
     else:
         plt.close(box)
 
-def get_first(iterable, default=-1):
-    if iterable:
-        for item in iterable:
-            return item
-    return default
-
-def is_date(string, fuzzy=False):
-    """
-    Return whether the string can be interpreted as a date.
-
-    :param string: str, string to check for date
-    :param fuzzy: bool, ignore unknown tokens in string if True
-    """
-    try: 
-        parse(string, fuzzy=fuzzy)
-        return True
-
-    except ValueError:
-        return False
+##def is_date(string, fuzzy=False):
+##    """
+##    Return whether the string can be interpreted as a date.
+##
+##    :param string: str, string to check for date
+##    :param fuzzy: bool, ignore unknown tokens in string if True
+##    """
+##    try: 
+##        parse(string, fuzzy=fuzzy)
+##        return True
+##
+##    except ValueError:
+##        return False
 
 def create_baseline_file(files, baseline_path, baseline_file, summary_path, tmax=0):
 
@@ -498,4 +499,5 @@ if __name__ == "__main__":
         print results.summary.tail(20)
         
         filename = summary_path + summary_file.replace('.','_') + '-boxplot.' + plot_format
-        box_plot(results.summary['date']+' '+results.summary['time'], results.summary[box_y], 'ug-C', 'Total Carbon', filename, format=plot_format, date_format='%Y-%m-%d %H:%M:%S')
+        if results.n > 1:
+            box_plot(results.summary['date']+' '+results.summary['time'], results.summary[box_y], 'ug-C', 'Total Carbon', filename, format=plot_format, date_format='%Y-%m-%d %H:%M:%S')
