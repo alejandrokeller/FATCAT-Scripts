@@ -11,6 +11,8 @@ import pandas as pd
 from pandas.plotting import register_matplotlib_converters
 
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+from matplotlib.ticker import FuncFormatter
 #print(plt.style.available)
 
 class Datafile(object):
@@ -73,11 +75,7 @@ class Datafile(object):
             "runtime": self.df['runtime'][0] if 'runtime' in self.df else '-',
             "co2-base": (self.df['co2'].mean() - self.df['co2-event'].mean()).round(2),
             "maxtemp": max(self.df['toven']),
-            #"tc": (np.trapz(self.df.loc[0:self.imax,'dtc'], x=self.df.loc[0:self.imax,'elapsed-time'])/60).round(3),
-            #"tc": (np.trapz(self.df['dtc'], x=self.df['elapsed-time'])/60).round(3),
             "tc": (np.trapz(self.tc_df['dtc'], x=self.tc_df['elapsed-time'])/60).round(3),
-            #"tc-baseline": (np.trapz(self.df.loc[0:self.imax,'dtc-baseline'], x=self.df.loc[0:self.imax,'elapsed-time'])/60).round(3) if 'dtc-baseline' in self.df else '-'
-            #"tc-baseline": (np.trapz(self.df['dtc-baseline'], x=self.df['elapsed-time'])/60).round(3) if 'dtc-baseline' in self.df else '-'
             "tc-baseline": (np.trapz(self.tc_df['dtc-baseline'], x=self.tc_df['elapsed-time'])/60).round(3) if 'dtc-baseline' in self.df else '-'
             }
         self.result_units = {
@@ -114,8 +112,6 @@ class Datafile(object):
             self.df['dtc-baseline'] = self.df['dtc']-baseline['dtc']
 
             # calculate the integral of the newly created column
-            #self.results["tc-baseline"] = (np.trapz(self.df['dtc-baseline'], x=self.df['elapsed-time'])/60).round(3)
-            #self.results["tc-baseline"] = (np.trapz(self.df.loc[0:self.imax,'dtc-baseline'], x=self.df.loc[0:self.imax,'elapsed-time'])/60).round(3)
             self.tc_keys = ['elapsed-time', 'dtc', 'dtc-baseline']
             if self.tmax == 0:
                 self.tc_df = self.df.loc[:,self.tc_keys]
@@ -287,9 +283,6 @@ def box_plot(x, y, units, title, filename, style='ggplot', format='pdf', mute = 
 
     register_matplotlib_converters()
     x = pd.to_datetime(x, format=date_format)
-    # create a dataframe with 'date' as index for display purposes
-    #join_df = pd.concat([x,y], axis=1)
-    #join_df.set_index('date', inplace=True)
 
     rect_scatter = [left, bottom, width, height]
     rect_box = [left + width + spacing, bottom, 1 - (2*left + width + spacing), height]
@@ -304,14 +297,19 @@ def box_plot(x, y, units, title, filename, style='ggplot', format='pdf', mute = 
 
     # the scatter plot:
     ax_scatter.scatter(x, y)
-    #ax_scatter.scatter(join_df.index, join_df)
     ax_scatter.set(xlabel='date', ylabel=y.name + ' (' + units + ')', title=title)
+    tdelta = x.max() - x.min()
+    my_date_formater(ax_scatter, tdelta)
 
     # now determine nice limits by hand:
     binwidth = 0.25
     lim0 = y.min()
     lim1 = y.max()
+    tlim0 = x.min()
+    tlim1 = x.max()
     extra_space = (lim1 - lim0)/10
+    extra_t = (tlim1 - tlim0)/10
+    ax_scatter.set_xlim((tlim0-extra_t, tlim1+extra_t))
     ax_scatter.set_ylim((lim0-extra_space, lim1+extra_space))
 
     ax_box.boxplot(y)
@@ -387,6 +385,37 @@ def generate_df_stats(mydata):
     stats_df = stats_df.round(2)
     
     return stats_df
+
+def my_date_formater(ax, delta):
+    if delta.days < 3:
+        ax.xaxis.set_major_locator(mdates.DayLocator())
+        ax.xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%y'))
+        ax.xaxis.set_minor_formatter(mdates.DateFormatter('%H:%M'))
+        ax.xaxis.grid(True, which='minor')
+        ax.tick_params(axis="x", which="major", pad=15)
+        if delta.days < 0.75:
+            ax.xaxis.set_minor_locator(mdates.HourLocator())
+        if delta.days < 1:
+            ax.xaxis.set_minor_locator(mdates.HourLocator((0,3,6,9,12,15,18,21,)))
+        else:
+            ax.xaxis.set_minor_locator(mdates.HourLocator((0,6,12,18,)))
+    else:
+        xtick_locator = mdates.AutoDateLocator()
+        xtick_formatter = mdates.AutoDateFormatter(xtick_locator)
+        xtick_formatter.scaled[30.] = FuncFormatter(my_days_format_function)
+        xtick_formatter.scaled[1.] = FuncFormatter(my_days_format_function)
+        ax.xaxis.set_major_locator(xtick_locator)
+        ax.xaxis.set_major_formatter(xtick_formatter)
+        ax.set(xlabel='date')
+
+def my_days_format_function(x, pos=None):
+     x = mdates.num2date(x)
+     if pos == 0:
+         fmt = '%b %d\n%Y'
+     else:
+         fmt = '%b %-d'
+     label = x.strftime(fmt)
+     return label
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Graph generator for fatcat event files.')

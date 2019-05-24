@@ -11,12 +11,10 @@ import pandas as pd
 from pandas.plotting import register_matplotlib_converters
 
 import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from matplotlib.ticker import FuncFormatter
 #print(plt.style.available)
 
-from plot_event import Datafile, ResultsList, generate_df_stats
+from plot_event import Datafile, ResultsList, generate_df_stats, my_date_formater, my_days_format_function
 
 def day_plot(df, df_list, tc_column = 'tc', filename = "day_overview", title = "Day Overview", style='ggplot',
              format='svg', mute = False):
@@ -166,16 +164,18 @@ def simple_day_plot(df, df_list, average_df, tc_column = 'tc', filename = "day_o
         tc_title = "TC - Baseline"
         dtc_column = 'dtc-baseline'
         visible = False
-    ax_tc.plot(x, df[tc_column], '--', x, df[tc_column], 'o')
-    ax_tc.set(xlabel='date/time', ylabel=r'Total Carbon ($\mu$g-C)')
+    tdelta = x.max() - x.min()
+    if tdelta.days < 3:
+        ax_tc.plot(x, df[tc_column], '--', x, df[tc_column], 'o')
+    else:
+        ax_tc.plot(x, df[tc_column], '-')
+    ax_tc.set(xlabel='time/date', ylabel=r'Total Carbon ($\mu$g-C)')
     ax_tc.set_title(tc_title, loc = 'right', verticalalignment = 'top', visible = False)
-    my_date_formater(ax_tc, x.max() - x.min())
+    my_date_formater(ax_tc, tdelta)
     
     # the temp(erature) plot:
-##    Xtemp = df_list[0]['toven']
     Xtemp = average_df['toven']
     Ytemp = df_list[0]['elapsed-time']
-#    ax_temp.plot(Xtemp, Ytemp, '-')
     ax_temp.errorbar(Xtemp, Ytemp, xerr=average_df['toven-sd'], errorevery=4)
     ax_temp.set(xlabel=r'Temperature ($^\circ$C)', ylabel='Time since heating start (s)')
     ax_temp.yaxis.set_label_position("right")
@@ -221,37 +221,6 @@ def simple_day_plot(df, df_list, average_df, tc_column = 'tc', filename = "day_o
         plt.show()
     else:
         plt.close(box)
-
-def my_date_formater(ax, delta):
-    if delta.days < 3:
-        ax.xaxis.set_major_locator(mdates.DayLocator())
-        ax.xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%y'))
-        ax.xaxis.set_minor_formatter(mdates.DateFormatter('%H:%M'))
-        ax.xaxis.grid(True, which='minor')
-        ax.tick_params(axis="x", which="major", pad=15)
-        if delta.days < 0.75:
-            ax.xaxis.set_minor_locator(mdates.HourLocator())
-        if delta.days < 1:
-            ax.xaxis.set_minor_locator(mdates.HourLocator((0,3,6,9,12,15,18,21,)))
-        else:
-            ax.xaxis.set_minor_locator(mdates.HourLocator((0,6,12,18,)))
-    else:
-        xtick_locator = mdates.AutoDateLocator()
-        xtick_formatter = mdates.AutoDateFormatter(xtick_locator)
-        xtick_formatter.scaled[30.] = FuncFormatter(my_days_format_function)
-        xtick_formatter.scaled[1.] = FuncFormatter(my_days_format_function)
-        ax.xaxis.set_major_locator(xtick_locator)
-        ax.xaxis.set_major_formatter(xtick_formatter)
-        ax.set(xlabel='date')
-
-def my_days_format_function(x, pos=None):
-     x = mdates.num2date(x)
-     if pos == 0:
-         fmt = '%b %d\n%Y'
-     else:
-         fmt = '%b %-d'
-     label = x.strftime(fmt)
-     return label
 
 def valid_date(s):
     try:
