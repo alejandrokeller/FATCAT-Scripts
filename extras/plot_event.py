@@ -223,6 +223,9 @@ class ResultsList(object):
             # update columns if baseline corrected column exists
             if 'dtc-baseline' in datafile.df:
                 self.average_keys.append('dtc-baseline')
+                self.sd_keys.append('dtc-baseline' + '-sd')
+                self.all_keys.append('dtc-baseline')
+                self.all_keys.append('dtc-baseline' + '-sd')
                 self.df_concat = pd.DataFrame(columns=self.average_keys)
             self.summary = pd.DataFrame(columns=datafile.result_keys).append(datafile.results, ignore_index = True)
             self.summary_keys = datafile.result_keys

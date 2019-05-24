@@ -13,6 +13,7 @@ from pandas.plotting import register_matplotlib_converters
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from matplotlib.ticker import FuncFormatter
 #print(plt.style.available)
 
 from plot_event import Datafile, ResultsList, generate_df_stats
@@ -30,10 +31,6 @@ def day_plot(df, df_list, tc_column = 'tc', filename = "day_overview", title = "
     register_matplotlib_converters()
     x = df['date']+' '+df['time']
     x = pd.to_datetime(x, format='%Y-%m-%d %H:%M:%S')
-
-    xtick_locator = mdates.AutoDateLocator()
-    xtick_formatter = mdates.AutoDateFormatter(xtick_locator)
-    xtick_formatter.scaled[1.] = '%d %b' # only show day and short month
 
     rect_tc = [left, bottom + 2*(height+ spacing), width, height]
     rect_temp = [left, bottom + height + spacing, width, height]
@@ -67,9 +64,8 @@ def day_plot(df, df_list, tc_column = 'tc', filename = "day_overview", title = "
         dtc_column = 'dtc-baseline'
         visible = False
     ax_tc.plot(x, df[tc_column], '--', x, df[tc_column], 'o')
-    ax_tc.xaxis.set_major_locator(xtick_locator)
-    ax_tc.xaxis.set_major_formatter(xtick_formatter)
-    ax_tc.set(xlabel='date', ylabel=r'Total Carbon ($\mu$g-C)')
+    ax_tc.set(xlabel='time/date', ylabel=r'Total Carbon ($\mu$g-C)')
+    my_date_formater(ax_tc, x.max() - x.min())
     ax_tc.set_title(tc_title, loc = 'right', verticalalignment = 'top', visible = False)
     # the tc boxplot
     ax_box.boxplot(df[tc_column])
@@ -77,16 +73,14 @@ def day_plot(df, df_list, tc_column = 'tc', filename = "day_overview", title = "
     
     # the temp(erature) plot:
     ax_temp.plot(x, df['maxtemp'], '--', x, df['maxtemp'], 'o')
-    ax_temp.xaxis.set_major_locator(xtick_locator)
-    ax_temp.xaxis.set_major_formatter(xtick_formatter)
-    ax_temp.set(xlabel='date', ylabel=r'Temperature ($^\circ$C)')
+    ax_temp.set(xlabel='time/date', ylabel=r'Temperature ($^\circ$C)')
+    my_date_formater(ax_temp, x.max() - x.min())
     ax_temp.set_title("Maximum Temperature", loc = 'right', verticalalignment = 'top', visible = False)
 
     # the co2 plot:
     ax_co2.plot(x, df['co2-base'], '--', x, df['co2-base'], 'o')
-    ax_co2.xaxis.set_major_locator(xtick_locator)
-    ax_co2.xaxis.set_major_formatter(xtick_formatter)
-    ax_co2.set(xlabel='date/time', ylabel=r'CO$_2$ Baseline (ppm)')
+    ax_co2.set(xlabel='time/date', ylabel=r'CO$_2$ Baseline (ppm)')
+    my_date_formater(ax_co2, x.max() - x.min())
     ax_co2.set_title(r'CO$_2$ baseline', loc = 'right', verticalalignment = 'top', visible = False)
 
     # The contourplot
@@ -98,10 +92,9 @@ def day_plot(df, df_list, tc_column = 'tc', filename = "day_overview", title = "
             row.append(df_list[i][dtc_column][j])
         Zcontour.append(row)
     Zcontour = map(list, zip(*Zcontour))
-    ax_contour.xaxis.set_major_locator(xtick_locator)
-    ax_contour.xaxis.set_major_formatter(xtick_formatter)
     cf = ax_contour.contourf(Xcontour, Ycontour, Zcontour)
-    ax_contour.set(xlabel='date/time', ylabel='Time [filter heating] (s)')
+    ax_contour.set(xlabel='time/date', ylabel='Time [filter heating] (s)')
+    my_date_formater(ax_contour, x.max() - x.min())
     overview.colorbar(cf, ax = ax_contour)
     ax_contour.set_title(r'Total Carbon [$\Delta TC$] ($\mu$g-C/minute)')
 
@@ -134,27 +127,22 @@ def day_plot(df, df_list, tc_column = 'tc', filename = "day_overview", title = "
     else:
         plt.close(box)
 
-def simple_day_plot(df, df_list, tc_column = 'tc', filename = "day_overview", title = "Day Overview", style='ggplot',
+def simple_day_plot(df, df_list, average_df, tc_column = 'tc', filename = "day_overview", title = "Day Overview", style='ggplot',
              format='svg', mute = False):
     plt.style.use('ggplot')
 
     # definitions for the axes
     left, width = 0.075, 0.55
     bottom, height = 0.1, 0.27
-    spacing = 0.005
-    contour_spacing = 0.04
+    spacing = 0.02
+    contour_spacing = 0.03
 
     register_matplotlib_converters()
     x = df['date']+' '+df['time']
     x = pd.to_datetime(x, format='%Y-%m-%d %H:%M:%S')
 
-    xtick_locator = mdates.AutoDateLocator()
-    xtick_formatter = mdates.AutoDateFormatter(xtick_locator)
-    xtick_formatter.scaled[1.] = '%d %b' # only show day and short month
-
-    rect_tc = [left, bottom, width*.972, height]
-    rect_box = [left + width + 2*contour_spacing, bottom, (1 - (2*left + width + 2*contour_spacing)), height]
-    rect_temp = [left + width + 2*contour_spacing, bottom + height + contour_spacing, (1 - (2*left + width + 2*contour_spacing)), 0.85*(2*height + spacing)]
+    rect_tc = [left, bottom, width*.971, height]
+    rect_temp = [left + width + contour_spacing + spacing, bottom + height + contour_spacing, (1 - (2*left + width + 2*contour_spacing + spacing)), 0.85*(2*height + spacing)]
     rect_contour = [left, bottom + height + contour_spacing, width, 0.85*(2*height + spacing)]
 
     # start with a rectangular Figure
@@ -165,9 +153,7 @@ def simple_day_plot(df, df_list, tc_column = 'tc', filename = "day_overview", ti
     ax_tc = plt.axes(rect_tc)
     ax_tc.tick_params(direction='in', top=True, right=True)
     ax_temp = plt.axes(rect_temp)
-    ax_temp.tick_params(direction='in', top=True, right=True, labelleft=False, labelbottom=False)
-    ax_box = plt.axes(rect_box)
-    ax_box.tick_params(direction='in', labelleft=False, labelbottom=False)
+    ax_temp.tick_params(direction='in', top=True, right=True, labelleft=False, labelbottom=True, labelright=True)
     ax_contour = plt.axes(rect_contour)
     ax_contour.tick_params(direction='in', labelleft=True, labelbottom=False)
 
@@ -181,22 +167,19 @@ def simple_day_plot(df, df_list, tc_column = 'tc', filename = "day_overview", ti
         dtc_column = 'dtc-baseline'
         visible = False
     ax_tc.plot(x, df[tc_column], '--', x, df[tc_column], 'o')
-    ax_tc.xaxis.set_major_locator(xtick_locator)
-    ax_tc.xaxis.set_major_formatter(xtick_formatter)
-    ax_tc.set(xlabel='date', ylabel=r'Total Carbon ($\mu$g-C)')
+    ax_tc.set(xlabel='date/time', ylabel=r'Total Carbon ($\mu$g-C)')
     ax_tc.set_title(tc_title, loc = 'right', verticalalignment = 'top', visible = False)
-    # the tc boxplot
-    ax_box.boxplot(df[tc_column])
-    ax_box.set_title('TC Box-Plot', loc='right', visible = visible)
+    my_date_formater(ax_tc, x.max() - x.min())
     
     # the temp(erature) plot:
-    Xtemp = df_list[0]['toven']
+##    Xtemp = df_list[0]['toven']
+    Xtemp = average_df['toven']
     Ytemp = df_list[0]['elapsed-time']
-    ax_temp.plot(Xtemp, Ytemp, '-')
-    ax_temp.xaxis.set_major_locator(xtick_locator)
-    ax_temp.xaxis.set_major_formatter(xtick_formatter)
-    ax_temp.set(xlabel=r'Temperature ($^\circ$C)')
-    ax_temp.set_title("Maximum Temperature", loc = 'right', verticalalignment = 'top', visible = False)
+#    ax_temp.plot(Xtemp, Ytemp, '-')
+    ax_temp.errorbar(Xtemp, Ytemp, xerr=average_df['toven-sd'], errorevery=4)
+    ax_temp.set(xlabel=r'Temperature ($^\circ$C)', ylabel='Time since heating start (s)')
+    ax_temp.yaxis.set_label_position("right")
+    ax_temp.set_title("Furnace Temp.")
 
     # The contourplot
     Xcontour, Ycontour = np.meshgrid(x, df_list[0]['elapsed-time'])
@@ -207,17 +190,14 @@ def simple_day_plot(df, df_list, tc_column = 'tc', filename = "day_overview", ti
             row.append(df_list[i][dtc_column][j])
         Zcontour.append(row)
     Zcontour = map(list, zip(*Zcontour))
-    ax_contour.xaxis.set_major_locator(xtick_locator)
-    ax_contour.xaxis.set_major_formatter(xtick_formatter)
     cf = ax_contour.contourf(Xcontour, Ycontour, Zcontour)
-    ax_contour.set(ylabel='Time [filter heating] (s)')
+    ax_contour.set(ylabel='Time since heating start (s)')
     ax_contour.set_title(r'Total Carbon [$\Delta TC$] ($\mu$g-C/minute)')
     # create an axes on the right side of ax. The width of cax will be 5%
     # of ax and the padding between cax and ax will be fixed at contour_spacing inch.
     divider = make_axes_locatable(ax_contour)
     cax = divider.append_axes("right", size="3%", pad=contour_spacing)
     overview.colorbar(cf, cax = cax)
-##    overview.colorbar(cf, ax = ax_contour)
 
     # now determine nice limits by hand:
     lim0 = df[tc_column].min()
@@ -230,10 +210,9 @@ def simple_day_plot(df, df_list, tc_column = 'tc', filename = "day_overview", ti
     extra_space_temp = (templim1 - templim0)/10
     extra_time = datetime.timedelta(minutes=30)
     ax_tc.set_ylim((lim0-extra_space_tc, lim1+extra_space_tc))
-    ax_tc.set_xlim((tlim0-extra_time, tlim1+extra_time))
-    ax_temp.set_xlim((templim0-extra_space_temp, templim1+extra_space_temp))
-##    ax_temp.set_ylim((templim0-extra_space_temp, templim1+extra_space_temp))
-    ax_box.set_ylim(ax_tc.get_ylim())
+    ax_tc.set_xlim((tlim0, tlim1))
+    ax_temp.set_ylim(ax_contour.get_ylim())
+    ax_temp.set_xlim((20, 810))
             
 
     filename = filename.replace('.','_') + '_' + df[tc_column].name + '-simple_day_overview.' + format
@@ -243,6 +222,36 @@ def simple_day_plot(df, df_list, tc_column = 'tc', filename = "day_overview", ti
     else:
         plt.close(box)
 
+def my_date_formater(ax, delta):
+    if delta.days < 3:
+        ax.xaxis.set_major_locator(mdates.DayLocator())
+        ax.xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%y'))
+        ax.xaxis.set_minor_formatter(mdates.DateFormatter('%H:%M'))
+        ax.xaxis.grid(True, which='minor')
+        ax.tick_params(axis="x", which="major", pad=15)
+        if delta.days < 0.75:
+            ax.xaxis.set_minor_locator(mdates.HourLocator())
+        if delta.days < 1:
+            ax.xaxis.set_minor_locator(mdates.HourLocator((0,3,6,9,12,15,18,21,)))
+        else:
+            ax.xaxis.set_minor_locator(mdates.HourLocator((0,6,12,18,)))
+    else:
+        xtick_locator = mdates.AutoDateLocator()
+        xtick_formatter = mdates.AutoDateFormatter(xtick_locator)
+        xtick_formatter.scaled[30.] = FuncFormatter(my_days_format_function)
+        xtick_formatter.scaled[1.] = FuncFormatter(my_days_format_function)
+        ax.xaxis.set_major_locator(xtick_locator)
+        ax.xaxis.set_major_formatter(xtick_formatter)
+        ax.set(xlabel='date')
+
+def my_days_format_function(x, pos=None):
+     x = mdates.num2date(x)
+     if pos == 0:
+         fmt = '%b %d\n%Y'
+     else:
+         fmt = '%b %-d'
+     label = x.strftime(fmt)
+     return label
 
 def valid_date(s):
     try:
@@ -285,6 +294,20 @@ if __name__ == "__main__":
                         dest='START', type=valid_date)
     parser.add_argument("-e", "--enddate", help="The End Date - format YYYY-MM-DD",
                         dest='END', type=valid_date)
+    parser.add_argument('--mute-graphs', help='Do not plot the data to screen', action='store_true')
+    simple_parser = parser.add_mutually_exclusive_group(required=False)
+    simple_parser.add_argument('--skip-simple', dest='simple', action='store_false',
+                            help='do not generate simple overview graph')
+    simple_parser.add_argument('--plot-simple', dest='simple', action='store_true',
+                            help='generate simple overview graph (default)')
+    parser.set_defaults(simple=True)
+    all_parser = parser.add_mutually_exclusive_group(required=False)
+    all_parser.add_argument('--skip-complete', dest='allplots', action='store_false',
+                            help='do not generate complete overview graph (with base CO2, etc. (default)')
+    all_parser.add_argument('--plot-complete', dest='allplots', action='store_true',
+                            help='generate complete overview graph (with base CO2, etc.')
+    parser.set_defaults(allplots=False)
+    
     
     args = parser.parse_args()
 
@@ -327,11 +350,6 @@ if __name__ == "__main__":
     # create a ResultsList object to hold the event key data
     results = ResultsList()
 
-##    # create the list of events
-##    date_str = args.START.strftime('%Y-%m-%d')
-##    filemask = date_str + '-????-eventdata.csv'
-##    print "Searching files: " + filemask
-##    for e in sorted(glob.glob(events_path + filemask)):
     for e in file_list:
         with open(e, 'r') as f:
             mydata = Datafile(f, output_path = output_path, tmax = tmax)
@@ -357,5 +375,11 @@ if __name__ == "__main__":
     print results.summary.tail(20)
 
     # send summary path, figure will append appropriate data
-    simple_day_plot(results.summary, results.df_list, tc_column = tc_column, title = 'Overview: ' + date_range, filename = summary_full_path,
-             format=plot_format)
+    if args.allplots:
+        day_plot(results.summary, results.df_list, tc_column = tc_column, title = 'Overview: ' + date_range, filename = summary_full_path,
+                 format=plot_format, mute = args.mute_graphs)
+    if args.simple:
+        #average_df = results.build_average_df()
+        #print average_df.head()
+        simple_day_plot(results.summary, results.df_list, tc_column = tc_column, title = 'Overview: ' + date_range, filename = summary_full_path,
+                 format=plot_format, mute = args.mute_graphs, average_df = results.build_average_df())
