@@ -343,12 +343,16 @@ if __name__ == "__main__":
     print stats_df.head()
     print results.summary.tail(20)
 
-    # send summary path, figure will append appropriate data
-    if args.allplots:
-        day_plot(results.summary, results.df_list, tc_column = tc_column, title = 'Overview: ' + date_range, filename = summary_full_path,
-                 format=plot_format, mute = args.mute_graphs)
-    if args.simple:
-        #average_df = results.build_average_df()
-        #print average_df.head()
-        simple_day_plot(results.summary, results.df_list, tc_column = tc_column, title = 'Overview: ' + date_range, filename = summary_full_path,
-                 format=plot_format, mute = args.mute_graphs, average_df = results.build_average_df())
+    if len(file_list) > 1:
+        # send summary path, figure will append appropriate data
+        if args.allplots:
+            day_plot(results.summary, results.df_list, tc_column = tc_column, title = 'Overview: ' + date_range, filename = summary_full_path,
+                     format=plot_format, mute = args.mute_graphs)
+        if args.simple:
+            #average_df = results.build_average_df()
+            #print average_df.head()
+            simple_day_plot(results.summary, results.df_list, tc_column = tc_column, title = 'Overview: ' + date_range, filename = summary_full_path,
+                     format=plot_format, mute = args.mute_graphs, average_df = results.build_average_df())
+    else:
+        print "Only one event on that range. Generating simple plot..."
+        mydata.create_dualplot(style=plot_style, format=plot_format, mute = args.mute_graphs)
