@@ -15,6 +15,12 @@ import matplotlib.dates as mdates
 from matplotlib.ticker import FuncFormatter
 #print(plt.style.available)
 
+def replace_in_list(a, old, new):
+    for n, i in enumerate(a):
+        if i == old:
+            a[n] = new
+    return a
+
 class Datafile(object):
     def __init__(self, datafile, output_path = 'data/events/graph/', recalculate_co2 = False, tmax=0): # datafile is a valid filepointer
         
@@ -28,6 +34,11 @@ class Datafile(object):
         self.rawdata    = datafile.readline().rstrip('\n') # second line points to raw data
         self.keys       = datafile.readline().rstrip('\n').replace(" ","").split(',')
         self.units      = datafile.readline().rstrip('\n').replace(" ","").split(',')
+
+        # Use TeX notation :-)
+        self.units = replace_in_list(self.units, 'ug-C', r'$\mu$g-C')
+        self.units = replace_in_list(self.units, 'degC', r'$^\circ$C')
+        self.units = replace_in_list(self.units, 'ug/min', r'$\mu$g-C/min')
 
         datafile.seek(0, 0)
         self.df = pd.read_csv(datafile, header=[2], skiprows=[3])      # loads the datafile
@@ -83,9 +94,9 @@ class Datafile(object):
             "time": 'hh:mm:ss',
             "runtime": 's',
             "co2-base": 'ppm',
-            "maxtemp": 'degC',
-            "tc": 'ug-C',
-            "tc-baseline": 'ug-C'
+            "maxtemp": r'$^\circ$C',
+            "tc": r'$\mu$g-C',
+            "tc-baseline": r'$\mu$g-C'
             }
 
     def extract_date(self):
@@ -277,19 +288,20 @@ def box_plot(x, y, units, title, filename, style='ggplot', format='pdf', mute = 
     plt.style.use('ggplot')
 
     # definitions for the axes
-    #left, width = 0.06, 0.7
-    left, width = 0.06, 0.5
+    left, width = 0.06, 0.7
     bottom, height = 0.1, 0.8
     spacing = 0.005
     box_width = 1 - (2*left + width + spacing)
-    box_width = (box_width - spacing)/2
+##    Histogram version    
+##    left, width = 0.06, 0.5
+##    box_width = (box_width - spacing)/2
 
     register_matplotlib_converters()
     x = pd.to_datetime(x, format=date_format)
 
     rect_scatter = [left, bottom, width, height]
     rect_box = [left + width + spacing, bottom, box_width, height]
-    rect_hist = [left + width + 2*spacing + box_width, bottom, box_width, height]
+##    rect_hist = [left + width + 2*spacing + box_width, bottom, box_width, height]
 
     # start with a rectangular Figure
     box = plt.figure("boxplot", figsize=(12, 6))
@@ -297,9 +309,9 @@ def box_plot(x, y, units, title, filename, style='ggplot', format='pdf', mute = 
     ax_scatter = plt.axes(rect_scatter)
     ax_scatter.tick_params(direction='in', top=True, right=True)
     ax_box = plt.axes(rect_box)
-    ax_box.tick_params(direction='in', labelleft=False)
-    ax_hist = plt.axes(rect_hist)
-    ax_hist.tick_params(direction='in', labelleft=False)
+    ax_box.tick_params(direction='in', labelleft=False, labelbottom=False)
+##    ax_hist = plt.axes(rect_hist)
+##    ax_hist.tick_params(direction='in', labelleft=False)
 
     # the scatter plot:
     ax_scatter.scatter(x, y)
@@ -318,11 +330,16 @@ def box_plot(x, y, units, title, filename, style='ggplot', format='pdf', mute = 
     ax_scatter.set_xlim((tlim0-extra_t, tlim1+extra_t))
     ax_scatter.set_ylim((lim0-extra_space, lim1+extra_space))
 
-    ax_box.boxplot(y)
+    meanpointprops = dict(marker='D')
+    ax_box.boxplot(y, showmeans=True, meanprops=meanpointprops)
     ax_box.set_ylim(ax_scatter.get_ylim())
-    #bins = np.arange(lim0, lim1 + binwidth, binwidth)
-    ax_hist.hist(y, orientation='horizontal')
-    ax_hist.set_ylim(ax_scatter.get_ylim())
+    mu = y.mean()
+    sigma = y.std()
+    text = r'$\mu={},\ \sigma={}$'.format(mu.round(3), sigma.round(3))
+    ax_box.text(1, lim1 + extra_space/2, text, horizontalalignment="center", verticalalignment="center")
+
+##    ax_hist.hist(y, orientation='horizontal')
+##    ax_hist.set_ylim(ax_scatter.get_ylim())
 
     filename = filename.replace('.','_') + '_' + y.name + '-boxplot.' + format
     plt.savefig(filename)
@@ -375,7 +392,7 @@ def create_baseline_file(files, baseline_path, baseline_file, summary_path, tmax
         f.close()
 
     print stats_df.head()
-    box_plot(x = results.summary['date'], y = results.summary['tc'], title = 'Baseline data', units = 'ug-C', filename = summary_path)
+    box_plot(x = results.summary['date'], y = results.summary['tc'], title = 'Baseline data', units = r'$\mu$g-C', filename = summary_path)
         
     return filename
 
@@ -546,4 +563,4 @@ if __name__ == "__main__":
         
         filename = summary_path + summary_file.replace('.','_') + '-boxplot.' + plot_format
         if results.n > 1:
-            box_plot(results.summary['date']+' '+results.summary['time'], results.summary[box_y], 'ug-C', 'Total Carbon', filename, format=plot_format, date_format='%Y-%m-%d %H:%M:%S')
+            box_plot(results.summary['date']+' '+results.summary['time'], results.summary[box_y], r'$\mu$g-C', 'Total Carbon', filename, format=plot_format, date_format='%Y-%m-%d %H:%M:%S')
