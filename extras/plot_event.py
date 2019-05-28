@@ -277,15 +277,19 @@ def box_plot(x, y, units, title, filename, style='ggplot', format='pdf', mute = 
     plt.style.use('ggplot')
 
     # definitions for the axes
-    left, width = 0.06, 0.7
+    #left, width = 0.06, 0.7
+    left, width = 0.06, 0.5
     bottom, height = 0.1, 0.8
     spacing = 0.005
+    box_width = 1 - (2*left + width + spacing)
+    box_width = (box_width - spacing)/2
 
     register_matplotlib_converters()
     x = pd.to_datetime(x, format=date_format)
 
     rect_scatter = [left, bottom, width, height]
-    rect_box = [left + width + spacing, bottom, 1 - (2*left + width + spacing), height]
+    rect_box = [left + width + spacing, bottom, box_width, height]
+    rect_hist = [left + width + 2*spacing + box_width, bottom, box_width, height]
 
     # start with a rectangular Figure
     box = plt.figure("boxplot", figsize=(12, 6))
@@ -294,6 +298,8 @@ def box_plot(x, y, units, title, filename, style='ggplot', format='pdf', mute = 
     ax_scatter.tick_params(direction='in', top=True, right=True)
     ax_box = plt.axes(rect_box)
     ax_box.tick_params(direction='in', labelleft=False)
+    ax_hist = plt.axes(rect_hist)
+    ax_hist.tick_params(direction='in', labelleft=False)
 
     # the scatter plot:
     ax_scatter.scatter(x, y)
@@ -313,8 +319,10 @@ def box_plot(x, y, units, title, filename, style='ggplot', format='pdf', mute = 
     ax_scatter.set_ylim((lim0-extra_space, lim1+extra_space))
 
     ax_box.boxplot(y)
-
     ax_box.set_ylim(ax_scatter.get_ylim())
+    #bins = np.arange(lim0, lim1 + binwidth, binwidth)
+    ax_hist.hist(y, orientation='horizontal')
+    ax_hist.set_ylim(ax_scatter.get_ylim())
 
     filename = filename.replace('.','_') + '_' + y.name + '-boxplot.' + format
     plt.savefig(filename)
