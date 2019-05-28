@@ -13,6 +13,7 @@ from pandas.plotting import register_matplotlib_converters
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib.ticker import FuncFormatter
+import matplotlib.animation as animation
 #print(plt.style.available)
 
 def replace_in_list(a, old, new):
@@ -107,11 +108,6 @@ class Datafile(object):
 
         except ValueError:
             return '-'
-        
-##        if is_date(date):
-##            return date
-##        else:
-##            return '-'
 
     def add_baseline(self, baseline):
         if 'dtc' in baseline:
@@ -284,11 +280,73 @@ class ResultsList(object):
 
         return df
 
-def box_plot(x, y, units, title, filename, style='ggplot', format='pdf', mute = False, date_format='%Y-%m-%d'):
+    def animated_plot(self, x='elapsed-time', y1='toven', y2='dtc', y3='dtc-baseline',
+                        style='ggplot'):
+
+        plt.style.use('ggplot')
+
+        # create a figure with two subplots
+        fig, (ax1, ax2) = plt.subplots(2,1)
+        # intialize two line objects (one in each axes)
+        line1, = ax1.plot([], [])
+        line2, = ax2.plot([], [])
+        line3, = ax2.plot([], [])
+        line = [line1, line2, line3]
+        ax1.tick_params(direction='in', labelbottom=False)
+
+        # the same axes initalizations as before (just now we do it for both of them)
+        # now determine nice limits by hand:
+        limY1min = self.df_concat[y1].min()
+        limY1max = self.df_concat[y1].max()
+        limY2min = self.df_concat[y2].min()
+        limY2max = self.df_concat[y2].max()
+        extra_space1 = (limY1max - limY1min)/10
+        extra_space2 = (limY2max - limY2min)/10
+        ax1.set_ylim(limY1min - extra_space1, limY1max + extra_space1)
+        ax2.set_ylim(limY2min - extra_space2, limY2max + extra_space2)
+        for ax in [ax1, ax2]:
+            ax.set_xlim(self.df_concat[x].min(), self.df_concat[x].max())
+            ax.grid()
+
+        # some formating
+        unity1 = self.all_units[self.all_keys.index(y1)]
+        unity2 = self.all_units[self.all_keys.index(y2)]
+        unitx = self.all_units[self.all_keys.index(x)]
+        ylabel1 = y1 + ' (' + unity1 + ')'
+        ylabel2 = y2 + ' (' + unity2 + ')'
+        xlabel = x + ' (' + unitx + ')'
+        ax1.set_ylabel(ylabel1)
+        ax2.set_ylabel(ylabel2)
+        ax2.set_xlabel(xlabel)
+
+        if y3 in self.df_concat:
+            plt.legend((y2, y3), loc='upper right')
+            show_y3 = True
+
+        def animate(data):
+            i = self.files.index(data)
+            ax1.set_title(data)
+            xdata = self.df_list[i][x]
+            y1data = self.df_list[i][y1]
+            y2data = self.df_list[i][y2]
+            # update the data of both line objects
+            line[0].set_data((xdata, y1data))
+            line[1].set_data((xdata, y2data))
+            if show_y3:
+                y3data = self.df_list[i][y3]
+                line[2].set_data((xdata, y3data))
+
+            return line
+
+        ani = animation.FuncAnimation(fig, animate, frames = self.files, interval=0.5*1000)
+
+        plt.show()
+
+def box_plot(x, y, units, title, filename, style='ggplot', format='pdf', date_format='%Y-%m-%d'):
     plt.style.use('ggplot')
 
     # definitions for the axes
-    left, width = 0.06, 0.7
+    left, width = 0.07, 0.7
     bottom, height = 0.1, 0.8
     spacing = 0.005
     box_width = 1 - (2*left + width + spacing)
@@ -343,10 +401,8 @@ def box_plot(x, y, units, title, filename, style='ggplot', format='pdf', mute = 
 
     filename = filename.replace('.','_') + '_' + y.name + '-boxplot.' + format
     plt.savefig(filename)
-    if not mute:
-        plt.show()
-    else:
-        plt.close(box)
+
+    return box
 
 ##def is_date(string, fuzzy=False):
 ##    """
@@ -424,6 +480,14 @@ def my_date_formater(ax, delta):
             ax.xaxis.set_minor_locator(mdates.HourLocator((0,3,6,9,12,15,18,21,)))
         else:
             ax.xaxis.set_minor_locator(mdates.HourLocator((0,6,12,18,)))
+    elif delta.days < 8:
+        ax.xaxis.set_major_locator(mdates.MonthLocator())
+        ax.xaxis.set_major_formatter(mdates.DateFormatter('%b %Y'))
+        ax.xaxis.set_minor_formatter(mdates.DateFormatter('%a %d'))
+        ax.xaxis.grid(True, which='minor')
+        ax.tick_params(axis="x", which="major", pad=15)
+        ax.xaxis.set_minor_locator(mdates.DayLocator())
+        ax.set(xlabel='date')
     else:
         xtick_locator = mdates.AutoDateLocator()
         xtick_formatter = mdates.AutoDateFormatter(xtick_locator)
@@ -460,7 +524,7 @@ if __name__ == "__main__":
     t_parser.add_argument('--no-temperature', dest='tplot', action='store_false',
                             help='only plot delta-TC')
     parser.set_defaults(tplot=True)
-    parser.add_argument('--mute-graphs', help='Do not plot the data to screen', action='store_true')
+    parser.add_argument('--individual-plots', help='Stop at individual event plots [slow]', action='store_true')
     parser.add_argument('--fix-co2', dest='fix', help='fix the co2-event in the event file', action='store_true')
     
     args = parser.parse_args()
@@ -543,9 +607,9 @@ if __name__ == "__main__":
             results.append_event(mydata)
 
             if args.tplot:
-                mydata.create_dualplot(style=plot_style, format=plot_format, mute = args.mute_graphs)
+                mydata.create_dualplot(style=plot_style, format=plot_format, mute = not args.individual_plots)
             else:
-                mydata.create_plot(style=plot_style, format=plot_format, mute = args.mute_graphs)
+                mydata.create_plot(style=plot_style, format=plot_format, mute = args.individual_plots)
 
         # write the results table to the summary file and include the stats in file header
         stats_df = generate_df_stats(results.summary)
@@ -564,3 +628,4 @@ if __name__ == "__main__":
         filename = summary_path + summary_file.replace('.','_') + '-boxplot.' + plot_format
         if results.n > 1:
             box_plot(results.summary['date']+' '+results.summary['time'], results.summary[box_y], r'$\mu$g-C', 'Total Carbon', filename, format=plot_format, date_format='%Y-%m-%d %H:%M:%S')
+            results.animated_plot()
