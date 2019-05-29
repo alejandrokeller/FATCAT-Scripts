@@ -285,8 +285,12 @@ class ResultsList(object):
 
         plt.style.use('ggplot')
 
+        # definitions for the axes
+        spacing = 0.01
+
         # create a figure with two subplots
         fig, (ax1, ax2) = plt.subplots(2,1)
+        fig.subplots_adjust(wspace=spacing, hspace=spacing)
         # intialize two line objects (one in each axes)
         line1, = ax1.plot([], [])
         line2, = ax2.plot([], [])
