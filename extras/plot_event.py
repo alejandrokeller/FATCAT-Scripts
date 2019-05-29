@@ -600,6 +600,8 @@ if __name__ == "__main__":
         list_of_events = glob.glob(events_path + '*.csv') # * means all if need specific format then *.csv
         latest_event = max(list_of_events, key=os.path.getctime)
         args.datafile = [open(latest_event, 'r')]
+        # show the diagram of the last event (instead of the boxplot and annimation)
+        args.individual_plots = True
 
     # create a ResultsList object to hold the event key data
     results = ResultsList()
