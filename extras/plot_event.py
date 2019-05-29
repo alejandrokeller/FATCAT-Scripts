@@ -127,8 +127,10 @@ class Datafile(object):
             self.results["tc-baseline"] = (np.trapz(self.tc_df['dtc-baseline'], x=self.tc_df['elapsed-time'])/60).round(3)
 
     def create_plot(self, x='elapsed-time', y='dtc', y2='dtc-baseline', style='ggplot', format='svg', err=False, error_interval = 4, mute = False):
+
         plt.style.use('ggplot')
-        plot = plt.figure(figsize=(12, 6))
+
+        plot = plt.figure()
         if err:
             yerr = y + "-sd"
             plt.errorbar(self.df[x], self.df[y], yerr=self.df[yerr], errorevery=error_interval)
@@ -139,6 +141,7 @@ class Datafile(object):
                 plt.legend((y, y2), loc='upper right')
         xlabel = x + ' (' + self.units[self.keys.index(x)] + ')'
         ylabel = y + ' (' + self.units[self.keys.index(y)] + ')'
+        plt.xlim(self.df[x].min(), self.df[x].max())
         plt.title(self.internname)
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
@@ -150,33 +153,57 @@ class Datafile(object):
 
     def create_dualplot(self, x='elapsed-time', y1='toven', y2='dtc', y3='dtc-baseline',
                         style='ggplot', format='svg', y1err=False, y2err=False, error_interval = 4, mute = False):
+
         plt.style.use('ggplot')
 
-        dualplot = plt.figure(figsize=(12, 6))
-        plt.subplot(2,1,1)
+        # definitions for the axes
+        spacing = 0.01
+
+        # create a figure with two subplots
+        dualplot, (ax1, ax2) = plt.subplots(2,1)
+        dualplot.subplots_adjust(wspace=spacing, hspace=spacing)
+        ax1.tick_params(direction='in', labelbottom=False)
+
+        # the same axes initalizations as before (just now we do it for both of them)
+        # now determine nice limits by hand:
+        limY1min = self.df[y1].min()
+        limY1max = self.df[y1].max()
+        limY2min = self.df[y2].min()
+        limY2max = self.df[y2].max()
+        extra_space1 = (limY1max - limY1min)/10
+        extra_space2 = (limY2max - limY2min)/10
+        ax1.set_ylim(limY1min - extra_space1, limY1max + extra_space1)
+        ax2.set_ylim(limY2min - extra_space2, limY2max + extra_space2)
+        for ax in [ax1, ax2]:
+            ax.set_xlim(self.df[x].min(), self.df[x].max())
+
+        # some formating
+        unity1 = self.units[self.keys.index(y1)]
+        unity2 = self.units[self.keys.index(y2)]
+        unitx = self.units[self.keys.index(x)]
+        ylabel1 = y1 + ' (' + unity1 + ')'
+        ylabel2 = y2 + ' (' + unity2 + ')'
+        xlabel = x + ' (' + unitx + ')'
+        ax1.set_ylabel(ylabel1)
+        ax2.set_ylabel(ylabel2)
+        ax2.set_xlabel(xlabel)
+        ax1.set_title(self.internname)
+
         if y1err:
             yerr = y1 + "-sd"
-            plt.errorbar(self.df[x], self.df[y1], yerr=self.df[yerr], errorevery=error_interval)
+            ax1.errorbar(self.df[x], self.df[y1], yerr=self.df[yerr], errorevery=error_interval)
         else:
-            plt.plot(self.df[x], self.df[y1])
-        ylabel = y1 + ' (' + self.units[self.keys.index(y1)] + ')'
-        plt.title(self.internname)
-        plt.ylabel(ylabel)
-        
-        plt.subplot(2,1,2)
+            ax1.plot(self.df[x], self.df[y1])
+
         if y2err:
             yerr = y2 + "-sd"
-            plt.errorbar(self.df[x], self.df[y2], yerr=self.df[yerr], errorevery=error_interval)
+            ax2.errorbar(self.df[x], self.df[y2], yerr=self.df[yerr], errorevery=error_interval)
         else:
             if y2 in self.df:
-                plt.plot(self.df[x], self.df[y2])
+                ax2.plot(self.df[x], self.df[y2])
             if y3 in self.df:
-                plt.plot(self.df[x], self.df[y3])
-                plt.legend((y2, y3), loc='upper right')
-        xlabel = x + ' (' + self.units[self.keys.index(x)] + ')'
-        ylabel = y2 + ' (' + self.units[self.keys.index(y2)] + ')'
-        plt.xlabel(xlabel)
-        plt.ylabel(ylabel)
+                ax2.plot(self.df[x], self.df[y3])
+                ax2.legend((y2, y3), loc='upper right')
 
         filename = self.outputDir + self.internname.replace('.','_') + '_' + y1 + '_' + y2 + '.' + format
         plt.savefig(filename)
@@ -310,7 +337,6 @@ class ResultsList(object):
         ax2.set_ylim(limY2min - extra_space2, limY2max + extra_space2)
         for ax in [ax1, ax2]:
             ax.set_xlim(self.df_concat[x].min(), self.df_concat[x].max())
-            ax.grid()
 
         # some formating
         unity1 = self.all_units[self.all_keys.index(y1)]
@@ -324,7 +350,7 @@ class ResultsList(object):
         ax2.set_xlabel(xlabel)
 
         if y3 in self.df_concat:
-            plt.legend((y2, y3), loc='upper right')
+            ax2.legend((y2, y3), loc='upper right')
             show_y3 = True
 
         def animate(data):
@@ -350,10 +376,10 @@ def box_plot(x, y, units, title, filename, style='ggplot', format='pdf', date_fo
     plt.style.use('ggplot')
 
     # definitions for the axes
-    left, width = 0.07, 0.7
-    bottom, height = 0.1, 0.8
+    left, width = 0.1, 0.7
+    bottom, height = 0.15, 0.75
     spacing = 0.005
-    box_width = 1 - (2*left + width + spacing)
+    box_width = 1 - (1.5*left + width + spacing)
 ##    Histogram version    
 ##    left, width = 0.06, 0.5
 ##    box_width = (box_width - spacing)/2
@@ -613,7 +639,7 @@ if __name__ == "__main__":
             if args.tplot:
                 mydata.create_dualplot(style=plot_style, format=plot_format, mute = not args.individual_plots)
             else:
-                mydata.create_plot(style=plot_style, format=plot_format, mute = args.individual_plots)
+                mydata.create_plot(style=plot_style, format=plot_format, mute = not args.individual_plots)
 
         # write the results table to the summary file and include the stats in file header
         stats_df = generate_df_stats(results.summary)
