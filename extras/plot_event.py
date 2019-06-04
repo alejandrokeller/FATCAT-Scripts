@@ -596,12 +596,11 @@ if __name__ == "__main__":
     else:
         baseline = pd.DataFrame()
 
+    # Get the last event if none is given
     if not args.datafile:
         list_of_events = glob.glob(events_path + '*.csv') # * means all if need specific format then *.csv
         latest_event = max(list_of_events, key=os.path.getctime)
         args.datafile = [open(latest_event, 'r')]
-        # show the diagram of the last event (instead of the boxplot and annimation)
-        args.individual_plots = True
 
     # create a ResultsList object to hold the event key data
     results = ResultsList()
@@ -629,6 +628,9 @@ if __name__ == "__main__":
             mydata.create_plot(style=plot_style, format=plot_format, err=True, error_interval = error_interval)
 
     else:
+        # if only one file, then show the diagram per default
+        if len(args.datafile) == 1:
+               args.individual_plots = True
         for f in args.datafile:
             mydata = Datafile(f, output_path = output_path, tmax = tmax)
             if 'dtc' in baseline:
