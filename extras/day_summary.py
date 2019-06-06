@@ -17,7 +17,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from plot_event import Datafile, ResultsList, generate_df_stats, my_date_formater, my_days_format_function
 
 def day_plot(df, df_list, tc_column = 'tc', filename = "day_overview", title = "Day Overview", style='ggplot',
-             format='svg', mute = False):
+             format='svg'):
     plt.style.use('ggplot')
 
     # definitions for the axes
@@ -37,9 +37,9 @@ def day_plot(df, df_list, tc_column = 'tc', filename = "day_overview", title = "
     rect_contour = [left + width + 2*contour_spacing, bottom, 1 - (2*left + width + contour_spacing), 2*height + spacing - contour_spacing]
 
     # start with a rectangular Figure
-    overview = plt.figure(title, figsize=(14, 7))
+    complete_overview = plt.figure(title, figsize=(14, 7))
 
-    overview.suptitle(title, fontsize=16)
+    complete_overview.suptitle(title, fontsize=16)
 
     ax_tc = plt.axes(rect_tc)
     ax_tc.tick_params(direction='in', top=True, right=True, labelbottom=False)
@@ -64,6 +64,7 @@ def day_plot(df, df_list, tc_column = 'tc', filename = "day_overview", title = "
     ax_tc.plot(x, df[tc_column], '--', x, df[tc_column], 'o')
     ax_tc.set(xlabel='time/date', ylabel=r'Total Carbon ($\mu$g-C)')
     my_date_formater(ax_tc, x.max() - x.min())
+    ax_tc.get_xaxis().set_visible(False)
     ax_tc.set_title(tc_title, loc = 'right', verticalalignment = 'top', visible = False)
     # the tc boxplot
     ax_box.boxplot(df[tc_column])
@@ -73,6 +74,7 @@ def day_plot(df, df_list, tc_column = 'tc', filename = "day_overview", title = "
     ax_temp.plot(x, df['maxtemp'], '--', x, df['maxtemp'], 'o')
     ax_temp.set(xlabel='time/date', ylabel=r'Temperature ($^\circ$C)')
     my_date_formater(ax_temp, x.max() - x.min())
+    ax_temp.get_xaxis().set_visible(False)
     ax_temp.set_title("Maximum Temperature", loc = 'right', verticalalignment = 'top', visible = False)
 
     # the co2 plot:
@@ -93,7 +95,7 @@ def day_plot(df, df_list, tc_column = 'tc', filename = "day_overview", title = "
     cf = ax_contour.contourf(Xcontour, Ycontour, Zcontour)
     ax_contour.set(xlabel='time/date', ylabel='Time [filter heating] (s)')
     my_date_formater(ax_contour, x.max() - x.min())
-    overview.colorbar(cf, ax = ax_contour)
+    complete_overview.colorbar(cf, ax = ax_contour)
     ax_contour.set_title(r'Total Carbon [$\Delta TC$] ($\mu$g-C/minute)')
 
     # now determine nice limits by hand:
@@ -120,13 +122,11 @@ def day_plot(df, df_list, tc_column = 'tc', filename = "day_overview", title = "
 
     filename = filename.replace('.','_') + '_' + df[tc_column].name + '-day_overview.' + format
     plt.savefig(filename)
-    if not mute:
-        plt.show()
-    else:
-        plt.close(box)
+
+    return complete_overview
 
 def simple_day_plot(df, df_list, average_df, tc_column = 'tc', filename = "day_overview", title = "Day Overview", style='ggplot',
-             format='svg', mute = False):
+             format='svg'):
     plt.style.use('ggplot')
 
     # definitions for the axes
@@ -217,10 +217,8 @@ def simple_day_plot(df, df_list, average_df, tc_column = 'tc', filename = "day_o
 
     filename = filename.replace('.','_') + '_' + df[tc_column].name + '-simple_day_overview.' + format
     plt.savefig(filename)
-    if not mute:
-        plt.show()
-    else:
-        plt.close(box)
+
+    return overview
 
 def valid_date(s):
     try:
@@ -346,13 +344,17 @@ if __name__ == "__main__":
     if len(file_list) > 1:
         # send summary path, figure will append appropriate data
         if args.allplots:
-            day_plot(results.summary, results.df_list, tc_column = tc_column, title = 'Overview: ' + date_range, filename = summary_full_path,
-                     format=plot_format, mute = args.mute_graphs)
+            overview = day_plot(results.summary, results.df_list, tc_column = tc_column, title = date_range, filename = summary_full_path,
+                     format=plot_format)
+            if args.mute_graphs:
+                plt.close(overview)
         if args.simple:
-            #average_df = results.build_average_df()
-            #print average_df.head()
-            simple_day_plot(results.summary, results.df_list, tc_column = tc_column, title = 'Overview: ' + date_range, filename = summary_full_path,
-                     format=plot_format, mute = args.mute_graphs, average_df = results.build_average_df())
+            simple_overview = simple_day_plot(results.summary, results.df_list, tc_column = tc_column, title = 'Overview ' + date_range, filename = summary_full_path,
+                     format=plot_format, average_df = results.build_average_df())
+            if args.mute_graphs:
+                plt.close(simple_overview)
+        if args.allplots or args.simple:
+            plt.show()
     else:
         print "Only one event on that range. Generating simple plot..."
         mydata.create_dualplot(style=plot_style, format=plot_format, mute = args.mute_graphs)
