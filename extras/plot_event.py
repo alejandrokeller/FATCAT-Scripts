@@ -372,7 +372,7 @@ class ResultsList(object):
 
         plt.show()
 
-def box_plot(x, y, units, title, filename, style='ggplot', format='pdf', date_format='%Y-%m-%d'):
+def box_plot(x, y, units, title, filename, style='ggplot', format='svg', date_format='%Y-%m-%d'):
     plt.style.use('ggplot')
 
     # definitions for the axes
@@ -478,7 +478,7 @@ def create_baseline_file(files, baseline_path, baseline_file, summary_path, tmax
         f.close()
 
     print stats_df.head()
-    box_plot(x = results.summary['date'], y = results.summary['tc'], title = 'Baseline data', units = r'$\mu$g-C', filename = summary_path)
+    box_plot(x = results.summary['date'], y = results.summary['tc'], title = 'Baseline data', units = r'$\mu$g-C', filename = filename)
         
     return filename
 
