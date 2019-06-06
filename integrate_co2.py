@@ -346,11 +346,11 @@ class Datafile(object):
        elapsedTime = self.fileData.runtime[i0] - self.results.runtime[eventIndex]
        j = 0
        while elapsedTime <= self.datalength and i1 < self.numSamples - 1:
+           i1 += 1
            elapsedTime = self.fileData.runtime[i1] - self.results.runtime[eventIndex]
            # search for index 
            if elapsedTime <= self.integrallength:
                j += 1
-           i1 += 1
        else:
            if elapsedTime <= self.datalength and i1 == self.numSamples - 1:
                print >>sys.stderr, 'End of file reachead while integrating last event ({0})!'.format(self.eventDaytime[eventIndex])
