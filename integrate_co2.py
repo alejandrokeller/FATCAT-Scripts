@@ -30,7 +30,7 @@ class EventError(Exception):
         return repr(self.value)
 
 class Datafile(object):
-    def __init__(self, datafile, events_path = 'data/events/', integral_length = 630): # datafile is a valid filepointer
+    def __init__(self, datafile, events_path = 'data/events/', integral_length = 65, data_length = 120): # datafile is a valid filepointer
 
         #init data structure
         self.datastring = ""
@@ -63,8 +63,9 @@ class Datafile(object):
         self.results     = self.results._replace(**{"index":events})
         print >>sys.stderr, '{0} lines of data.\n{1} event(s) found at index(es): {2}'.format(self.numSamples, len(self.results.index), self.results.index)
 
-        self.baselinelength    =   5 # time for baseline calculation in seconds
-        self.integrationlength = integral_length # length of integration in seconds
+        self.baselinelength    = 5               # time for baseline calculation in seconds
+        self.datalength        = data_length     # seconds of data for event file
+        self.integrallength = integral_length # length of integration in seconds
         #self.uploadDelay       =   5 # seconds to wait between each db insert command
 
         self.filekeys = [
@@ -343,11 +344,15 @@ class Datafile(object):
        i0 = int(self.results.index[eventIndex])
        i1 = i0
        elapsedTime = self.fileData.runtime[i0] - self.results.runtime[eventIndex]
-       while elapsedTime <= self.integrationlength and i1 < self.numSamples - 1:
-           i1 += 1
+       j = 0
+       while elapsedTime <= self.datalength and i1 < self.numSamples - 1:
            elapsedTime = self.fileData.runtime[i1] - self.results.runtime[eventIndex]
+           # search for index 
+           if elapsedTime <= self.integrallength:
+               j += 1
+           i1 += 1
        else:
-           if elapsedTime <= self.integrationlength and i1 == self.numSamples - 1:
+           if elapsedTime <= self.datalength and i1 == self.numSamples - 1:
                print >>sys.stderr, 'End of file reachead while integrating last event ({0})!'.format(self.eventDaytime[eventIndex])
            i1 -= 1
 
@@ -355,9 +360,12 @@ class Datafile(object):
        runtime = self.fileData.runtime[i0:i1]
        flow    = self.fileData.flow[i0:i1]
        #deltatc  = co2*np.mean(flow)*ppmtoug        ### Evaluate TC using the average flow
-       deltatc  = co2*flow*ppmtoug                 ### Evaluate TC using real time flow (noise about 2-4%)
+       deltatc  = co2*flow*ppmtoug                 ### Evaluate TC using real time flow
+       integral_y = deltatc[:j]
+       integral_x = runtime[:j]
        #tc_s = simps(deltatc, runtime)/60           ### Integrate using simpson's rule
-       tc_t = np.trapz(deltatc, x=runtime)/60      ### Integrate using trapezoidal rule
+       #tc_t = np.trapz(deltatc, x=runtime)/60      ### Integrate using trapezoidal rule
+       tc_t = np.trapz(integral_y, x=integral_x)/60 ### Integrate using trapezoidal rule
 
        co2 = co2.round(3)
        deltatc = deltatc.round(3)
@@ -489,6 +497,20 @@ class Datafile(object):
 
 if __name__ == "__main__":
 
+    #config_file = args.INI
+    config_file = 'config.ini'
+    if os.path.exists(config_file):
+        config = configparser.ConfigParser()
+        config.read(config_file)
+        events_path = eval(config['GENERAL_SETTINGS']['EVENTS_PATH']) + '/'
+        data_length = eval(config['DATA_ANALYSIS']['EVENT_LENGTH'])
+        integral_length = eval(config['DATA_ANALYSIS']['INTEGRAL_LENGTH'])
+    else:
+        events_path = './data/events/'  # if ini file cannot be found
+        data_length = 120
+        integral_length = 65
+        print >>sys.stderr, 'Could not find the configuration file {0}'.format(config_file)
+
     parser = argparse.ArgumentParser(description='Process FatCat datafiles.')
     parser.add_argument('datafile', metavar='file', type=argparse.FileType('r'),
                     nargs='?', default="extras/SampleData.txt",
@@ -515,10 +537,12 @@ if __name__ == "__main__":
                     help='Use this date for the generated result table (DATE=Today if omitted). Format: YYYY-MM-DD')
     parser.add_argument('--startindex', required=False, dest='istart', type=int,
                     help='Use this if you want to start uploading data at an index other than the first (i.e. i>0). This option is for errors in the uploading process')
-    parser.add_argument('--inifile', required=False, dest='INI', default='config.ini',
-                    help='Path to configuration file (config.ini if omitted)')
-    parser.add_argument('--intlength', dest='intlength', type=int, default=630,
-                    help='Set the length of the integration time in seconds (default 630s)')
+#    parser.add_argument('--inifile', required=False, dest='INI', default='config.ini',
+#                    help='Path to configuration file (config.ini if omitted)')
+    parser.add_argument('--intlength', dest='intlength', type=int, default=integral_length,
+                    help='Set the length of the integration time in seconds. Must be shorter than data length (default {}s)'.format(integral_length))
+    parser.add_argument('--datalength', dest='datalength', type=int, default=data_length,
+                    help='Set the length of the integration time in seconds (default {}s)'.format(data_length))
 
     args = parser.parse_args()
 
@@ -533,23 +557,16 @@ if __name__ == "__main__":
     else:
         startIndex = 0
         
-    if args.intlength:
-        integral_length = args.intlength
-    else:
-        integral_length = 630
-
-    config_file = args.INI
-    if os.path.exists(config_file):
-        config = configparser.ConfigParser()
-        config.read(config_file)
-        events_path = eval(config['GENERAL_SETTINGS']['EVENTS_PATH']) + '/'
-    else:
-        events_path = './data/events/'  # if ini file cannot be found
-        print >>sys.stderr, 'Could not find the configuration file {0}'.format(config_file)
+#    if args.intlength:
+#        integral_length = args.intlength
+#    else:
+#        integral_length = 630
+    integral_length = args.intlength
+    data_length = args.datalength
 
 
     with args.datafile as file:
-        mydata = Datafile(file, events_path=events_path, integral_length = integral_length)
+        mydata = Datafile(file, events_path=events_path, integral_length = integral_length, data_length = data_length)
 
         try:
             if args.all:
