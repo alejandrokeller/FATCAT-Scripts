@@ -46,8 +46,7 @@ if __name__ == "__main__":
     
     
     device.open_port()
-    for q in queries:
-        device.send_command(q)
+    device.send_commands(queries)
     ser.close_port()
 
     print >>sys.stderr, "bye..."
