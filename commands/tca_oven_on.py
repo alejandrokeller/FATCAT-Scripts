@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import time, sys
+import sys
 
 sys.path.append('../extras/')
 from instrument import instrument
