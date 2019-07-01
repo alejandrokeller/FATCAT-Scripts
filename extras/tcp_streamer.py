@@ -8,7 +8,7 @@ import configparser
 
 sys.path.append('../')
 
-from tcp_interface_class import send_string
+from gui import send_string
 
 # READ ini file
 config_file = '../config.ini'
@@ -39,7 +39,7 @@ for line in fi:
        # Send data
        #sock = send_string(line, server_address, sock)
        sock = send_string(datastring, server_address, sock)
-       time.sleep(0.25)
+       time.sleep(0.5)
    else:
        i += 1
 fi.close()
