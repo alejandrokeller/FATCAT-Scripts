@@ -12,4 +12,4 @@ from instrument import instrument
 config_file = 'config.ini'
 device = instrument(config_file)
 
-print device.serial_ports(port_name)
+print device.serial_ports()
