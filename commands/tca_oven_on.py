@@ -1,11 +1,13 @@
 #!/usr/bin/env python
+import time, sys
 
-execfile("../extras/tca.py")
+sys.path.append('../extras/')
+from instrument import instrument
 
-ser = open_tca_port(read_serial_port_name(config_file = '../config.ini'))
+config_file = '../config.ini'
+device = instrument(config_file)
 
-timestamp = time.strftime("%y.%m.%d-%H:%M:%S ")
-print timestamp + "Turning induction oven on..."
+device.log_message("COMMANDS", "Turning induction oven on...")
+device.send_commands(['O1000'], open_port = True)
 
-ser.write('O1000')
 
