@@ -12,15 +12,16 @@ import sys, os
 import ast # for datastring parsing
 import numpy as np
 import configparser
+from functools import partial # function mapping
+
+import pandas as pd
 
 import time
 import serial
 import serial.tools.list_ports
 
 sys.path.append('./extras/')
-from tca import serial_ports
-from tca import open_tca_port
-
+from instrument import instrument
 
 from collections import namedtuple
 
@@ -33,6 +34,10 @@ def hex2bin(s):
     for i in range(len(s)):
         bits += hex_table[int(s[i], base=16)]
     return bits
+
+### map function for propper parameter convertion
+def apply(f,a):
+    return f(a)
 
 def send_string(line, server_address, sock = 0):
     # Sends a string to through a TCP socket
@@ -56,11 +61,11 @@ def send_string(line, server_address, sock = 0):
     return sock
 
 class Visualizer(object):
-    def __init__(self, host_name='localhost', port_name='nano-TD'):
-
+    def __init__(self, host_name='localhost', host_port=10000):
+        
         # init socket
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # Create a TCP/IP socket
-        self.server_address = (host_name, 10000)
+        self.server_address = (host_name, host_port)
         print >>sys.stderr, 'starting up on %s port %s' % self.server_address
         self.sock.bind(self.server_address) # Bind the socket to the port
         self.sock.listen(1) # Listen for incoming connections
@@ -68,8 +73,8 @@ class Visualizer(object):
         self.connection, self.client_address = self.sock.accept() # Wait for a connection
         print >>sys.stderr, 'connection from', self.client_address
 
-        # other variables
-        self.serial_port_description = port_name
+###        self.device = instrument(config_file = config_file)
+        self.device = instrument()
 
         # init pyqt
         self.app = QtGui.QApplication([])
@@ -82,6 +87,7 @@ class Visualizer(object):
         #init data structure
         self.numSamples = 1200
         self.datastring = ""
+        self.deltaT = 0.5 # s, sampling time
 
         self.keys = [
             "runtime",
@@ -91,31 +97,81 @@ class Visualizer(object):
             "tcoil",
             "spband",
             "tband",
-            "spcat",
+            "eflow",
             "tcat",
             "tco2",
             "pco2",
             "co2",
             "flow",
             "curr",
-            "countdown"]
-        self.tcaData = namedtuple("tcaData", self.keys)
-        self.units = self.tcaData(
-            "s",    # runtime
-            "°C",   # spoven
-            "°C",   # toven
-            "°C",   # spcoil
-            "°C",   # tcoil
-            "°C",   # spband
-            "°C",   # tband
-            "°C",   # spcat
-            "°C",   # tcat
-            "°C",   # tco2
-            "kPa",  # pco2
-            "ppm",  # co2
-            "lpm",  # flow
-            "A",    # current
-            "S")    # countdown
+            "countdown",
+            "status",
+            "co2abs",
+            "h2o",
+            "h2oabs",
+            "rawco2",
+            "rawco2ref",
+            "rawh2o",
+            "rawh2oref"
+            ]
+        self.functions = [
+            float,  # runtime
+            int,    # spoven
+            float,  # toven
+            int,    # spcoil
+            float,  # tcoil
+            int,    # spband
+            float,  # tband
+            float,  # sflow
+            float,  # tcat
+            float,  # tco2
+            float,  # pco2
+            float,  # co2
+            float,  # flow
+            float,  # current
+            int,    # countdown
+            hex2bin,# status
+            float,  # co2abs
+            float,  # h2o
+            float,  # h2oabs
+            int,    # rawco2
+            int,    # rawco2ref
+            int,    # rawh2o
+            int     # rawh2oref
+            ]
+        
+        self.units = [
+            "s",        # runtime
+            "°C",       # spoven
+            "°C",       # toven
+            "°C",       # spcoil
+            "°C",       # tcoil
+            "°C",       # spband
+            "°C",       # tband
+            "lpm",      # sflow
+            "°C",       # tcat
+            "°C",       # tco2
+            "kPa",      # pco2
+            "ppm",      # co2
+            "lpm",      # flow
+            "A",        # current
+            "S",        # countdown
+            "-",        # status
+            "- [absorption]",   # co2abs
+            "mmol/mol", # h2o
+            "- [absorption]",   # h2oabs
+            "- [raw]",  # rawco2
+            "- [raw]",  # rawco2ref
+            "- [raw]",  # rawh2o
+            "- [raw]"   # rawh2oref
+            ]
+
+        self.unitsDict = dict(zip(self.keys, self.units))
+        self.df = pd.DataFrame(columns=self.keys)
+        zeroDict = dict(zip(self.keys,
+                       map(partial(apply, a="0"), self.functions)
+                       ))
+        self.df = self.df.append([zeroDict]*self.numSamples,ignore_index=True)
             
         self.statusKeys = [
             "valve",
@@ -126,13 +182,16 @@ class Visualizer(object):
             "licor",
             "res2",
             "res"]
-        self.statusData = namedtuple("statusData", self.statusKeys)
-
-        self.streamVarsData = self.tcaData._make(np.zeros((np.shape(self.keys)[0],self.numSamples)))
-        self.statusVarsData = self.statusData._make(np.zeros((np.shape(self.statusKeys)[0],self.numSamples)))
+        
+#        self.statusData = namedtuple("statusData", self.statusKeys)
+#        self.statusVarsData = self.statusData._make(np.zeros((np.shape(self.statusKeys)[0],self.numSamples)))
+        
+#        self.statusDf = pd.DataFrame(np.zeros(shape = (self.numSamples,len(self.statusKeys))), columns = self.statusKeys)
+        self.statusDict = {}
+        for k in self.statusKeys:
+            self.statusDict[k] = 0
 
         # setup plots
-        self.deltaT = 0.5 # s, sampling time
         self.pen = pg.mkPen('y', width=1)
         self.t = np.linspace(-self.deltaT*self.numSamples, 0, self.numSamples)
 
@@ -145,14 +204,13 @@ class Visualizer(object):
         self.Tplot.setLabel('left', "Temperature", units='°C')
         self.Tplot.setLabel('bottom', "t", units='s')
         self.Tplot.showGrid(False, True)
-        self.Tcurves[0] = self.Tplot.plot(self.t, self.streamVarsData.spoven, pen=pg.mkPen('y', width=1, style=QtCore.Qt.DashLine))
-        self.Tcurves[1] = self.Tplot.plot(self.t, self.streamVarsData.toven, pen=pg.mkPen('y', width=1), name='Oven')
-        self.Tcurves[2] = self.Tplot.plot(self.t, self.streamVarsData.spcoil, pen=pg.mkPen('r', width=1, style=QtCore.Qt.DashLine))
-        self.Tcurves[3] = self.Tplot.plot(self.t, self.streamVarsData.tcoil, pen=pg.mkPen('r', width=1), name='Coil')
-        self.Tcurves[4] = self.Tplot.plot(self.t, self.streamVarsData.spband, pen=pg.mkPen('b', width=1, style=QtCore.Qt.DashLine))
-        self.Tcurves[5] = self.Tplot.plot(self.t, self.streamVarsData.tband, pen=pg.mkPen('b', width=1), name='Band')
-        self.Tcurves[6] = self.Tplot.plot(self.t, self.streamVarsData.spcat, pen=pg.mkPen('g', width=1, style=QtCore.Qt.DashLine))
-        self.Tcurves[7] = self.Tplot.plot(self.t, self.streamVarsData.tcat, pen=pg.mkPen('g', width=1), name='Cat')
+        self.Tcurves[0] = self.Tplot.plot(self.t, self.df['spoven'], pen=pg.mkPen('y', width=1, style=QtCore.Qt.DashLine))
+        self.Tcurves[1] = self.Tplot.plot(self.t, self.df['toven'], pen=pg.mkPen('y', width=1), name='Oven')
+        self.Tcurves[2] = self.Tplot.plot(self.t, self.df['spcoil'], pen=pg.mkPen('r', width=1, style=QtCore.Qt.DashLine))
+        self.Tcurves[3] = self.Tplot.plot(self.t, self.df['tcoil'], pen=pg.mkPen('r', width=1), name='Coil')
+        self.Tcurves[4] = self.Tplot.plot(self.t, self.df['spband'], pen=pg.mkPen('b', width=1, style=QtCore.Qt.DashLine))
+        self.Tcurves[5] = self.Tplot.plot(self.t, self.df['tband'], pen=pg.mkPen('b', width=1), name='Band')
+        self.Tcurves[6] = self.Tplot.plot(self.t, self.df['tcat'], pen=pg.mkPen('g', width=1), name='Cat')
 #        self.win.nextRow()
 
         self.Pcurves = dict()
@@ -163,7 +221,7 @@ class Visualizer(object):
         self.Pplot.setLabel('left', "CO2 Press.", units='kPa')
         self.Pplot.setLabel('bottom', "t", units='s')
         self.Pplot.showGrid(False, True)
-        self.Pcurves[0] = self.Pplot.plot(self.t, self.streamVarsData.pco2, pen=pg.mkPen('y', width=1))
+        self.Pcurves[0] = self.Pplot.plot(self.t, self.df['pco2'], pen=pg.mkPen('y', width=1))
 #        self.win.nextRow()
 
         self.Ccurves = dict()
@@ -174,18 +232,20 @@ class Visualizer(object):
         self.Cplot.setLabel('left', "CO2", units='ppm')
         self.Cplot.setLabel('bottom', "t", units='s')
         self.Cplot.showGrid(False, True)
-        self.Ccurves[0] = self.Cplot.plot(self.t, self.streamVarsData.co2, pen=pg.mkPen('y', width=1))
+        self.Ccurves[0] = self.Cplot.plot(self.t, self.df['co2'], pen=pg.mkPen('y', width=1))
 #        self.win.nextRow()
 
         self.Fcurves = dict()
 
 ###        self.Fplot = self.win.addPlot(row=4, col=0, title="")
         self.Fplot = pg.PlotWidget()
-        self.Fplot.setRange(yRange=[0, 2])
+        self.Fplot.addLegend()
+        self.Fplot.setRange(yRange=[0, 10])
         self.Fplot.setLabel('left', "Flow", units='lpm')
         self.Fplot.setLabel('bottom', "t", units='s')
         self.Fplot.showGrid(False, True)
-        self.Fcurves[0] = self.Fplot.plot(self.t, self.streamVarsData.flow, pen=pg.mkPen('y', width=1))
+        self.Fcurves[0] = self.Fplot.plot(self.t, self.df['flow'], pen=pg.mkPen('y', width=1), name='Intern')
+        self.Fcurves[1] = self.Fplot.plot(self.t, self.df['flow'], pen=pg.mkPen('r', width=1), name='Extern')
 #        self.win.nextRow()
 
 #####################################################################
@@ -291,116 +351,136 @@ class Visualizer(object):
             self.datastring = self.connection.recv(1024)
 
             if self.datastring:
-##                self.daytime, self.datastring = self.datastring.split('\t', 1)
                 ####### syntax changed for the status byte... ignore
                 ####### additional variables at the end
-                # self.datavector = [ast.literal_eval(s) for s in self.datastring.split( )]
-                i = 0
-                self.datavector = []
-                for s in self.datastring.split( ):
-                    if i < len(self.keys):
-                         #### use this values als integers
-                         self.datavector.append(ast.literal_eval(s))
-                    else:
-                        try:
-                             #### transcode the last value from hex to a binary array
-                             self.statusbyte = hex2bin(s)
-                             j = 0
-                             #### now store it in the status variables
-                             for k in self.statusKeys:
-                                 self.tempArray = np.roll(self.statusVarsData[j], -1)
-                                 self.tempArray[-1] = int(self.statusbyte[j])                             
-                                 self.statusVarsData = self.statusVarsData._replace(**{k:self.tempArray})
-                                 j += 1
-                             break
-                        except:
-                            pass
-                    i += 1
-                    
-                i = 0
-                for k in self.keys:
-                    self.tempArray = np.roll(self.streamVarsData[i], -1)
-                    self.tempArray[-1] = self.datavector[i]
-                    self.streamVarsData = self.streamVarsData._replace(**{k:self.tempArray})
-                    i += 1
-##                print >>sys.stderr, self.streamVarsData.runtime
-                self.Tcurves[0].setData(self.t, self.streamVarsData.spoven)
-                self.Tcurves[1].setData(self.t, self.streamVarsData.toven)
-                self.Tcurves[2].setData(self.t, self.streamVarsData.spcoil)
-                self.Tcurves[3].setData(self.t, self.streamVarsData.tcoil)
-                self.Tcurves[4].setData(self.t, self.streamVarsData.spband)
-                self.Tcurves[5].setData(self.t, self.streamVarsData.tband)
-                self.Tcurves[6].setData(self.t, self.streamVarsData.spcat)
-                self.Tcurves[7].setData(self.t, self.streamVarsData.tcat)
+                
+                ###### DATAFRAME version
+                #Eliminate first element
+                self.df = self.df[1:self.numSamples]
+                values = self.datastring.split( )
+                newData = self.df.iloc[[-1]].to_dict('records')[0]
+                for k, f, v in zip(self.keys, self.functions, values):
+                    try:
+                        newData[k] = f(v)
+                    except:
+                        print "could not apply funtion " + str(f) + " to " + str(v)
 
-                self.Pcurves[0].setData(self.t, self.streamVarsData.pco2)
+                self.df = self.df.append([newData],ignore_index=True)
 
-                self.Ccurves[0].setData(self.t, self.streamVarsData.co2)
+                statusbyte = newData['status']
+                j = 0
+                for k in self.statusKeys:
+                    self.statusDict[k] = int(statusbyte[j])
+                    j += 1
+                
+##                i = 0
+##                self.datavector = []
+##                for s in self.datastring.split( ):
+####                    if i < len(self.keys):
+##                    if i < 13:
+##                         #### use this values als integers
+##                         self.datavector.append(ast.literal_eval(s))
+##                    else:
+##                        try:
+##                             #### transcode the last value from hex to a binary array
+##                             self.statusbyte = hex2bin(s)
+##                             j = 0
+##                             #### now store it in the status variables
+##                             for k in self.statusKeys:
+##                                 self.tempArray = np.roll(self.statusVarsData[j], -1)
+##                                 self.tempArray[-1] = int(self.statusbyte[j])                             
+##                                 self.statusVarsData = self.statusVarsData._replace(**{k:self.tempArray})
+##                                 j += 1
+##                             break
+##                        except:
+##                            pass
+##                    i += 1
+##                    
+##                i = 0
+##                for k in self.keys:
+##                    self.tempArray = np.roll(self.streamVarsData[i], -1)
+##                    self.tempArray[-1] = self.datavector[i]
+##                    self.streamVarsData = self.streamVarsData._replace(**{k:self.tempArray})
+##                    i += 1
+####                print >>sys.stderr, self.streamVarsData.runtime
+                self.Tcurves[0].setData(self.t, self.df['spoven'])
+                self.Tcurves[1].setData(self.t, self.df['toven'])
+                self.Tcurves[2].setData(self.t, self.df['spcoil'])
+                self.Tcurves[3].setData(self.t, self.df['tcoil'])
+                self.Tcurves[4].setData(self.t, self.df['spband'])
+                self.Tcurves[5].setData(self.t, self.df['tband'])
+                self.Tcurves[6].setData(self.t, self.df['tcat'])
 
-                self.Fcurves[0].setData(self.t, self.streamVarsData.flow)
+                self.Pcurves[0].setData(self.t, self.df['pco2'])
+
+                self.Ccurves[0].setData(self.t, self.df['co2'])
+
+                self.Fcurves[0].setData(self.t, self.df['flow'])
+                self.Fcurves[1].setData(self.t, self.df['eflow'])
                 
 ####################################################################
 
-                self.lblCD.setText(" ".join(("Countdown:", str(int(self.streamVarsData.countdown[-1])))))
-                self.lblOven.setText("".join(("Oven: ", str(int(self.streamVarsData.toven[-1])), "/",
-                                              str(int(self.streamVarsData.spoven[-1])), " degC")))
-                self.lblBand.setText("".join(("Band: ", str(int(self.streamVarsData.tband[-1])), "/",
-                                               str(int(self.streamVarsData.spband[-1])), " degC")))
-                self.lblPump.setText("".join(("Pump (", "{:.2f}".format(self.streamVarsData.flow[-1]), " lpm)")))
+                self.lblCD.setText(" ".join(("Countdown:", str(newData['countdown']))))
+                self.lblOven.setText("".join(("Oven: ", str(int(newData['toven'])), "/",
+                                              str(newData['spoven']), " degC")))
+                self.lblBand.setText("".join(("Band: ", str(int(newData['tband'])), "/",
+                                               str(newData['spband']), " degC")))
+                self.lblPump.setText("".join(("Pump (", "{:.2f}".format(newData['flow']), " lpm)")))
+                self.lblRes2.setText("".join(("Ext. Pump (", "{:.1f}".format(newData['eflow']), " lpm)")))
 
-                if (self.streamVarsData.countdown[-1] % 2 == 0):
+                if (newData['countdown'] % 2 == 0):
                     self.lblCD.setStyleSheet('color: black')
                 else:
                     self.lblCD.setStyleSheet('color: red')
                 
-                if self.statusVarsData.oven[-1]:
+                if self.statusDict['oven']:
                     self.lblOven.setStyleSheet('color: green')
                 else:
                     self.lblOven.setStyleSheet('color: red')
 
-                if self.statusVarsData.band[-1]:
+                if self.statusDict['band']:
                     self.lblBand.setStyleSheet('color: green')
                 else:
                     self.lblBand.setStyleSheet('color: red')
 
-                if self.statusVarsData.fan[-1]:
+                if self.statusDict['fan']:
                     self.lblFan.setStyleSheet('color: green')
                 else:
                     self.lblFan.setStyleSheet('color: red')
 
-                if self.statusVarsData.pump[-1]:
+                if self.statusDict['pump']:
                     self.lblPump.setStyleSheet('color: green')
                 else:
                     self.lblPump.setStyleSheet('color: red')
 
-                if self.statusVarsData.licor[-1]:
+                if self.statusDict['licor']:
                     self.lblLicor.setStyleSheet('color: green')
                 else:
                     self.lblLicor.setStyleSheet('color: red')
 
-                if self.statusVarsData.valve[-1]:
+                if self.statusDict['valve']:
                     self.lblValve.setStyleSheet('color: green')
                 else:
                     self.lblValve.setStyleSheet('color: red')
 
-                if self.statusVarsData.res[-1]:
+                if self.statusDict['res']:
                     self.lblRes.setStyleSheet('color: green')
                 else:
                     self.lblRes.setStyleSheet('color: red')
 
-                if self.statusVarsData.res2[-1]:
+                if self.statusDict['res2']:
                     self.lblRes2.setStyleSheet('color: green')
                 else:
                     self.lblRes2.setStyleSheet('color: red')
 
-                if (not self.statusVarsData.pump[-1] and not self.statusVarsData.valve[-1] and
-                        self.statusVarsData.res2[-1]    and not self.statusVarsData.licor[-1]):
+                if (not self.statusDict['pump'] and not self.statusDict['valve'] and
+                        self.statusDict['res2'] and not self.statusDict['licor']):
                     self.lblSample.setStyleSheet('color: green')
                 else:
                     self.lblSample.setStyleSheet('color: red')
 
-                if (self.statusVarsData.pump[-1]     and self.statusVarsData.valve[-1] and
-                    not self.statusVarsData.res2[-1] and self.statusVarsData.licor[-1]):
+                if (self.statusDict['pump']     and self.statusDict['valve'] and
+                    not self.statusDict['res2'] and self.statusDict['licor']):
                     self.lblZeroAir.setStyleSheet('color: green')
                 else:
                     self.lblZeroAir.setStyleSheet('color: red')
@@ -410,76 +490,60 @@ class Visualizer(object):
 ##            raise
 
     def togglePump(self):
-        # find out which serial port is connected
-        ser = open_tca_port(port_name = self.serial_port_description)
-        if self.statusVarsData.pump[-1]:
-            ser.write('U0000')
+        if self.statusDict['pump']:
+            commands = ['U0000']
         else:
-            ser.write('U1000')
-        ser.close()
+            commands = ['U1000']
+        self.device.send_commands(commands, open_port = True)
 
     def toggleBand(self):
-        # find out which serial port is connected
-        ser = open_tca_port(port_name=self.serial_port_description)
-        if self.statusVarsData.band[-1]:
-            ser.write('B0000')
+        if self.statusDict['band']:
+            commands = ['B0000']
         else:
-            ser.write('B1000')
-        ser.close()
+            commands = ['B1000']
+        self.device.send_commands(commands, open_port = True)
 
     def toggleValve(self):
-        # find out which serial port is connected
-        ser = open_tca_port(port_name=self.serial_port_description)
-        if self.statusVarsData.valve[-1]:
-            ser.write('V0000')
+        if self.statusDict['valve']:
+            commands = ['V0000']
         else:
-            ser.write('V1000')
-        ser.close()
+            commands = ['V1000']
+        self.device.send_commands(commands, open_port = True)
 
     def toggleLicor(self):
-        # find out which serial port is connected
-        ser = open_tca_port(port_name=self.serial_port_description)
-        if self.statusVarsData.licor[-1]:
-            ser.write('L0000')
+        if self.statusDict['licor']:
+            commands = ['L0000']
         else:
-            ser.write('L1000')
-        ser.close()
+            commands = ['L1000']
+        self.device.send_commands(commands, open_port = True)
 
     def toggleOven(self):
-        # find out which serial port is connected
-        ser = open_tca_port(port_name=self.serial_port_description)
-        if self.statusVarsData.oven[-1]:
-            ser.write('O0000')
+        if self.statusDict['oven']:
+            commands = ['O0000']
         else:
-            ser.write('O1000')
-        ser.close()
+            commands = ['O1000']
+        self.device.send_commands(commands, open_port = True)
 
     def toggleRes2(self):
-        # find out which serial port is connected
-        ser = open_tca_port(port_name=self.serial_port_description)
-        if self.statusVarsData.res2[-1]:
-            ser.write('E0000')
+        if self.statusDict['res2']:
+            commands = ['E0000']
         else:
-            ser.write('E1000')
-        ser.close()
+            commands = ['E1000']
+        self.device.send_commands(commands, open_port = True)
 
     def startSample(self):
-        # find out which serial port is connected
-        ser = open_tca_port(port_name=self.serial_port_description)
-        ser.write('U0000')
-        ser.write('V0000')
-        ser.write('E1000')
-        ser.write('L0000')
-        ser.close()
+        commands = ['U0000',
+                    'V0000',
+                    'E1000',
+                    'L0000']
+        self.device.send_commands(commands, open_port = True)
 
     def startZeroAir(self):
-        # find out which serial port is connected
-        ser = open_tca_port(port_name=self.serial_port_description)
-        ser.write('L1000')
-        ser.write('E0000')
-        ser.write('V1000')
-        ser.write('U1000')
-        ser.close()
+        commands = ['L1000',
+                    'E0000',
+                    'V1000',
+                    'U1000']
+        self.device.send_commands(commands, open_port = True)
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
@@ -491,14 +555,13 @@ if __name__ == '__main__':
         config = configparser.ConfigParser()
         config.read(config_file)
         host_name = eval(config['TCP_INTERFACE']['HOST_NAME'])
-        port_name = eval(config['SERIAL_SETTINGS']['SERIAL_PORT_DESCRIPTION'])
+        host_port = eval(config['TCP_INTERFACE']['HOST_PORT'])
     else:
-        host_name = 'localhost'
-        port_name = 'nano-TD'
-        print >>sys.stderr, 'Could not find the configuration file {0}'.format(config_file)
+        raise FileNotFoundError(
+            errno.ENOENT, os.strerror(errno.ENOENT), self.config_file)
 
 
-    vis = Visualizer(host_name=host_name, port_name=port_name)
+    vis = Visualizer(host_name=host_name, host_port=host_port)
 
     timer = QtCore.QTimer()
     timer.timeout.connect(vis.update)
