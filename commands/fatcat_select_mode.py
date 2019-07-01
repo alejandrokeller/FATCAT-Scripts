@@ -8,14 +8,7 @@ import configparser
 import serial
 import serial.tools.list_ports
 sys.path.append('../extras/')
-from tca import serial_ports
-from tca import open_tca_port
-
-def send_command(ser, query):
-    # This function sends a query to port 'ser' and returns the instrument response
-    timestamp = time.strftime("%Y.%m.%d-%H:%M:%S ")
-    print >>sys.stderr, timestamp + "Sending command '" + q + "'"
-    ser.write(query)
+from instrument import instrument
 
 if __name__ == "__main__":
 
@@ -34,14 +27,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     config_file = args.INI
-    if os.path.exists(config_file):
-        config = configparser.ConfigParser()
-        config.read(config_file)
-        port_name = eval(config['SERIAL_SETTINGS']['SERIAL_PORT_DESCRIPTION'])
-    else:
-        port_name = 'nano-TD'
-        print >>sys.stderr, 'Could not find the configuration file {0}'.format(config_file)
-
+    device = instrument(config_file)
 
     if args.sample:
         queries = [
@@ -59,9 +45,9 @@ if __name__ == "__main__":
             ]
     
     
-    ser = open_tca_port(port_name = port_name)
+    device.open_port()
     for q in queries:
-        send_command(ser, q)
-    ser.close()
+        device.send_command(q)
+    ser.close_port()
 
     print >>sys.stderr, "bye..."
