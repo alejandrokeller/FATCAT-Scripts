@@ -1,0 +1,2 @@
+Daytime	Time	SP Oven	T Oven	Max Allowed Coil	T Coil	SP Band	T Band	SP Cat	T Cat	CO2 Cell T	CO2 Cell P	CO2	Flowrate	Ind. Current	Cycle Countdown	Status Byte
+hh:mm:ss	s °C °C °C °C °C °C °C °C °C kPa ppm	lpm	A	s	-
