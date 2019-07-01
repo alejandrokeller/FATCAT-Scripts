@@ -1,12 +1,7 @@
 #!/usr/bin/env python
 
 import argparse      # for argument parsing
-import os, sys
-import datetime, time
-import configparser
 
-import serial
-import serial.tools.list_ports
 sys.path.append('../extras/')
 from instrument import instrument
 
@@ -46,7 +41,6 @@ if __name__ == "__main__":
     
     
     device.open_port()
+    device.log_message("COMMANDS", "Sending commands:" + str(queries))
     device.send_commands(queries)
     ser.close_port()
-
-    print >>sys.stderr, "bye..."
