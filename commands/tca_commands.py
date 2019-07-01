@@ -8,10 +8,7 @@ import os, sys
 import serial
 import serial.tools.list_ports
 sys.path.append('../extras/')
-from tca import serial_ports
-from tca import open_tca_port
-
-execfile("../extras/tca.py")
+from instrument import instrument
 
 if __name__ == "__main__":
 
@@ -40,15 +37,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     config_file = args.INI
-    if os.path.exists(config_file):
-        config = configparser.ConfigParser()
-        config.read(config_file)
-        port_name = eval(config['SERIAL_SETTINGS']['SERIAL_PORT_DESCRIPTION'])
-    else:
-        port_name = 'nano-TD'
-        print >>sys.stderr, 'Could not find the configuration file {0}'.format(config_file)
-
-    ser = open_tca_port(port_name=port_name)
+    device = instrument(config_file)
+    device.open_port()
+    
+    queries = []
 
     timestamp = time.strftime("%y.%m.%d-%H:%M:%S ")
 
@@ -57,7 +49,7 @@ if __name__ == "__main__":
     elif args.flowrate >= 0:
         flow = 'F{:04d}'.format(args.flowrate)
         print timestamp + "Setting pump flow rate to " + flow 
-        ser.write(flow)
+        queries.append(flow)
 #    elif args.flowrate < 0:
 #        print "ERROR: flow must be larger than 0."
 
@@ -66,7 +58,7 @@ if __name__ == "__main__":
     elif args.eflowrate >= 0:
         flow = 'C{:04d}'.format(args.eflowrate)
         print timestamp + "Setting external pump flow rate to " + flow 
-        ser.write(flow)
+        queries.append(flow)
 #    elif args.eflowrate < 0:
 #        print "ERROR: flow must be larger than 0."
 
@@ -76,62 +68,64 @@ if __name__ == "__main__":
         if args.seconds > 0:
             seconds = 'A{:04d}'.format(args.seconds)
             print timestamp + "Setting countdown to " + seconds + "seconds"
-            ser.write(seconds)
+            queries.append(seconds)
         else:
             print "ERROR: countdown must be larger than 0."
 
 
     if args.pump_status == 'on':
         print timestamp + "Switching pump ON."
-        ser.write('U1000')
+        queries.append('U1000')
     elif args.pump_status == 'off':
         print timestamp + "Switching pump OFF."
-        ser.write('U0000')
+        queries.append('U0000')
     elif args.pump_status:
         print "ERROR: Valid pump-status: on and off."
         
     if args.ext_pump_status == 'on':
         print timestamp + "Switching external pump ON."
-        ser.write('E1000')
+        queries.append('E1000')
     elif args.ext_pump_status == 'off':
         print timestamp + "Switching external pump OFF."
-        ser.write('E0000')
+        queries.append('E0000')
     elif args.ext_pump_status:
         print "ERROR: Valid ext_pump-status: on and off."
 
     if args.datastream_status == 'on':
         print timestamp + "Restarting datastream."
-        ser.write('X1000')
+        queries.append('X1000')
     elif args.datastream_status == 'off':
         print timestamp + "Stopping datastream."
-        ser.write('X0000')
+        queries.append('X0000')
     elif args.datastream_status:
         print "ERROR: Valid datastream-status: on and off."
 
     if args.valve_status == 'on':
         print timestamp + "Switching valve ON."
-        ser.write('V1000')
+        queries.append('V1000')
     elif args.valve_status == 'off':
         print timestamp + "Switching valve OFF."
-        ser.write('V0000')
+        queries.append('V0000')
     elif args.valve_status:
         print "ERROR: Valid valve-status: on and off."
 
     if args.band_status == 'on':
         print timestamp + "Switching band heater ON."
-        ser.write('B1000')
+        queries.append('B1000')
     elif args.band_status == 'off':
         print timestamp + "Switching band heater OFF."
-        ser.write('B0000')
+        queries.append('B0000')
     elif args.band_status:
         print "ERROR: Valid band-status: on and off."
 
     if args.licor_status == 'on':
         print timestamp + "Switching LICOR ON."
-        ser.write('L1000')
+        queries.append('L1000')
     elif args.licor_status == 'off':
         print timestamp + "Switching LICOR OFF."
-        ser.write('L0000')
+        queries.append('L0000')
     elif args.licor_status:
         print "ERROR: Valid licor-status: on and off."
 
+    device.send_commands(queries)
+    device.close_port()
