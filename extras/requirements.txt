@@ -4,3 +4,4 @@ configparser==3.5.0
 pyqtgraph
 pandas
 matplotlib
+serial
