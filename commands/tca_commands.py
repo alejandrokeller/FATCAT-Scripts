@@ -42,90 +42,103 @@ if __name__ == "__main__":
     
     queries = []
 
-    timestamp = time.strftime("%y.%m.%d-%H:%M:%S ")
-
     if args.flowrate > 20:
         print "ERROR: valid flow range is 0 to 20 dl per minute." 
     elif args.flowrate >= 0:
         flow = 'F{:04d}'.format(args.flowrate)
-        print timestamp + "Setting pump flow rate to " + flow 
+        msg = "Setting pump flow rate to " + flow 
+        device.log_message("COMMANDS", msg)
         queries.append(flow)
 #    elif args.flowrate < 0:
-#        print "ERROR: flow must be larger than 0."
+#        device.log_message("COMMANDS", "ERROR: flow must be larger than 0.")
 
     if args.eflowrate > 170:
         print "ERROR: valid flow range is 0 to 170 dl per minute." 
     elif args.eflowrate >= 0:
         flow = 'C{:04d}'.format(args.eflowrate)
-        print timestamp + "Setting external pump flow rate to " + flow 
+        msg = "Setting external pump flow rate to " + flow 
+        device.log_message("COMMANDS", msg)
         queries.append(flow)
 #    elif args.eflowrate < 0:
-#        print "ERROR: flow must be larger than 0."
+#        device.log_message("COMMANDS", "ERROR: flow must be larger than 0.")
 
     if args.seconds > 80:
-        print "ERROR: valid countdown range is 0 to 80 seconds."
+        device.log_message("COMMANDS", "ERROR: valid countdown range is 0 to 80 seconds.")
     elif args.seconds:
         if args.seconds > 0:
             seconds = 'A{:04d}'.format(args.seconds)
-            print timestamp + "Setting countdown to " + seconds + "seconds"
+            msg = "Setting countdown to " + seconds + "seconds"
+            device.log_message("COMMANDS", msg)
             queries.append(seconds)
         else:
-            print "ERROR: countdown must be larger than 0."
+            device.log_message("COMMANDS", "ERROR: countdown must be larger than 0.")
 
 
     if args.pump_status == 'on':
-        print timestamp + "Switching pump ON."
+        msg = "Switching pump ON."
+        device.log_message("COMMANDS", msg)
         queries.append('U1000')
     elif args.pump_status == 'off':
-        print timestamp + "Switching pump OFF."
+        msg = "Switching pump OFF."
+        device.log_message("COMMANDS", msg)
         queries.append('U0000')
     elif args.pump_status:
-        print "ERROR: Valid pump-status: on and off."
+        device.log_message("COMMANDS", "ERROR: Valid pump-status: on and off.")
         
     if args.ext_pump_status == 'on':
-        print timestamp + "Switching external pump ON."
+        msg = "Switching external pump ON."
+        device.log_message("COMMANDS", msg)
         queries.append('E1000')
     elif args.ext_pump_status == 'off':
-        print timestamp + "Switching external pump OFF."
+        msg = "Switching external pump OFF."
+        device.log_message("COMMANDS", msg)
         queries.append('E0000')
     elif args.ext_pump_status:
-        print "ERROR: Valid ext_pump-status: on and off."
+        device.log_message("COMMANDS", "ERROR: Valid ext_pump-status: on and off.")
 
     if args.datastream_status == 'on':
-        print timestamp + "Restarting datastream."
+        msg = "Restarting datastream."
+        device.log_message("COMMANDS", msg)
         queries.append('X1000')
     elif args.datastream_status == 'off':
-        print timestamp + "Stopping datastream."
+        msg = "Stopping datastream."
+        device.log_message("COMMANDS", msg)
         queries.append('X0000')
     elif args.datastream_status:
-        print "ERROR: Valid datastream-status: on and off."
+        device.log_message("COMMANDS", "ERROR: Valid datastream-status: on and off.")
 
     if args.valve_status == 'on':
-        print timestamp + "Switching valve ON."
+        msg = "Switching valve ON."
+        device.log_message("COMMANDS", msg)
         queries.append('V1000')
     elif args.valve_status == 'off':
-        print timestamp + "Switching valve OFF."
+        msg = "Switching valve OFF."
+        device.log_message("COMMANDS", msg)
         queries.append('V0000')
     elif args.valve_status:
-        print "ERROR: Valid valve-status: on and off."
+        device.log_message("COMMANDS", "ERROR: Valid valve-status: on and off.")
 
     if args.band_status == 'on':
-        print timestamp + "Switching band heater ON."
+        msg = "Switching band heater ON."
+        device.log_message("COMMANDS", msg)
         queries.append('B1000')
     elif args.band_status == 'off':
-        print timestamp + "Switching band heater OFF."
+        msg = "Switching band heater OFF."
+        device.log_message("COMMANDS", msg)
         queries.append('B0000')
     elif args.band_status:
-        print "ERROR: Valid band-status: on and off."
+        device.log_message("COMMANDS", "ERROR: Valid band-status: on and off.")
 
     if args.licor_status == 'on':
-        print timestamp + "Switching LICOR ON."
+        msg = "Switching LICOR ON."
+        device.log_message("COMMANDS", msg)
         queries.append('L1000')
     elif args.licor_status == 'off':
-        print timestamp + "Switching LICOR OFF."
+        msg = "Switching LICOR OFF."
+        device.log_message("COMMANDS", msg)
         queries.append('L0000')
     elif args.licor_status:
-        print "ERROR: Valid licor-status: on and off."
+        device.log_message("COMMANDS", "ERROR: Valid licor-status: on and off.")
 
     device.send_commands(queries)
     device.close_port()
