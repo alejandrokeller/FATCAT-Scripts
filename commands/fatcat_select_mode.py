@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import argparse      # for argument parsing
+import sys
 
 sys.path.append('../extras/')
 from instrument import instrument
