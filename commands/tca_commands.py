@@ -1,12 +1,8 @@
 #!/usr/bin/env python
 
 import argparse      # for argument parsing
-import configparser
-import time
-import os, sys
+import sys
 
-import serial
-import serial.tools.list_ports
 sys.path.append('../extras/')
 from instrument import instrument
 
