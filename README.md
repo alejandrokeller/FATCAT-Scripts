@@ -24,6 +24,10 @@ $ pip install -r extras/requirements.txt
 ```bash
 $ sudo apt-get install python-pyside
 ```
+7. In some linux distributions, e.g. Ubuntu, install python-tk (already installed on the Raspberry Pi):
+```bash
+sudo apt-get install python-tk
+```
 
 ## Enabling USB/Serial Port Permissions on Linux (not needed for the Raspberry Pi)
 
