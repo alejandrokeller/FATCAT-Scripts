@@ -6,3 +6,4 @@ pandas
 matplotlib
 serial
 pyserial
+sense-hat
