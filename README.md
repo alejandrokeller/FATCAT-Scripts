@@ -25,7 +25,7 @@ $ pip install -r extras/requirements.txt
 $ sudo apt-get install python-pyside
 ```
 
-## Enabling USB/Serial Port Permissions on Linux
+## Enabling USB/Serial Port Permissions on Linux (not needed for the Raspberry Pi)
 
 Note: Linux distributions other than Ubuntu may run into issues with the following instructions: 
 
