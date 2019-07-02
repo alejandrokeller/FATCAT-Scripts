@@ -11,10 +11,10 @@ $ git clone https://github.com/alejandrokeller/FATCAT-scripts
 ```bash
 $ cd FATCAT-scripts
 ```
-3. Open config.ini and check **[configuration file](#configuration-file)**.
+3. Open config.ini and check **[configuration file](#configuration-file)**. You can set here the destination directories for the output files.
 4. Create required data and logs directories:
 ```bash
-$ sudo mkdir data data/events data/events/graph logs data/baseline
+$ sudo mkdir  ~/fatcat-files/ ~/fatcat-files/data ~/fatcat-files/data/events ~/fatcat-files/data/events/graph ~/fatcat-files/logs ~/fatcat-files/data/baseline
 ```
 5. Install python requirements:
 ```bash
