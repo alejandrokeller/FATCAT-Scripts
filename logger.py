@@ -2,7 +2,7 @@
 
 import os, sys
 import datetime, time
-from sense_hat import SenseHat
+## from sense_hat import SenseHat
 import configparser
 import serial
 import serial.tools.list_ports
@@ -11,7 +11,7 @@ from gui import send_string
 sys.path.append('./extras/')
 from instrument import instrument
 
-from sense_interface import sense_interface
+## from sense_interface import sense_interface
 
 def create_data_file(path, header = "extras/columns.txt", name = "datafile.txt" ): 
     #This function creates column headers for a new datafile
@@ -58,8 +58,8 @@ script_path = os.path.abspath(os.path.dirname(sys.argv[0]))
 headerfile=script_path + "/" + header_file_name
 counter=0
 
-if use_sense:
-	sense = sense_interface()
+##if use_sense:
+##	sense = sense_interface()
 device = instrument(config_file = config_file)
 device.open_port()
 
@@ -90,8 +90,8 @@ while 1:
     except serial.serialutil.SerialException:
        device.close_port()
        device.log_message("LOGGER", "cannot read data-line. Restarting port and waiting 5 seconds...")
-       if use_sense:
-           sense.error()
+##       if use_sense:
+##           sense.error()
        time.sleep(5)
        device.open_port()
     except KeyboardInterrupt:
@@ -102,8 +102,8 @@ while 1:
        fo.write(x)
        fo.close()
        print "bye..."
-       if use_sense:
-          sense.sense.clear()
+##       if use_sense:
+##          sense.sense.clear()
        break
     except:
        device.close_port()
@@ -111,15 +111,15 @@ while 1:
        print "    --- error type:", sys.exc_info()[0]
        print "    --- error value:", sys.exc_info()[1]
        print "    --- error traceback:", sys.exc_info()[2]
-       if use_sense:
-           sense.error()
+##       if use_sense:
+##           sense.error()
        time.sleep(5)
        device.open_port()
 
     if data_string <> "":
-       if use_sense:
-#          ambient_data = sense.sense_sensor_string()
-          sense.increase()
+##       if use_sense:
+##          ambient_data = sense.sense_sensor_string()
+##          sense.increase()
        x+=daytime + '\t' + data_string
        # transmit TCP data
        sock = send_string(data_string, server_address, sock)
@@ -128,8 +128,8 @@ while 1:
 
     # Create a new file at midnight
     if newdate.day <> filedate.day:
-       if use_sense:
-           sense.sense.clear(sense.blue)
+##       if use_sense:
+##           sense.sense.clear(sense.blue)
        fo = open(file, "a")
        fo.write(x)
        fo.close()
@@ -139,8 +139,8 @@ while 1:
        file = create_data_file(data_path, header=headerfile, name=basefilename)
        print "Writing to Datafile: " + file
     elif counter >= buffersize:
-       if use_sense:
-           sense.sense.clear(sense.green)
+##       if use_sense:
+##           sense.sense.clear(sense.green)
        fo = open(file, "a")
        fo.write(x)
        fo.close()
