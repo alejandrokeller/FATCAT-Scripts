@@ -1,5 +1,5 @@
 [GENERAL_SETTINGS]
-LOGS_PATH: './logs'
+LOGS_PATH: '/home/pi/fatcat-files/logs'
 DATA_PATH: '/home/pi/fatcat-files/data'
 EVENTS_PATH: '/home/pi/fatcat-files/data/events'
 
