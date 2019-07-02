@@ -4,3 +4,4 @@ logs/scripts/**
 data/events/**
 data/**
 *.pyc
+config.ini
