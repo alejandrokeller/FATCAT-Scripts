@@ -96,7 +96,7 @@ while 1:
        device.open_port()
     except KeyboardInterrupt:
        device.log_message("LOGGER", "aborted by user!")
-       ser.close()
+       device.close_port()
        print "Writing data..."
        fo = open(file, "a")
        fo.write(x)
