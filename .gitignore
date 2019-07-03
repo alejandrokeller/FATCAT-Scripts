@@ -5,3 +5,4 @@ data/events/**
 data/**
 *.pyc
 config.ini
+launcher/config
