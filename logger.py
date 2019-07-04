@@ -66,7 +66,7 @@ device.open_port()
 # Fetch the serial number and establish filename
 device.stop_datastream()
 str = device.query_status(query='N?').strip() # get serial number
-print >>sys.stderr, "Answer to serial number query: '" + str + "'"
+device.log_message("LOGGER", "Answer to serial number query: '" + str + "'")
 device.start_datastream()
 for s in str.split("="):
     if s.isdigit(): # parse the number
@@ -77,11 +77,11 @@ basefilename = basefilename + extension
 
 filedate = datetime.datetime.now()
 file = create_data_file(data_path, header=headerfile, name=basefilename)
-print "Writing to Datafile: " + file
-print "Using header file: " + headerfile
+device.log_message("LOGGER", "Writing to Datafile: " + file)
+device.log_message("LOGGER", "Using header file: " + headerfile)
 x=''
 
-print 'starting up on %s port %s' %server_address
+device.log_message("LOGGER", 'starting up on %s port %s' %server_address)
 
 while 1:
     try:
@@ -97,20 +97,20 @@ while 1:
     except KeyboardInterrupt:
        device.log_message("LOGGER", "aborted by user!")
        device.close_port()
-       print "Writing data..."
+       device.log_message("LOGGER", "Writing data...")
        fo = open(file, "a")
        fo.write(x)
        fo.close()
-       print "bye..."
+       device.log_message("LOGGER", "bye...")
 ##       if use_sense:
 ##          sense.sense.clear()
        break
     except:
        device.close_port()
        device.log_message("LOGGER", "something went wrong... Restarting port and waiting 5 seconds...")
-       print "    --- error type:", sys.exc_info()[0]
-       print "    --- error value:", sys.exc_info()[1]
-       print "    --- error traceback:", sys.exc_info()[2]
+       device.log_message("LOGGER", "    --- error type: " + str(sys.exc_info()[0]))
+       device.log_message("LOGGER", "    --- error value: " + str(sys.exc_info()[1]))
+       device.log_message("LOGGER", "    --- error traceback: " + str(sys.exc_info()[2]))
 ##       if use_sense:
 ##           sense.error()
        time.sleep(5)
@@ -137,7 +137,7 @@ while 1:
        counter=0
        filedate = newdate
        file = create_data_file(data_path, header=headerfile, name=basefilename)
-       print "Writing to Datafile: " + file
+       device.log_message("LOGGER", "Writing to Datafile: " + file)
     elif counter >= buffersize:
 ##       if use_sense:
 ##           sense.sense.clear(sense.green)
