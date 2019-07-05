@@ -31,7 +31,7 @@ class EventError(Exception):
         return repr(self.value)
 
 class Rawfile(object):
-    def __init__(self, datafile, events_path, integral_length, data_length): # datafile is a valid filepointer
+    def __init__(self, datafile, events_path, integral_length, data_length, all_events = True): # datafile is a valid filepointer
 
         #init data structure
         self.datastring = ""
@@ -108,7 +108,10 @@ class Rawfile(object):
         self._load()
         
         print >>sys.stderr, '{1}\nCounting events in datafile "{0}"'.format(self.datafile, time.asctime( time.localtime(time.time()) ))
-        events = self._countAndFetchEvents()
+        if all_events:
+            events = self._countAndFetchEvents()
+        else:
+            events = self._fetchLastEvents()
         # in case there is not enough data for the last event ignore it
         if events[-1] >= self.numSamples - data_length*2: 
            events = events[:-2]
@@ -131,6 +134,25 @@ class Rawfile(object):
                     ignore_index=True).fillna(0)
 
         return events
+
+    def _fetchLastEvents(self):
+        events = []
+        event_flag = False
+
+        for index, row in self.df[::-1].iterrows():
+            if row['Cycle Countdown'] > 0:
+                event_flag = True
+                last_row = row
+            elif (event_flag == True and row['Cycle Countdown'] == 0):
+                event_flag = True
+                events.append(index+1)
+                self.resultsDf = self.resultsDf.append(
+                    {self.eventKeys[0]: int(index+1), self.eventKeys[1]: last_row['Time'], self.eventKeys[2]: last_row['Daytime']},
+                    ignore_index=True).fillna(0)
+                break
+
+        return events
+
 
     def _read_header(self):
         # rewind file
@@ -175,9 +197,6 @@ class Rawfile(object):
            self.csvfile.close() 
 
     def calculateEventBaseline(self, eventIndex):
-        if eventIndex < 0:
-           eventIndex = self.numEvents - 1
-
         if eventIndex >= self.numEvents:
            try:
                raise EventError(2)
@@ -204,10 +223,7 @@ class Rawfile(object):
 
     def integrateEvent(self, eventIndex = -1):
 
-       if eventIndex < 0:
-           eventIndex = self.numEvents - 1
-           print >>sys.stderr, "Integrating last event: event number", eventIndex + 1
-       elif eventIndex >= self.numEvents:
+       if eventIndex >= self.numEvents:
            try:
                raise EventError(1)
            except EventError as e:
@@ -287,7 +303,7 @@ class Rawfile(object):
         self.resultsDf['maxtoven'] = temp_data
         self.resultsDf['tc'] = tc_data
 
-    def printResults(self, header = True, all = True):
+    def printResults(self, header = True, all_events = True):
 
         formatString = '{0}\t{1:.0f}\t{2:.2f}\t{3:.2f}\t{4:.0f}\t{5:.2f}'
 
@@ -296,7 +312,7 @@ class Rawfile(object):
             print 'event time\tindex\truntime\tco2 base\tmax T_oven\ttc'
             print 'hh:mm:ss\t-\tseconds\tppm\tdegC\tug'
 
-        if all:
+        if all_events:
             start = 0
         else:
             start = self.numEvents - 1
@@ -306,13 +322,13 @@ class Rawfile(object):
                             self.resultsDf['runtime'][event], self.resultsDf['baseline'][event],
                             self.resultsDf['maxtoven'][event], self.resultsDf['tc'][event])
 
-    def uploadData(self, date, all = True, istart = 0):
+    def uploadData(self, date, all_events = True, istart = 0):
 
         if len(date) == 0:
             date = self.date
         myUploader = FileUploader()
 
-        if all:
+        if all_events:
             start = 0
         else:
             start = self.numEvents - 1
@@ -407,24 +423,17 @@ if __name__ == "__main__":
     data_length = args.datalength
 
     with args.datafile as file:
-        mydata = Rawfile(file, events_path=events_path, integral_length = integral_length, data_length = data_length)
-
+        mydata = Rawfile(file, events_path=events_path,
+                         integral_length = integral_length, data_length = data_length,
+                         all_events = args.all)
         try:
-##                if args.all:
-##                    mydata.calculateAllBaseline()
-##                    mydata.integrateAll()
-##                else:
-##                mydata.loadLast()
-##                mydata.loadEventsData()
-##                mydata.calculateEventBaseline(-1)
-##                i0, i1 = mydata.integrateEvent(-1)
             mydata.calculateAllBaseline()
             mydata.integrateAll()
-            mydata.printResults(header = args.head, all = args.all)
+            mydata.printResults(header = args.head, all_events = args.all)
         except:
             print >>sys.stderr, "Oops!  could not calculate tc table.  Try again..."
             raise
 
         if args.upload:
                 print >>sys.stderr, "uploading events to DB..."
-                mydata.uploadData(date, all = args.all, istart = startIndex)
+                mydata.uploadData(date, all_events = args.all, istart = startIndex)
