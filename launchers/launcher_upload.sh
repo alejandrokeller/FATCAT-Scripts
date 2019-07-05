@@ -3,5 +3,5 @@
 # navigate to home directory, then to this directory, then execute python script, then back home
 
 cd /FATCAT-scripts/data
-python /FATCAT-scripts/integrate_co2.py --upload --last $(ls -t /FATCAT-scripts/data/* | head -1)
+python /FATCAT-scripts/extract.py --upload --last $(ls -t /FATCAT-scripts/data/* | head -1)
 cd /

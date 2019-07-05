@@ -7,5 +7,5 @@ cd /FATCAT-scripts/launchers
 cd /GAW-Instrument
 python export-day.py > $newfile
 cd /FATCAT-scripts/
-python /FATCAT-scripts/integrate_co2.py --no-header --upload --last $newfile >> $file2
+python /FATCAT-scripts/extract.py --no-header --upload --last $newfile >> $file2
 cd /

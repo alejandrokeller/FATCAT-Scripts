@@ -4,5 +4,5 @@
 cd /FATCAT-scripts/launchers
 . ./config
 cd ..
-python integrate_co2.py $file1 > $file2
+python extract.py $file1 > $file2
 cd /
