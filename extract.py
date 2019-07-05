@@ -297,17 +297,14 @@ class Rawfile(object):
             print 'hh:mm:ss\t-\tseconds\tppm\tdegC\tug'
 
         if all:
-            for event in range(0,self.numEvents):
-                print formatString.format(self.eventDaytime[event],
-                            self.results.index[event],
-                            self.results.runtime[event], self.results.baseline[event],
-                            self.results.maxtoven[event], self.results.tc[event])
+            start = 0
         else:
-            event = self.numEvents - 1
-            print formatString.format(self.eventDaytime[event],
-                            self.results.index[event],
-                            self.results.runtime[event], self.results.baseline[event],
-                            self.results.maxtoven[event], self.results.tc[event])
+            start = self.numEvents - 1
+        for event in range(start,self.numEvents):
+                print formatString.format(self.resultsDf['daytime'][event],
+                            self.resultsDf['index'][event],
+                            self.resultsDf['runtime'][event], self.resultsDf['baseline'][event],
+                            self.resultsDf['maxtoven'][event], self.resultsDf['tc'][event])
 
     def uploadData(self, date, all = True, istart = 0):
 
@@ -316,53 +313,33 @@ class Rawfile(object):
         myUploader = FileUploader()
 
         if all:
-            j = 1
-            for event in range(0,self.numEvents):
-                filename = self.eventDir + self.date + "-" + self.eventDaytime[event][0:2] + self.eventDaytime[event][3:5] + self.eventfileSuffix
-                data   = {}
-                values = [
-                    date,
-                    self.eventDaytime[event],
-                    self.datafile,
-                    self.results.index[event],
-                    self.results.runtime[event],
-                    self.results.baseline[event],
-                    self.results.maxtoven[event],
-                    self.results.tc[event],
-                    open(filename, 'r')]
-                i = 0
-                for k in self.uploadKeys:
-                    data[k] = values[i]
-                    i += 1
-                if j > istart:
-                    print >>sys.stderr, "Datapoint", j, ", event file:", filename
-                    myUploader.httpsend(data)
-                else:
-                    print >>sys.stderr, "Skipping upload of datapoint", j
-                j += 1
+            start = 0
         else:
-            event = self.numEvents - 1
-
-            filename = self.eventDir + self.date + "-" + self.eventDaytime[event][0:2] + self.eventDaytime[event][3:5] + self.eventfileSuffix
+            start = self.numEvents - 1
+        j = 1
+        for event in range(start,self.numEvents):
+            filename = self.eventDir + self.date + "-" + self.resultsDf['daytime'][0:2] + self.resultsDf['daytime'][3:5] + self.eventfileSuffix
             data   = {}
-            
             values = [
-                    date,
-                    self.eventDaytime[event],
-                    self.datafile,
-                    self.results.index[event],
-                    self.results.runtime[event],
-                    self.results.baseline[event],
-                    self.results.maxtoven[event],
-                    self.results.tc[event],
-                    open(filename, 'r')]
+                date,
+                self.resultsDf['daytime'][event],
+                self.datafile,
+                self.resultsDf['index'][event],
+                self.resultsDf['runtime'][event],
+                self.resultsDf['baseline'][event],
+                self.resultsDf['maxtoven'][event],
+                self.resultsDf['tc'][event],
+                open(filename, 'r')]
             i = 0
             for k in self.uploadKeys:
                 data[k] = values[i]
                 i += 1
-            
-            print >>sys.stderr, "Event file:", filename
-            myUploader.httpsend(data)
+            if j > istart:
+                print >>sys.stderr, "Datapoint", j, ", event file:", filename
+                myUploader.httpsend(data)
+            else:
+                print >>sys.stderr, "Skipping upload of datapoint", j
+            j += 1
 
 if __name__ == "__main__":
 
@@ -433,20 +410,20 @@ if __name__ == "__main__":
         mydata = Rawfile(file, events_path=events_path, integral_length = integral_length, data_length = data_length)
 
         try:
-            if args.all:
-                mydata.calculateAllBaseline()
-                mydata.integrateAll()
-##            else:
+##                if args.all:
+##                    mydata.calculateAllBaseline()
+##                    mydata.integrateAll()
+##                else:
 ##                mydata.loadLast()
 ##                mydata.loadEventsData()
 ##                mydata.calculateEventBaseline(-1)
 ##                i0, i1 = mydata.integrateEvent(-1)
-##            mydata.printResults(header = args.head, all = args.all)
+            mydata.calculateAllBaseline()
+            mydata.integrateAll()
+            mydata.printResults(header = args.head, all = args.all)
         except:
             print >>sys.stderr, "Oops!  could not calculate tc table.  Try again..."
             raise
-
-        print mydata.resultsDf
 
         if args.upload:
                 print >>sys.stderr, "uploading events to DB..."
