@@ -1,0 +1,2 @@
+Daytime	Time	SP Oven	T Oven	Max Allowed Coil	T Coil	SP Band	T Band	Ext flow	T Cat	CO2 Cell T	CO2 Cell P	CO2	Flowrate	Ind. Current	Cycle Countdown	Status Byte	CO2 abs	H2O	H2O abs	raw CO2	raw CO2 ref	raw H2O	raw H2Oref
+hh:mm:ss	s	degC	degC	degC	degC	degC	degC	lpm	degC	degC	kPa	ppm	lpm	A	s	-	- [absorption]	mmol/mol	- [absorption]	- [raw]	- [raw]	- [raw]	- [raw]
