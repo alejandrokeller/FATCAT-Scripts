@@ -610,12 +610,12 @@ if __name__ == "__main__":
             mydata = Datafile(f, recalculate_co2 = True)
 
             filename = "/home/pi/event-temp/" + mydata.internname
-            header = mydata.internname + "\n" + mydata.rawdata + "\n" + ",".join(mydata.keys) + "\n" + ",".join(mydata.units) + "\n"            
+            header = mydata.internname + "\n" + mydata.rawdata + "\n" + ",".join(mydata.keys) + "\n" + ",".join(mydata.units) + "\n"
             with open(filename, 'w') as fw:
                 fw.write(header)
                 mydata.df.to_csv(fw, index=False, header=False)
                 fw.close()
-            
+
     elif args.zero:
         filename = create_baseline_file(files=args.datafile, baseline_path=baseline_path, baseline_file=baseline_file, summary_path = summary_full_path, tmax = tmax)
 

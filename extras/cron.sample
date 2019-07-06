@@ -1,0 +1,17 @@
+# run the logger script at startup
+@reboot sh /FATCAT-scripts/launchers/launcher.sh >>/home/pi/fatcat-files/logs/analysislog 2>&1
+## extract the DB information at ':11, analyze and upload
+##11 * * * * /FATCAT-scripts/launchers/launcher_extract_and_upload.sh
+## create summary file at days end
+##15 0 * * * /FATCAT-scripts/launchers/launcher_summary.sh
+# extract the information from the DB, analyses and uploads
+11 */2,23 * * * /FATCAT-scripts/launchers/launcher_analyze.sh >>/home/pi/fatcat-files/logs/analysislog 2>&1
+# create summary file after first and last event of the day
+15 0,23 * * * /FATCAT-scripts/launchers/launcher_summary2.sh >>/home/pi/fatcat-files/logs/analysislog 2>&1
+# launch analysis mode
+0 */2,23 * * * /FATCAT-scripts/launchers/launcher_analysis_mode.sh >>/home/pi/fatcat-files/logs/instrumentlog 2>&1
+# launch sample mode
+10 */2 * * * /FATCAT-scripts/launchers/launcher_sample_mode.sh >>/home/pi/fatcat-files/logs/instrumentlog 2>&1
+# turn oven on
+6 */2,23 * * * /FATCAT-scripts/launchers/launcher_oven.sh >>/home/pi/fatcat-files/logs/instrumentlog 2>&1
+

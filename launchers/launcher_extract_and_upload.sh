@@ -1,11 +1,11 @@
 #!/bin/sh
-# launcher_upload.sh
+# launcher_extract_and_upload.sh
+# This launcher is used in case the data is located in the local backup of the cloud application
 # navigate to home directory, then to this directory, then execute python script, then back home
+cd /FATCAT-scripts/launchers
+. ./config
 cd /GAW-Instrument
-today=`date '+%Y%m%d'`
-filename="/home/pi/fatcat-files/data/$today-Ambient-Denuder.dat"
-file2="/home/pi/fatcat-files/data/summaries/$today-120s.dat"
-python export-day.py > $filename
+python export-day.py > $newfile
 cd /FATCAT-scripts/
-python /FATCAT-scripts/integrate_co2.py --no-header --upload --last $filename >> $file2
+python /FATCAT-scripts/extract.py --no-header --upload --last $newfile >> $file2
 cd /

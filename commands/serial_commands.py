@@ -39,7 +39,7 @@ if __name__ == "__main__":
     queries = []
 
     if args.flowrate > 20:
-        print "ERROR: valid flow range is 0 to 20 dl per minute." 
+        device.log_message("COMMANDS", "ERROR: valid flow range is 0 to 20 dl per minute.")
     elif args.flowrate >= 0:
         flow = 'F{:04d}'.format(args.flowrate)
         msg = "Setting pump flow rate to " + flow 
@@ -49,7 +49,7 @@ if __name__ == "__main__":
 #        device.log_message("COMMANDS", "ERROR: flow must be larger than 0.")
 
     if args.eflowrate > 170:
-        print "ERROR: valid flow range is 0 to 170 dl per minute." 
+        device.log_message("COMMANDS", "ERROR: valid flow range is 0 to 170 dl per minute.") 
     elif args.eflowrate >= 0:
         flow = 'C{:04d}'.format(args.eflowrate)
         msg = "Setting external pump flow rate to " + flow 
