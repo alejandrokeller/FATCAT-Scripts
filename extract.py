@@ -207,12 +207,12 @@ class Rawfile(object):
             runtime = self.resultsDf['runtime'][eventIndex]
             i1 = i0
             elapsedTime = runtime - self.df['Time'][i1]
-            while elapsedTime <= self.baselinelength and i1 >= 0:
-                i1 -= 1
+            while (elapsedTime <= self.baselinelength and i1 >= 0):
+                i1 = i1 - 1
                 elapsedTime = runtime - self.df['Time'][i1]
             else:
                 i1 += 1
-            return np.mean(self.df['CO2'][i1:i0]).round(3)
+            return round(np.mean(self.df['CO2'][i1:i0]), 2)
 
     def calculateAllBaseline(self):
 

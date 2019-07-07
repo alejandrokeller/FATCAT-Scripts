@@ -1,9 +1,7 @@
 poster
-numpy
+numpy==1.16.3
 configparser==3.5.0
 pyqtgraph
-pandas
-matplotlib
-serial
+pandas==0.24.2
+matplotlib==2.2.4
 pyserial
-sense-hat

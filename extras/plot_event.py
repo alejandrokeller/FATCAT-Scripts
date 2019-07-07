@@ -85,10 +85,10 @@ class Datafile(object):
             "date": self.extract_date(),
             "time": self.df['time'][0] if 'time' in self.df else '-',
             "runtime": self.df['runtime'][0] if 'runtime' in self.df else '-',
-            "co2-base": (self.df['co2'].mean() - self.df['co2-event'].mean()).round(2),
+            "co2-base": (self.df['co2'].mean() - self.df['co2-event'].mean()),
             "maxtemp": max(self.df['toven']),
-            "tc": (np.trapz(self.tc_df['dtc'], x=self.tc_df['elapsed-time'])/60).round(3),
-            "tc-baseline": (np.trapz(self.tc_df['dtc-baseline'], x=self.tc_df['elapsed-time'])/60).round(3) if 'dtc-baseline' in self.df else '-'
+            "tc": round(np.trapz(self.tc_df['dtc'], x=self.tc_df['elapsed-time'])/60, 3),
+            "tc-baseline": (np.trapz(self.tc_df['dtc-baseline'], x=self.tc_df['elapsed-time'])/60) if 'dtc-baseline' in self.df else '-'
             }
         self.result_units = {
             "date": 'yyyy-mm-dd',
@@ -402,7 +402,7 @@ def box_plot(x, y, units, title, filename, style='ggplot', format='svg', date_fo
 ##    ax_hist.tick_params(direction='in', labelleft=False)
 
     # the scatter plot:
-    ax_scatter.scatter(x, y)
+    ax_scatter.scatter(x = x, y = y)
     ax_scatter.set(xlabel='date', ylabel=y.name + ' (' + units + ')', title=title)
     tdelta = x.max() - x.min()
     my_date_formater(ax_scatter, tdelta)
@@ -423,7 +423,7 @@ def box_plot(x, y, units, title, filename, style='ggplot', format='svg', date_fo
     ax_box.set_ylim(ax_scatter.get_ylim())
     mu = y.mean()
     sigma = y.std()
-    text = r'$\mu={},\ \sigma={}$'.format(mu.round(3), sigma.round(3))
+    text = r'$\mu={},\ \sigma={}$'.format(round(mu, 3), round(sigma, 3))
     ax_box.text(1, lim1 + extra_space/2, text, horizontalalignment="center", verticalalignment="center")
 
 ##    ax_hist.hist(y, orientation='horizontal')
@@ -661,5 +661,7 @@ if __name__ == "__main__":
         
         filename = summary_path + summary_file.replace('.','_') + '-boxplot.' + plot_format
         if results.n > 1:
-            box_plot(results.summary['date']+' '+results.summary['time'], results.summary[box_y], r'$\mu$g-C', 'Total Carbon', filename, format=plot_format, date_format='%Y-%m-%d %H:%M:%S')
+            x = results.summary.apply(lambda row: str(row.date) + ' ' + str(row.time), axis=1)
+            box_plot(x, results.summary[box_y], r'$\mu$g-C', 'Total Carbon', filename,
+                     format=plot_format, date_format='%Y-%m-%d %H:%M:%S')
             results.animated_plot()
