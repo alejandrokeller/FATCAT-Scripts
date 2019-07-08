@@ -4,7 +4,7 @@
 
 import configparser, argparse # for argument parsing
 from dateutil.parser import parse
-import time, os, glob
+import sys, time, os, glob
 
 import numpy as np
 import pandas as pd
