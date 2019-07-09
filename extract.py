@@ -7,14 +7,15 @@ from collections import namedtuple
 import numpy as np
 import time, datetime  # required by the uploadData function
 import pandas as pd
+#import math
+#from scipy.integrate import simps   ### if simpson's rule integration (instead of trapezoidal) is required.
+import re              # for regular expression matching
 
 sys.path.append('./extras/')
 
 from fatcat_uploader import Uploader # httpsend command for uploading data
 from fatcat_uploader import FileUploader # httpsend command for uploading data
-#import math
-#from scipy.integrate import simps   ### if simpson's rule integration (instead of trapezoidal) is required.
-import re              # for regular expression matching
+from plot_event import Datafile
 
 ppmtoug = 12.01/22.4 # factor to convert C in ppm to ug/lt at 0 degC and 1atm
 
@@ -31,7 +32,9 @@ class EventError(Exception):
         return repr(self.value)
 
 class Rawfile(object):
-    def __init__(self, datafile, events_path, integral_length, data_length, all_events = True): # datafile is a valid filepointer
+    def __init__(self, datafile, events_path, integral_length,
+                 data_length, all_events = True,
+                 baseline = False): # datafile is a valid filepointer
 
         #init data structure
         self.datastring = ""
@@ -41,6 +44,7 @@ class Rawfile(object):
         self.eventDir = events_path
         self.date       = time.strftime("%Y-%m-%d")
         self.skipedlines = []
+        self.baseline = baseline
 
         self.eventKeys = [
             "index",
@@ -306,17 +310,30 @@ class Rawfile(object):
     def printResults(self, header = True, all_events = True):
 
         formatString = '{0}\t{1:.0f}\t{2:.2f}\t{3:.2f}\t{4:.0f}\t{5:.2f}'
+        if self.baseline:
+            formatString += '\t{6:.2f}'
 
         if header:
+            col_names = 'event time\tindex\truntime\tco2 base\tmax T_oven\ttc'
+            col_units = 'hh:mm:ss\t-\tseconds\tppm\tdegC\tug-C'
+            if self.baseline:
+                col_names += '\ttc-baseline'
+                col_units += '\tug-C'
             print "datafile:", self.datafile
-            print 'event time\tindex\truntime\tco2 base\tmax T_oven\ttc'
-            print 'hh:mm:ss\t-\tseconds\tppm\tdegC\tug'
+            print col_names
+            print col_units
 
         if all_events:
             start = 0
         else:
             start = self.numEvents - 1
         for event in range(start,self.numEvents):
+            if self.baseline:
+                print formatString.format(self.resultsDf['daytime'][event],
+                            self.resultsDf['index'][event],
+                            self.resultsDf['runtime'][event], self.resultsDf['baseline'][event],
+                            self.resultsDf['maxtoven'][event], self.resultsDf['tc'][event], self.resultsDf['tc'][event] - self.baseline)
+            else:
                 print formatString.format(self.resultsDf['daytime'][event],
                             self.resultsDf['index'][event],
                             self.resultsDf['runtime'][event], self.resultsDf['baseline'][event],
@@ -367,11 +384,10 @@ if __name__ == "__main__":
         events_path = eval(config['GENERAL_SETTINGS']['EVENTS_PATH']) + '/'
         data_length = eval(config['DATA_ANALYSIS']['EVENT_LENGTH'])
         integral_length = eval(config['DATA_ANALYSIS']['INTEGRAL_LENGTH'])
+        baseline_path = eval(config['DATA_ANALYSIS']['BASELINE_PATH']) + '/'
+        baseline_file = eval(config['DATA_ANALYSIS']['BASELINE_FILE'])
     else:
-        events_path = './data/events/'  # if ini file cannot be found
-        data_length = 120
-        integral_length = 65
-        print >>sys.stderr, 'Could not find the configuration file {0}'.format(config_file)
+        raise ValueError('File \'%s\' is not a valid \'.ini\' file' % config_file)
 
     parser = argparse.ArgumentParser(description='Process FatCat datafiles.')
     parser.add_argument('datafile', metavar='file', type=argparse.FileType('r'),
@@ -422,10 +438,19 @@ if __name__ == "__main__":
     integral_length = args.intlength
     data_length = args.datalength
 
+    # open the baseline DataFrame if it exists
+    filename = baseline_path + baseline_file
+    if os.path.isfile(filename):
+        f = open(filename, 'r')
+        baseline = Datafile(f).results['tc']
+        print >>sys.stderr, "Instrument baseline: {} ug-C".format(baseline)
+    else:
+        baseline = False
+
     with args.datafile as file:
         mydata = Rawfile(file, events_path=events_path,
                          integral_length = integral_length, data_length = data_length,
-                         all_events = args.all)
+                         all_events = args.all, baseline = baseline)
         try:
             mydata.calculateAllBaseline()
             mydata.integrateAll()
