@@ -57,8 +57,8 @@ class Datafile(object):
         if recalculate_co2:
             ## recalculate co2-event using the (mean) flow and dtc
             self.df['co2-event'] = self.df['dtc']/(self.df['flow'].mean()*ppmtoug) ### Evaluate TC using (mean) flow
-            self.df['co2-event'] = self.df['co2-event'].round(1)
-            self.df['dtc'] = self.df['dtc'].round(3)
+            self.df['co2-event'] = round(self.df['co2-event'], 1)
+            self.df['dtc'] = round(self.df['dtc'], 3)
 
         # create event results Dictionary
         self.result_keys = [
@@ -85,10 +85,10 @@ class Datafile(object):
             "date": self.extract_date(),
             "time": self.df['time'][0] if 'time' in self.df else '-',
             "runtime": self.df['runtime'][0] if 'runtime' in self.df else '-',
-            "co2-base": (self.df['co2'].mean() - self.df['co2-event'].mean()).round(2),
+            "co2-base": round(self.df['co2'].mean() - self.df['co2-event'].mean(), 2),
             "maxtemp": max(self.df['toven']),
-            "tc": (np.trapz(self.tc_df['dtc'], x=self.tc_df['elapsed-time'])/60).round(3),
-            "tc-baseline": (np.trapz(self.tc_df['dtc-baseline'], x=self.tc_df['elapsed-time'])/60).round(3) if 'dtc-baseline' in self.df else '-'
+            "tc": round(np.trapz(self.tc_df['dtc'], x=self.tc_df['elapsed-time'])/60, 3),
+            "tc-baseline": round(np.trapz(self.tc_df['dtc-baseline'], x=self.tc_df['elapsed-time'])/60, 3) if 'dtc-baseline' in self.df else '-'
             }
         self.result_units = {
             "date": 'yyyy-mm-dd',
@@ -124,7 +124,7 @@ class Datafile(object):
                 self.tc_df = self.df.loc[:,self.tc_keys]
             else:
                 self.tc_df = (self.df[(self.df['elapsed-time'] <= self.tmax)])[self.tc_keys]
-            self.results["tc-baseline"] = (np.trapz(self.tc_df['dtc-baseline'], x=self.tc_df['elapsed-time'])/60).round(3)
+            self.results["tc-baseline"] = round(np.trapz(self.tc_df['dtc-baseline'], x=self.tc_df['elapsed-time'])/60,3)
 
     def create_plot(self, x='elapsed-time', y='dtc', y2='dtc-baseline', style='ggplot', format='svg', err=False, error_interval = 4, mute = False):
 
@@ -423,7 +423,7 @@ def box_plot(x, y, units, title, filename, style='ggplot', format='svg', date_fo
     ax_box.set_ylim(ax_scatter.get_ylim())
     mu = y.mean()
     sigma = y.std()
-    text = r'$\mu={},\ \sigma={}$'.format(mu.round(3), sigma.round(3))
+    text = r'$\mu={0:.2f},\ \sigma={1:.3f}$'.format(mu, sigma)
     ax_box.text(1, lim1 + extra_space/2, text, horizontalalignment="center", verticalalignment="center")
 
 ##    ax_hist.hist(y, orientation='horizontal')
