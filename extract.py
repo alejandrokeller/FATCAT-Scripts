@@ -309,10 +309,9 @@ class Rawfile(object):
         self.resultsDf['tc'] = tc_data
 
     def printResults(self, header = True, all_events = True):
-
-        formatString = '{0}\t{1:.0f}\t{2:.2f}\t{3:.2f}\t{4:.0f}\t{5:.2f}'
+        formatString = '{0}\t{1:.0f}\t{2:.2f}\t{3:.2f}\t{4:.0f}\t{5:.3f}'
         if self.baseline:
-            formatString += '\t{6:.2f}'
+            formatString += '\t{6:.3f}'
 
         if header:
             col_names = 'event time\tindex\truntime\tco2 base\tmax T_oven\ttc'
@@ -444,7 +443,8 @@ if __name__ == "__main__":
     filename = baseline_path + baseline_file
     if os.path.isfile(filename):
         f = open(filename, 'r')
-        baseline = Datafile(f).results['tc']
+        baselineFile = Datafile(f, tmax = integral_length)
+        baseline = baselineFile.results['tc']
         print >>sys.stderr, "Instrument baseline: {} ug-C".format(baseline)
     else:
         baseline = False
