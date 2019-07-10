@@ -29,6 +29,51 @@ $ sudo apt-get install python-pyside
 sudo apt-get install python-tk
 ```
 
+## Starting scripts and gui automatically (Linux)
+
+### Using cron daemon to run scripts
+
+The **logger application** can be set to start at system boot by adding a command to the cron daemon.
+1. Enter to crontab edit mode by typing:
+```
+crontab -e
+```
+If this is the first time that you use *cron*, the system will ask you to choose a default edit program like, e.g., `nano`. 
+2. Go to the end of the line and type the following command:
+```
+@reboot sh /FATCAT-scripts/launchers/launcher.sh >>/home/pi/fatcat-files/logs/analysislog 2>&1
+```
+This will run the `launcher.sh` script at startup and save the error messages to `/home/pi/fatcat-files/logs/analysislog`. Make sure that the script and log directories are correct and that your user has enough priviliges to read (script directory) or write (log directory), otherwise the command will not run.
+3. Press `ctrl-x` and then `y`to save the changes.
+
+Similarly, measurement scripts can be sheduled in *cron*. For instance, in order to set daily measurements at two hours intervals use:
+```
+# extract the information from the DB, analyses and uploads
+11 */2 * * * /FATCAT-scripts/launchers/launcher_analyze.sh >>/home/pi/fatcat-files/logs/analysislog 2>&1
+# create summary file after first and last event of the day
+15 0,23 * * * /FATCAT-scripts/launchers/launcher_summary2.sh >>/home/pi/fatcat-files/logs/analysislog 2>&1
+# launch analysis mode
+0 */2 * * * /FATCAT-scripts/launchers/launcher_analysis_mode.sh >>/home/pi/fatcat-files/logs/instrumentlog 2>&1
+# launch sample mode
+10 */2 * * * /FATCAT-scripts/launchers/launcher_sample_mode.sh >>/home/pi/fatcat-files/logs/instrumentlog 2>&1
+# turn oven on
+6 */2 * * * /FATCAT-scripts/launchers/launcher_oven.sh >>/home/pi/fatcat-files/logs/instrumentlog 2>&1
+```
+
+### Launching the graphical user interface at startup (Raspberry Pi)
+
+1. Go to the autostart directory: `cd ~/.config/autostart`
+2. Add an autostart file `nano fatcatgui.desktop`
+3. Populate the file using:
+```
+[Desktop Entry]
+Type=Application
+Name=TightVNC
+Exec=/FATCAT-scripts/gui.py &
+StartupNotify=false
+```
+4. Pres `ctrl-X` and the Y to seve the changes
+
 ## Enabling USB/Serial Port Permissions on Linux (not needed for the Raspberry Pi)
 
 Note: Linux distributions other than Ubuntu may run into issues with the following instructions: 
