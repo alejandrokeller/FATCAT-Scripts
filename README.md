@@ -39,11 +39,13 @@ The **logger application** can be set to start at system boot by adding a comman
 crontab -e
 ```
 If this is the first time that you use *cron*, the system will ask you to choose a default edit program like, e.g., `nano`. 
+
 2. Go to the end of the line and type the following command:
 ```
 @reboot sh /FATCAT-scripts/launchers/launcher.sh >>/home/pi/fatcat-files/logs/analysislog 2>&1
 ```
 This will run the `launcher.sh` script at startup and save the error messages to `/home/pi/fatcat-files/logs/analysislog`. Make sure that the script and log directories are correct and that your user has enough priviliges to read (script directory) or write (log directory), otherwise the command will not run.
+
 3. Press `ctrl-x` and then `y`to save the changes.
 
 Similarly, measurement scripts can be sheduled in *cron*. For instance, in order to set daily measurements at two hours intervals use:
