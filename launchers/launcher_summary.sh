@@ -4,5 +4,5 @@
 cd /FATCAT-scripts/launchers
 . ./config
 cd ..
-python extract.py $file1 > $file2
+./extract.py $file1 > $file2
 cd /

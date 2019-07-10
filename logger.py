@@ -7,13 +7,15 @@ import configparser
 import serial
 import serial.tools.list_ports
 
+script_path = os.path.dirname(sys.argv[0])
+sys.path.append(script_path + '/extras/')
+sys.path.append(script_path + '/')
 from gui import send_string
-sys.path.append('./extras/')
 from instrument import instrument
 
 ## from sense_interface import sense_interface
 
-def create_data_file(path, header = "extras/columns.txt", name = "datafile.txt" ): 
+def create_data_file(path, header, name): 
     #This function creates column headers for a new datafile
     fo      = open(header, "r")
     header  = fo.read()
@@ -29,7 +31,7 @@ def create_data_file(path, header = "extras/columns.txt", name = "datafile.txt" 
     return newname
 
 # READ ini file
-config_file = 'config.ini'
+config_file = script_path + '/config.ini'
 if os.path.exists(config_file):
     config = configparser.ConfigParser()
     config.read(config_file)

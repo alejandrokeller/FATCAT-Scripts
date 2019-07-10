@@ -11,7 +11,8 @@ import pandas as pd
 #from scipy.integrate import simps   ### if simpson's rule integration (instead of trapezoidal) is required.
 import re              # for regular expression matching
 
-sys.path.append('./extras/')
+script_path = os.path.dirname(sys.argv[0])
+sys.path.append(script_path + '/extras/')
 
 from fatcat_uploader import Uploader # httpsend command for uploading data
 from fatcat_uploader import FileUploader # httpsend command for uploading data
@@ -377,7 +378,8 @@ class Rawfile(object):
 if __name__ == "__main__":
 
     #config_file = args.INI
-    config_file = 'config.ini'
+    config_file = script_path + '/config.ini'
+    sample_file = script_path + '/extras/SampleData.txt'
     if os.path.exists(config_file):
         config = configparser.ConfigParser()
         config.read(config_file)
@@ -391,8 +393,8 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Process FatCat datafiles.')
     parser.add_argument('datafile', metavar='file', type=argparse.FileType('r'),
-                    nargs='?', default="extras/SampleData.txt",
-                    help='file to be processed. Leave empty to test with extras/SampleData.txt')
+                    nargs='?', default=sample_file,
+                    help='file to be processed. Leave empty to test with: {}'.format(sample_file))
     head_parser = parser.add_mutually_exclusive_group(required=False)
     head_parser.add_argument('--header', dest='head', action='store_true',
                     help='include file header in output (default)')
@@ -415,7 +417,7 @@ if __name__ == "__main__":
                     help='Use this date for the generated result table (DATE=Today if omitted). Format: YYYY-MM-DD')
     parser.add_argument('--startindex', required=False, dest='istart', type=int,
                     help='Use this if you want to start uploading data at an index other than the first (i.e. i>0). This option is for errors in the uploading process')
-#    parser.add_argument('--inifile', required=False, dest='INI', default='config.ini',
+#    parser.add_argument('--inifile', required=False, dest='INI', default=config_file,
 #                    help='Path to configuration file (config.ini if omitted)')
     parser.add_argument('--intlength', dest='intlength', type=int, default=integral_length,
                     help='Set the length of the integration time in seconds. Must be shorter than data length (default {}s)'.format(integral_length))

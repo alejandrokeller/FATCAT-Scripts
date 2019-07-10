@@ -1,13 +1,16 @@
 #!/usr/bin/env python
 
 import argparse      # for argument parsing
-import sys
+import sys, os
 
-sys.path.append('../extras/')
+script_path = os.path.dirname(sys.argv[0])
+sys.path.append(script_path + '/../extras/')
 from instrument import instrument
 
 if __name__ == "__main__":
 
+    config_file
+    
     description_text = """Send the list of serial commands to FATCAT. e.g.:
          S1xxx -> 000...999 -> Set target temperature of OVEN;
          S2xxx -> 000...999 -> Set target temperature of BANDheater;
@@ -19,13 +22,13 @@ if __name__ == "__main__":
     parser.add_argument('commands', metavar='list',
                     nargs='+',
                     help='<Requiered> List of one or more commands to be transmitted')
-    parser.add_argument('--inifile', required=False, dest='INI', default='../config.ini',
-                    help='Path to configuration file (../config.ini if omitted)')
+    parser.add_argument('--inifile', required=False, dest='INI', default=config_file,
+                    help="Path to configuration file ({} if omitted)".format(config_file))
 
     args = parser.parse_args()
 
     config_file = args.INI
-    device = instrument(config_file)
+    device = instrument(config_file = config_file)
 
     device.open_port()
 

@@ -4,13 +4,12 @@ import serial.tools.list_ports
 import os, sys, configparser
 
 class instrument(object):
-    def __init__(self, config_file = 'config.ini'):
-        self.config_file = config_file
+    def __init__(self, config_file):
 
         self.port = "n/a"
 
         # Read the name of the serial port
-        if os.path.exists(self.config_file):
+        if os.path.exists(config_file):
             config = configparser.ConfigParser()
             config.read(config_file)
             self.serial_port_description = eval(config['SERIAL_SETTINGS']['SERIAL_PORT_DESCRIPTION'])
@@ -20,8 +19,8 @@ class instrument(object):
             self.serial_bytesize = eval(config['SERIAL_SETTINGS']['SERIAL_BYTESIZE'])
             self.serial_timeout = eval(config['SERIAL_SETTINGS']['SERIAL_TIMEOUT'])
         else:
-            raise FileNotFoundError(
-                errno.ENOENT, os.strerror(errno.ENOENT), self.config_file)
+            self.log_message("INSTRUMENT", "Could not find the configuration file: " + config_file)
+            exit()
 
         self.stop_str  = 'X0000'
         self.start_str = 'X1000'

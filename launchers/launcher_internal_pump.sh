@@ -3,6 +3,6 @@
 # navigate to home directory, then to this directory, then execute python script, then back home
 
 cd /FATCAT-scripts/commands
-python serial_commands.py --extpump off
-python serial_commands.py --pump on
+./serial_commands.py --extpump off
+./serial_commands.py --pump on
 cd /

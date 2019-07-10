@@ -4,5 +4,5 @@
 cd /FATCAT-scripts/launchers
 . ./config
 cd ..
-python extract.py --no-header --last $file1 >> $file2
+./extract.py --no-header --last $file1 >> $file2
 cd /

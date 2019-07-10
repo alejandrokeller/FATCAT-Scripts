@@ -13,6 +13,7 @@ import ast # for datastring parsing
 import numpy as np
 import configparser
 from functools import partial # function mapping
+from collections import namedtuple
 
 import pandas as pd
 
@@ -20,10 +21,9 @@ import time
 import serial
 import serial.tools.list_ports
 
-sys.path.append('./extras/')
+script_path = os.path.dirname(sys.argv[0])
+sys.path.append(script_path + '/extras/')
 from instrument import instrument
-
-from collections import namedtuple
 
 def hex2bin(s):
     hex_table = ['0000', '0001', '0010', '0011',
@@ -61,7 +61,7 @@ def send_string(line, server_address, sock = 0):
     return sock
 
 class Visualizer(object):
-    def __init__(self, host_name='localhost', host_port=10000):
+    def __init__(self, host_name='localhost', host_port=10000, config_file='config.ini'):
         
         # init socket
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # Create a TCP/IP socket
@@ -73,8 +73,7 @@ class Visualizer(object):
         self.connection, self.client_address = self.sock.accept() # Wait for a connection
         print >>sys.stderr, 'connection from', self.client_address
 
-###        self.device = instrument(config_file = config_file)
-        self.device = instrument()
+        self.device = instrument(config_file = config_file)
 
         # init pyqt
         self.app = QtGui.QApplication([])
@@ -550,18 +549,18 @@ if __name__ == '__main__':
     import sys
 
     # READ ini file
-    config_file = 'config.ini'
+    config_file = script_path + '/config.ini'
     if os.path.exists(config_file):
         config = configparser.ConfigParser()
         config.read(config_file)
         host_name = eval(config['TCP_INTERFACE']['HOST_NAME'])
         host_port = eval(config['TCP_INTERFACE']['HOST_PORT'])
     else:
-        raise FileNotFoundError(
-            errno.ENOENT, os.strerror(errno.ENOENT), self.config_file)
+        print >> sys.stderr, "Could not find the configuration file: " + config_file
+        exit()
 
 
-    vis = Visualizer(host_name=host_name, host_port=host_port)
+    vis = Visualizer(host_name=host_name, host_port=host_port, config_file=config_file)
 
     timer = QtCore.QTimer()
     timer.timeout.connect(vis.update)
