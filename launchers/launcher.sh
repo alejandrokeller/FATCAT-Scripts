@@ -5,5 +5,5 @@
 cd /FATCAT-scripts
 python fatcat_read_settings.py
 sleep 3
-python logger.py
+python logger.py &
 cd /
