@@ -70,7 +70,7 @@ Similarly, measurement scripts can be sheduled in *cron*. For instance, in order
 ```
 [Desktop Entry]
 Type=Application
-Name=TightVNC
+Name=FatcatGUI
 Exec=/FATCAT-scripts/gui.py &
 StartupNotify=false
 ```
