@@ -3,13 +3,13 @@
 import argparse      # for argument parsing
 import sys, os
 
-script_path = os.path.dirname(sys.argv[0])
-sys.path.append(script_path + '/../extras/')
+base_path = os.path.abspath(os.path.dirname(sys.argv[0]) + '/..')
+sys.path.append(base_path + '/extras/')
 from instrument import instrument
 
 if __name__ == "__main__":
 
-    config_file = script_path + '/../config.ini'
+    config_file = os.path.abspath(base_path + '/config.ini')
 
     parser = argparse.ArgumentParser(description='Send serial commands to FATCAT.')
     parser.add_argument('--set-flow', required=False, dest='flowrate', type=int,

@@ -537,11 +537,14 @@ def my_days_format_function(x, pos=None):
      return label
 
 if __name__ == "__main__":
+
+    config_file = os.path.abspath(os.path.abspath(os.path.dirname(sys.argv[0])) + "/../config.ini")
+    
     parser = argparse.ArgumentParser(description='Graph generator for fatcat event files.')
     parser.add_argument('datafile', metavar='file', type=argparse.FileType('r'),
                         nargs='*', help='List of event files to be processed. Leave empty for newest file')
-    parser.add_argument('--inifile', required=False, dest='INI', default='../config.ini',
-                        help='Path to configuration file (../config.ini if omitted)')
+    parser.add_argument('--inifile', required=False, dest='INI', default=config_file,
+                        help="Path to configuration file ({} if omitted)".format(config_file))
     zero_parser = parser.add_mutually_exclusive_group(required=False)
     zero_parser.add_argument('--baseline', dest='zero', action='store_true',
                             help='calculate and store baseline from event list')

@@ -9,8 +9,8 @@ import time
 import serial
 import serial.tools.list_ports
 
-script_path = os.path.dirname(sys.argv[0])
-sys.path.append(script_path + '/extras/')
+base_path = os.path.abspath(os.path.dirname(sys.argv[0]))
+sys.path.append(base_path + '/extras/')
 from instrument import instrument
 
 def create_status_file( path = "logs/status/", name = "fatcat_status.txt" ): 
@@ -27,7 +27,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=description_text)
     
     # READ ini file
-    config_file = script_path + '/config.ini'
+    config_file = base_path + '/config.ini'
     device = instrument(config_file = config_file)
 
 

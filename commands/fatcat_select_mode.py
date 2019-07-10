@@ -2,15 +2,15 @@
 
 import argparse, sys, os      # for argument parsing
 
-script_path = os.path.dirname(sys.argv[0])
-sys.path.append(script_path + '/../extras/')
+base_path = os.path.abspath(os.path.dirname(sys.argv[0]) + '/..')
+sys.path.append(base_path + '/extras/')
 from instrument import instrument
 
 if __name__ == "__main__":
 
     description_text= """Prepares fatcat for analysis/sampling."""
 
-    config_file = script_path + '/../config.ini'
+    config_file = os.path.abspath(base_path + '/config.ini')
 
     parser = argparse.ArgumentParser(description=description_text)
     mode_parser = parser.add_mutually_exclusive_group(required=True)
@@ -19,7 +19,7 @@ if __name__ == "__main__":
     mode_parser.add_argument('--analysis', dest='sample', action='store_false',
                     help='set valves/pumps to zero air.')
     parser.add_argument('--inifile', required=False, dest='INI', default=config_file,
-                    "Path to configuration file ({} if omitted)".format(config_file))
+                    help='Path to configuration file ({} if omitted)'.format(config_file) )
     #parser.set_defaults(sample=True)
 
     args = parser.parse_args()

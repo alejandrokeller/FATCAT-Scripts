@@ -7,9 +7,9 @@ import configparser
 import serial
 import serial.tools.list_ports
 
-script_path = os.path.dirname(sys.argv[0])
-sys.path.append(script_path + '/extras/')
-sys.path.append(script_path + '/')
+base_path = os.path.abspath(os.path.dirname(sys.argv[0]))
+sys.path.append(base_path + '/extras/')
+sys.path.append(base_path + '/')
 from gui import send_string
 from instrument import instrument
 
@@ -31,7 +31,7 @@ def create_data_file(path, header, name):
     return newname
 
 # READ ini file
-config_file = script_path + '/config.ini'
+config_file = base_path + '/config.ini'
 if os.path.exists(config_file):
     config = configparser.ConfigParser()
     config.read(config_file)
@@ -56,8 +56,7 @@ server_address = (server_name, server_port)
 sock = 0
 
 # Variables
-script_path = os.path.abspath(os.path.dirname(sys.argv[0]))
-headerfile=script_path + "/" + header_file_name
+headerfile=base_path + "/" + header_file_name
 counter=0
 
 ##if use_sense:

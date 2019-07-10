@@ -3,13 +3,13 @@
 import argparse      # for argument parsing
 import sys, os
 
-script_path = os.path.dirname(sys.argv[0])
-sys.path.append(script_path + '/../extras/')
+base_path = os.path.abspath(os.path.dirname(sys.argv[0]) + '/..')
+sys.path.append(base_path + '/extras/')
 from instrument import instrument
 
 if __name__ == "__main__":
 
-    config_file
+    config_file = os.path.abspath(base_path + "/config.ini")
     
     description_text = """Send the list of serial commands to FATCAT. e.g.:
          S1xxx -> 000...999 -> Set target temperature of OVEN;

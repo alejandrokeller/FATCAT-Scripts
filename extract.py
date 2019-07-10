@@ -11,8 +11,8 @@ import pandas as pd
 #from scipy.integrate import simps   ### if simpson's rule integration (instead of trapezoidal) is required.
 import re              # for regular expression matching
 
-script_path = os.path.dirname(sys.argv[0])
-sys.path.append(script_path + '/extras/')
+base_path = os.path.abspath(os.path.dirname(sys.argv[0]))
+sys.path.append(base_path + '/extras/')
 
 from fatcat_uploader import Uploader # httpsend command for uploading data
 from fatcat_uploader import FileUploader # httpsend command for uploading data
@@ -378,8 +378,8 @@ class Rawfile(object):
 if __name__ == "__main__":
 
     #config_file = args.INI
-    config_file = script_path + '/config.ini'
-    sample_file = script_path + '/extras/SampleData.txt'
+    config_file = base_path + '/config.ini'
+    sample_file = base_path + '/extras/SampleData.txt'
     if os.path.exists(config_file):
         config = configparser.ConfigParser()
         config.read(config_file)

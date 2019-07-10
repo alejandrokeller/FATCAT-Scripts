@@ -6,12 +6,13 @@ import time
 import os, sys
 import configparser
 
-sys.path.append('../')
+base_path = os.path.abspath(os.path.dirname(sys.argv[0]) + '/..')
+sys.path.append(base_path)
 
 from gui import send_string
 
 # READ ini file
-config_file = '../config.ini'
+config_file = base_path + '/config.ini'
 if os.path.exists(config_file):
     config = configparser.ConfigParser()
     config.read(config_file)

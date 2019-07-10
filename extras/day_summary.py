@@ -229,7 +229,8 @@ def valid_date(s):
 
 if __name__ == "__main__":
     
-    config_file = '../config.ini'
+    
+    config_file = os.path.abspath(os.path.dirname(sys.argv[0]) + '/../config.ini')
     if os.path.exists(config_file):
         config = configparser.ConfigParser()
         config.read(config_file)
