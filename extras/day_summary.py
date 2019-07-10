@@ -4,7 +4,7 @@
 
 import configparser, argparse # for argument parsing
 from dateutil.parser import parse
-import time, datetime, os, glob
+import time, datetime, os, glob, sys
 
 import numpy as np
 import pandas as pd
@@ -301,7 +301,11 @@ if __name__ == "__main__":
             end_date = date_str
             file_list.extend(day_list)
             days_to_show = days_to_show + 1
-    date_range = (start_date if days_to_show == 1 else start_date + '-' + end_date)
+    try:
+        date_range = (start_date if days_to_show == 1 else start_date + '-' + end_date)
+    except:
+        print >>sys.stderr, "No event flies found in the desired range: {} to {}".format(args.START.strftime('%Y-%m-%d'), args.END.strftime('%Y-%m-%d'))
+        exit()
     print str(len(file_list)) + " files found in the time range: " + date_range
 
     # open the baseline DataFrame if it exists
@@ -356,5 +360,5 @@ if __name__ == "__main__":
         if args.allplots or args.simple:
             plt.show()
     else:
-        print "Only one event on that range. Generating simple plot..."
+        print >>sys.stderr, "Only one event on that range. Generating simple plot..."
         mydata.create_dualplot(style=plot_style, format=plot_format, mute = args.mute_graphs)
