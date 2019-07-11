@@ -28,9 +28,16 @@ if __name__ == "__main__":
     
     # READ ini file
     config_file = base_path + '/config.ini'
+    if os.path.exists(config_file):
+        config = configparser.ConfigParser()
+        config.read(config_file)
+        
+        logs_path = eval(config['GENERAL_SETTINGS']['LOGS_PATH']) + '/'
+    else:
+        print >> sys.stderr, "Could not find the configuration file: " + config_file
+        exit()
+
     device = instrument(config_file = config_file)
-
-
     device.open_port()
     device.stop_datastream()
     fatcat_status = ""
@@ -41,7 +48,7 @@ if __name__ == "__main__":
     device.start_datastream()
     device.close_port()
 
-    print fatcat_status
+    print >>sys.stderr, fatcat_status
 
     newname = create_status_file(path=logs_path)
     print >>sys.stderr, "Writing to Datafile: " + newname

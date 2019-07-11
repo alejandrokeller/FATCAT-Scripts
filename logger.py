@@ -48,8 +48,8 @@ if os.path.exists(config_file):
     extension = eval(config['LOGGER']['EXTENSION'])
     use_serial_number = eval(config['LOGGER']['SN'])
 else:
-    raise FileNotFoundError(
-        errno.ENOENT, os.strerror(errno.ENOENT), config_file)
+    print >> sys.stderr, "Could not find the configuration file: " + config_file
+    exit()
 
 # Connect the socket to the port where the server is listening
 server_address = (server_name, server_port)
