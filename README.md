@@ -28,8 +28,24 @@ $ sudo apt-get install python-pyside
 ```bash
 sudo apt-get install python-tk
 ```
+## Adding the FATCAT directories to your user `PATH` environment
 
-## Starting scripts and gui automatically (Linux)
+1. Open the `.profile` file.
+```
+nano ~\.profile
+```
+2. Append the following text (substitute `/FATCAT-scripts` with the directory where you installed the scripts):
+```
+# set PATH so it includes the Fatcat scripts if it exists
+if [ -d "/FATCAT-scripts" ] ; then
+    PATH="/FATCAT-scripts:$PATH"
+fi
+if [ -d "/FATCAT-scripts/extras" ] ; then
+    PATH="/FATCAT-scripts/extras:$PATH"
+fi
+```
+3. Press `ctl-x` followed by `y` and then press enter to save the file.
+4. The new `PATH` environment will be available next time you start a session.
 
 ### Using cron daemon to run scripts
 
