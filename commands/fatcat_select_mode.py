@@ -18,9 +18,14 @@ if __name__ == "__main__":
                     help='set valves/pumps to sample mode.')
     mode_parser.add_argument('--analysis', dest='sample', action='store_false',
                     help='set valves/pumps to zero air.')
+    bypass_parser = parser.add_mutually_exclusive_group(required=False)
+    bypass_parser.add_argument('--bypass', dest='bypass', action='store_true',
+                    help='do not switch off external pump during analysis.')
+    bypass_parser.add_argument('--normal', dest='bypass', action='store_false',
+                    help='switch off external pump during analysis (default).')
     parser.add_argument('--inifile', required=False, dest='INI', default=config_file,
                     help='Path to configuration file ({} if omitted)'.format(config_file) )
-    #parser.set_defaults(sample=True)
+    parser.set_defaults(bypass=False)
 
     args = parser.parse_args()
 
@@ -35,12 +40,19 @@ if __name__ == "__main__":
             "L0000" # Switch off external valve
             ]
     else:
-        queries = [
-            "L1000", # Switch on  external valve
-            "E0000", # Switch off external pump
-            "V1000", # Switch on  internal valve
-            "U1000"  # Switch on  internal pump
-            ]
+        if args.bypass:
+            queries = [
+                "L1000", # Switch on  external valve
+                "V1000", # Switch on  internal valve
+                "U1000"  # Switch on  internal pump
+                ]
+        else:
+            queries = [
+                "L1000", # Switch on  external valve
+                "E0000", # Switch off external pump
+                "V1000", # Switch on  internal valve
+                "U1000"  # Switch on  internal pump
+                ]
     
     
     device.open_port()
