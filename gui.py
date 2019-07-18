@@ -14,6 +14,7 @@ import numpy as np
 import configparser
 from functools import partial # function mapping
 from collections import namedtuple
+import binascii # For lamp settings
 
 import pandas as pd
 
@@ -84,85 +85,69 @@ class Visualizer(object):
         pg.setConfigOption('foreground', 'w')
 
         #init data structure
-        self.numSamples = 1200
         self.datastring = ""
-        self.deltaT = 0.5 # s, sampling time
+        self.graphLength = 600 # seconds
+        self.deltaT = 0.25 # s, sampling time
+        self.numSamples = self.graphLength/self.deltaT
+        self.photodiode_constant = 0.04545 # nA/mV
 
         self.keys = [
             "runtime",
-            "spoven",
-            "toven",
-            "spcoil",
-            "tcoil",
-            "spband",
-            "tband",
-            "eflow",
-            "tcat",
-            "tco2",
-            "pco2",
-            "co2",
-            "flow",
-            "curr",
-            "countdown",
+            "svoc1",
+            "voc1",
+            "svoc2",
+            "voc2",
+            "mfc1",
+            "mfc2",
+            "flow1",
+            "flow2",
+            "tuv",
+            "iuv",
+            "stvoc",
+            "tvoc",
+            "stbath",
+            "tbath",
             "status",
-            "co2abs",
-            "h2o",
-            "h2oabs",
-            "rawco2",
-            "rawco2ref",
-            "rawh2o",
-            "rawh2oref"
+            "lamps"
             ]
         self.functions = [
             float,  # runtime
-            int,    # spoven
-            float,  # toven
-            int,    # spcoil
-            float,  # tcoil
-            int,    # spband
-            float,  # tband
-            float,  # sflow
-            float,  # tcat
-            float,  # tco2
-            float,  # pco2
-            float,  # co2
-            float,  # flow
-            float,  # current
-            int,    # countdown
-            hex2bin,# status
-            float,  # co2abs
-            float,  # h2o
-            float,  # h2oabs
-            int,    # rawco2
-            int,    # rawco2ref
-            int,    # rawh2o
-            int     # rawh2oref
+            int,    # svoc1
+            float,  # voc1
+            int,    # svoc2
+            float,  # voc2
+            float,  # mfc1
+            float,  # mfc2
+            float,  # flow1
+            float,  # flow2
+            float,  # tuv
+            float,   # iuv
+            int,     # svoc
+            float,   # tvoc
+            int,     # stbath
+            float,   # tbath
+            hex2bin, # status
+            hex2bin  # lamps
             ]
         
         self.units = [
-            "s",        # runtime
-            "°C",       # spoven
-            "°C",       # toven
-            "°C",       # spcoil
-            "°C",       # tcoil
-            "°C",       # spband
-            "°C",       # tband
-            "lpm",      # sflow
-            "°C",       # tcat
-            "°C",       # tco2
-            "kPa",      # pco2
-            "ppm",      # co2
-            "lpm",      # flow
-            "A",        # current
-            "S",        # countdown
-            "-",        # status
-            "- [absorption]",   # co2abs
-            "mmol/mol", # h2o
-            "- [absorption]",   # h2oabs
-            "- [raw]",  # rawco2
-            "- [raw]",  # rawco2ref
-            "- [raw]",  # rawh2o
-            "- [raw]"   # rawh2oref
+            's',    # runtime
+            'mV',   # svoc1
+            'mV',   # voc1
+            'mV',   # svoc2
+            'mV',   # voc2
+            'ml',   # mfc1
+            'ml',   # mfc2
+            'slpm', # flow1
+            'slpm', # flow2
+            'degC', # tuv
+            'mv',   # iuv 
+            'degC', # svoc
+            'degC', # tvoc
+            'degC', # stbath
+            'degC', # tbath
+            '-',    # status
+            '-'     # lamps
             ]
 
         self.unitsDict = dict(zip(self.keys, self.units))
@@ -173,128 +158,128 @@ class Visualizer(object):
         self.df = self.df.append([zeroDict]*self.numSamples,ignore_index=True)
             
         self.statusKeys = [
-            "valve",
-            "pump",
-            "fan",
-            "oven",
-            "band",
-            "licor",
-            "res2",
-            "res"]
+            "pump1",
+            "pump2",
+            "voc1",
+            "voc2",
+            "tube_heat",
+            "rH",
+            "res3",
+            "res4"]
+
+        self.lampKeys = [
+            "lamp1",
+            "lamp2",
+            "lamp3",
+            "lamp4",
+            "lamp5",
+            "run_flag"]
         
-#        self.statusData = namedtuple("statusData", self.statusKeys)
-#        self.statusVarsData = self.statusData._make(np.zeros((np.shape(self.statusKeys)[0],self.numSamples)))
-        
-#        self.statusDf = pd.DataFrame(np.zeros(shape = (self.numSamples,len(self.statusKeys))), columns = self.statusKeys)
         self.statusDict = {}
         for k in self.statusKeys:
             self.statusDict[k] = 0
 
+        self.lampDict = {}
+        for k in self.lampKeys:
+            self.lampDict[k] = 0
+
         # setup plots
         self.pen = pg.mkPen('y', width=1)
-        self.t = np.linspace(-self.deltaT*self.numSamples, 0, self.numSamples)
+        self.t = np.linspace(-self.graphLength, 0, self.numSamples)
 
-        self.Tcurves = dict()
+        self.PIDcurves = dict()
 
-###        self.Tplot = self.win.addPlot(row=0, col=0, title="")
-        self.Tplot = pg.PlotWidget()
-        self.Tplot.addLegend()
-        self.Tplot.setRange(yRange=[0, 900])
-        self.Tplot.setLabel('left', "Temperature", units='°C')
-        self.Tplot.setLabel('bottom', "t", units='s')
-        self.Tplot.showGrid(False, True)
-        self.Tcurves[0] = self.Tplot.plot(self.t, self.df['spoven'], pen=pg.mkPen('y', width=1, style=QtCore.Qt.DashLine))
-        self.Tcurves[1] = self.Tplot.plot(self.t, self.df['toven'], pen=pg.mkPen('y', width=1), name='Oven')
-        self.Tcurves[2] = self.Tplot.plot(self.t, self.df['spcoil'], pen=pg.mkPen('r', width=1, style=QtCore.Qt.DashLine))
-        self.Tcurves[3] = self.Tplot.plot(self.t, self.df['tcoil'], pen=pg.mkPen('r', width=1), name='Coil')
-        self.Tcurves[4] = self.Tplot.plot(self.t, self.df['spband'], pen=pg.mkPen('b', width=1, style=QtCore.Qt.DashLine))
-        self.Tcurves[5] = self.Tplot.plot(self.t, self.df['tband'], pen=pg.mkPen('b', width=1), name='Band')
-        self.Tcurves[6] = self.Tplot.plot(self.t, self.df['tcat'], pen=pg.mkPen('g', width=1), name='Cat')
-#        self.win.nextRow()
+        self.PIDplot = pg.PlotWidget()
+        self.PIDplot.addLegend()
+        self.PIDplot.setRange(yRange=[0, 900])
+        self.PIDplot.setLabel('left', "PID voltage", units='mV')
+        self.PIDplot.setLabel('bottom', "t", units='s')
+        self.PIDplot.showGrid(False, True)
+        self.PIDcurves[0] = self.PIDplot.plot(self.t, self.df['svoc1'], pen=pg.mkPen('y', width=1, style=QtCore.Qt.DashLine))
+        self.PIDcurves[1] = self.PIDplot.plot(self.t, self.df['voc1'], pen=pg.mkPen('y', width=1), name='PID1')
+        self.PIDcurves[2] = self.PIDplot.plot(self.t, self.df['svoc2'], pen=pg.mkPen('r', width=1, style=QtCore.Qt.DashLine))
+        self.PIDcurves[3] = self.PIDplot.plot(self.t, self.df['tvoc2'], pen=pg.mkPen('r', width=1), name='PID2')
+        
 
-        self.Pcurves = dict()
-
-###        self.Pplot = self.win.addPlot(row=3, col=0, title="")
-        self.Pplot = pg.PlotWidget()
-        self.Pplot.setRange(yRange=[50, 100])
-        self.Pplot.setLabel('left', "CO2 Press.", units='kPa')
-        self.Pplot.setLabel('bottom', "t", units='s')
-        self.Pplot.showGrid(False, True)
-        self.Pcurves[0] = self.Pplot.plot(self.t, self.df['pco2'], pen=pg.mkPen('y', width=1))
-#        self.win.nextRow()
-
-        self.Ccurves = dict()
-
-###        self.Cplot = self.win.addPlot(row=2, col=0, title="")
-        self.Cplot = pg.PlotWidget()
-#        self.Cplot.setRange(yRange=[0, 100])
-        self.Cplot.setLabel('left', "CO2", units='ppm')
-        self.Cplot.setLabel('bottom', "t", units='s')
-        self.Cplot.showGrid(False, True)
-        self.Ccurves[0] = self.Cplot.plot(self.t, self.df['co2'], pen=pg.mkPen('y', width=1))
-#        self.win.nextRow()
+##        self.Pcurves = dict()
+##
+##        self.Pplot = pg.PlotWidget()
+##        self.Pplot.setRange(yRange=[50, 100])
+##        self.Pplot.setLabel('left', "CO2 Press.", units='kPa')
+##        self.Pplot.setLabel('bottom', "t", units='s')
+##        self.Pplot.showGrid(False, True)
+##        self.Pcurves[0] = self.Pplot.plot(self.t, self.df['pco2'], pen=pg.mkPen('y', width=1))
+##
+##        self.Ccurves = dict()
+##
+##        self.Cplot = pg.PlotWidget()
+##        self.Cplot.setLabel('left', "CO2", units='ppm')
+##        self.Cplot.setLabel('bottom', "t", units='s')
+##        self.Cplot.showGrid(False, True)
+##        self.Ccurves[0] = self.Cplot.plot(self.t, self.df['co2'], pen=pg.mkPen('y', width=1))
 
         self.Fcurves = dict()
 
-###        self.Fplot = self.win.addPlot(row=4, col=0, title="")
         self.Fplot = pg.PlotWidget()
         self.Fplot.addLegend()
         self.Fplot.setRange(yRange=[0, 10])
-        self.Fplot.setLabel('left', "Flow", units='lpm')
+        self.Fplot.setLabel('left', "Flow", units='slpm')
         self.Fplot.setLabel('bottom', "t", units='s')
         self.Fplot.showGrid(False, True)
-        self.Fcurves[0] = self.Fplot.plot(self.t, self.df['flow'], pen=pg.mkPen('y', width=1), name='Intern')
-        self.Fcurves[1] = self.Fplot.plot(self.t, self.df['flow'], pen=pg.mkPen('r', width=1), name='Extern')
-#        self.win.nextRow()
+        self.Fcurves[0] = self.Fplot.plot(self.t, self.df['flow1'], pen=pg.mkPen('y', width=1), name='Flow1')
+        self.Fcurves[1] = self.Fplot.plot(self.t, self.df['flow2'], pen=pg.mkPen('r', width=1), name='Flow2')
 
 #####################################################################
 
         ## Define a top level widget to hold the controls
         self.widgets = QtGui.QWidget()
-        self.widgets.setWindowTitle("FATCAT: Total Carbon Analizer")
+        self.widgets.setWindowTitle("OCU: Organics Coating Unit")
         self.widgets.showFullScreen()
 
         ## Create infotext widgets to be placed inside
-        self.lblLicor     = QtGui.QLabel("Ext. Valve")
-        self.lblBand      = QtGui.QLabel("Band Heater")
-        self.lblOven      = QtGui.QLabel("Oven")
-        self.lblFan       = QtGui.QLabel("Fan")
-        self.lblPump      = QtGui.QLabel("Pump")
-        self.lblValve     = QtGui.QLabel("Int. Valve")
-        self.lblRes2      = QtGui.QLabel("Ext. Pump")
-        self.lblRes       = QtGui.QLabel("Res")
-        self.lblSample    = QtGui.QLabel("Sample")
-        self.lblZeroAir   = QtGui.QLabel("Zero Air")
+        self.lblLamp      = QtGui.QLabel("Lamps")
+        self.lblBath      = QtGui.QLabel("Bath Heater")
+        self.lblTube      = QtGui.QLabel("Tube Heather")
+        self.lblVOC1      = QtGui.QLabel("VOC1 control")
+        self.lblVOC2      = QtGui.QLabel("VOC2 control")
+        self.lblPump1     = QtGui.QLabel("Pump1")
+        self.lblPump2     = QtGui.QLabel("Pump2")
+##        self.lblValve     = QtGui.QLabel("Int. Valve")
+##        self.lblRes       = QtGui.QLabel("Res")
+##        self.lblSample    = QtGui.QLabel("Sample")
+##        self.lblZeroAir   = QtGui.QLabel("Zero Air")
         
         self.lblCD        = QtGui.QLabel("0")
 
         ## Create button widgets for actions
         self.button_size = 30
-        self.btnPump      = QtGui.QPushButton("")            # Turn internal pump on/off
-        self.btnPump.setFixedWidth(self.button_size)
-        self.btnBand      = QtGui.QPushButton("")            # Turn Cat. Heating on/off
-        self.btnBand.setFixedWidth(self.button_size)
-        self.btnValve     = QtGui.QPushButton("")            # Toggle sampling/clean-air valves
-        self.btnValve.setFixedWidth(self.button_size)
-        self.btnLicor     = QtGui.QPushButton("")            # Toggle external valve
-        self.btnLicor.setFixedWidth(self.button_size)
-        self.btnOven      = QtGui.QPushButton("!")           # Turn Induction Heating on/off
-        self.btnOven.setFixedWidth(self.button_size)
-        self.btnRes2      = QtGui.QPushButton("")            # Turn external pump on/off
-        self.btnRes2.setFixedWidth(self.button_size)
-        self.btnSample    = QtGui.QPushButton("")            # activate sampling mode
-        self.btnSample.setFixedWidth(self.button_size)
-        self.btnZeroAir   = QtGui.QPushButton("")            # prepare for analisys
-        self.btnZeroAir.setFixedWidth(self.button_size)
+        self.btnLamp      = QtGui.QPushButton("")            # Turn lamps on or off
+        self.btnLamp.setFixedWidth(self.button_size)
+        self.btnBath      = QtGui.QPushButton("")            # Turn Bath Heating on/off
+        self.btnBath.setFixedWidth(self.button_size)
+        self.btnTube     = QtGui.QPushButton("")             # Turn Tube Heating on/off
+        self.btnTube.setFixedWidth(self.button_size)
+        self.btnVOC1     = QtGui.QPushButton("")             # TURN VOC1 control on/off
+        self.btnVOC1.setFixedWidth(self.button_size)
+        self.btnVOC2      = QtGui.QPushButton("")            # TURN VOC2 control on/off
+        self.btnVOC2.setFixedWidth(self.button_size)
+        self.btnPump1      = QtGui.QPushButton("")            # Turn pump 1 on/off
+        self.btnPump1.setFixedWidth(self.button_size)
+        self.btnPump2      = QtGui.QPushButton("")            # Turn pump 2 on/off
+        self.btnPump2.setFixedWidth(self.button_size)
 
-        self.btnPump.clicked.connect(self.togglePump)
-        self.btnBand.clicked.connect(self.toggleBand)
-        self.btnValve.clicked.connect(self.toggleValve)
-        self.btnLicor.clicked.connect(self.toggleLicor)
-        self.btnOven.clicked.connect(self.toggleOven)
-        self.btnRes2.clicked.connect(self.toggleRes2)
-        self.btnSample.clicked.connect(self.startSample)
-        self.btnZeroAir.clicked.connect(self.startZeroAir)
+##        self.btnSample    = QtGui.QPushButton("")            # activate sampling mode
+##        self.btnSample.setFixedWidth(self.button_size)
+##        self.btnZeroAir   = QtGui.QPushButton("")            # prepare for analisys
+##        self.btnZeroAir.setFixedWidth(self.button_size)
+
+        self.btnLamp.clicked.connect(self.toggleAllLamps)
+        self.btnVOC1.clicked.connect(self.toggleVOC1)
+        self.btnVOC2.clicked.connect(self.toggleVOC2)
+        self.btnPump1.clicked.connect(self.togglePump1)
+        self.btnPump2.clicked.connect(self.togglePump2)
+##        self.btnSample.clicked.connect(self.startSample)
+##        self.btnZeroAir.clicked.connect(self.startZeroAir)
 
         ## Create a grid layout to manage the controls size and position
         self.controlsLayout = QtGui.QGridLayout()
@@ -303,36 +288,34 @@ class Visualizer(object):
         self.encloserLayout.addStretch(1)
 
         ## Add widgets to the layout in their proper positions
-        self.controlsLayout.addWidget(self.lblPump,    0, 1)
-        self.controlsLayout.addWidget(self.lblBand,    1, 1)
-        self.controlsLayout.addWidget(self.lblOven,    2, 1)
-        self.controlsLayout.addWidget(self.lblValve,   3, 1)
-        self.controlsLayout.addWidget(self.lblLicor,   4, 1)
-        self.controlsLayout.addWidget(self.lblRes2,    5, 1)
-        self.controlsLayout.addWidget(self.lblFan,     7, 0)
-        self.controlsLayout.addWidget(self.lblRes,     7, 1)
-        self.controlsLayout.addWidget(self.lblSample,  9, 1)
-        self.controlsLayout.addWidget(self.lblZeroAir,10, 1)
+        self.controlsLayout.addWidget(self.lblLamp,    0, 1)
+        self.controlsLayout.addWidget(self.lblVoc1,    1, 1)
+        self.controlsLayout.addWidget(self.lblVoc2,    2, 1)
+        self.controlsLayout.addWidget(self.lblPump1,   3, 1)
+        self.controlsLayout.addWidget(self.lblPump2,   4, 1)
+        self.controlsLayout.addWidget(self.lblBath,     5, 0)
+        self.controlsLayout.addWidget(self.lblTube,     5, 1)
+##        self.controlsLayout.addWidget(self.lblSample,  9, 1)
+##        self.controlsLayout.addWidget(self.lblZeroAir,10, 1)
 
         self.controlsLayout.addWidget(self.lblCD,    8, 0, 1, 2)
 
-        self.controlsLayout.addWidget(self.btnPump,     0, 0)
-        self.controlsLayout.addWidget(self.btnBand,     1, 0)
-        self.controlsLayout.addWidget(self.btnOven,     2, 0)
-        self.controlsLayout.addWidget(self.btnValve,    3, 0)
-        self.controlsLayout.addWidget(self.btnLicor,    4, 0)
-        self.controlsLayout.addWidget(self.btnRes2,     5, 0)
-        #self.controlsLayout.addWidget(self.btnOven,  7, 0, 1, 2)
-        self.controlsLayout.addWidget(self.btnSample,   9, 0)
-        self.controlsLayout.addWidget(self.btnZeroAir, 10, 0)
+        self.controlsLayout.addWidget(self.btnLamp,     0, 0)
+        self.controlsLayout.addWidget(self.btnVOC1,     1, 0)
+        self.controlsLayout.addWidget(self.btnVOC2,     2, 0)
+        self.controlsLayout.addWidget(self.btnPump1,    3, 0)
+        self.controlsLayout.addWidget(self.btnPump2,    4, 0)
+##        self.controlsLayout.addWidget(self.btnOven,  7, 0, 1, 2)
+##        self.controlsLayout.addWidget(self.btnSample,   9, 0)
+##        self.controlsLayout.addWidget(self.btnZeroAir, 10, 0)
 
         ## Create a QVBox layout to manage the plots
         self.plotLayout = QtGui.QVBoxLayout()
 
-        self.plotLayout.addWidget(self.Tplot)
+        self.plotLayout.addWidget(self.PIDplot)
         self.plotLayout.addWidget(self.Cplot)
-        self.plotLayout.addWidget(self.Pplot)
-        self.plotLayout.addWidget(self.Fplot)
+##        self.plotLayout.addWidget(self.Pplot)
+##        self.plotLayout.addWidget(self.Fplot)
 
         ## Create a QHBox layout to manage the plots
         self.centralLayout = QtGui.QHBoxLayout()
@@ -371,178 +354,154 @@ class Visualizer(object):
                 for k in self.statusKeys:
                     self.statusDict[k] = int(statusbyte[j])
                     j += 1
+
+                statusbyte = newData['lamps']
+                j = 0
+                for k in self.lampKeys:
+                    self.lampDict[k] = int(statusbyte[j])
+                    j += 1
                 
-##                i = 0
-##                self.datavector = []
-##                for s in self.datastring.split( ):
-####                    if i < len(self.keys):
-##                    if i < 13:
-##                         #### use this values als integers
-##                         self.datavector.append(ast.literal_eval(s))
-##                    else:
-##                        try:
-##                             #### transcode the last value from hex to a binary array
-##                             self.statusbyte = hex2bin(s)
-##                             j = 0
-##                             #### now store it in the status variables
-##                             for k in self.statusKeys:
-##                                 self.tempArray = np.roll(self.statusVarsData[j], -1)
-##                                 self.tempArray[-1] = int(self.statusbyte[j])                             
-##                                 self.statusVarsData = self.statusVarsData._replace(**{k:self.tempArray})
-##                                 j += 1
-##                             break
-##                        except:
-##                            pass
-##                    i += 1
-##                    
-##                i = 0
-##                for k in self.keys:
-##                    self.tempArray = np.roll(self.streamVarsData[i], -1)
-##                    self.tempArray[-1] = self.datavector[i]
-##                    self.streamVarsData = self.streamVarsData._replace(**{k:self.tempArray})
-##                    i += 1
-####                print >>sys.stderr, self.streamVarsData.runtime
-                self.Tcurves[0].setData(self.t, self.df['spoven'])
-                self.Tcurves[1].setData(self.t, self.df['toven'])
-                self.Tcurves[2].setData(self.t, self.df['spcoil'])
-                self.Tcurves[3].setData(self.t, self.df['tcoil'])
-                self.Tcurves[4].setData(self.t, self.df['spband'])
-                self.Tcurves[5].setData(self.t, self.df['tband'])
-                self.Tcurves[6].setData(self.t, self.df['tcat'])
+                self.PIDcurves[0].setData(self.t, self.df['svoc1'])
+                self.PIDcurves[1].setData(self.t, self.df['voc1'])
+                self.PIDcurves[2].setData(self.t, self.df['svoc2'])
+                self.PIDcurves[3].setData(self.t, self.df['voc2'])
 
-                self.Pcurves[0].setData(self.t, self.df['pco2'])
+##                self.Pcurves[0].setData(self.t, self.df['pco2'])
+##
+##                self.Ccurves[0].setData(self.t, self.df['co2'])
 
-                self.Ccurves[0].setData(self.t, self.df['co2'])
-
-                self.Fcurves[0].setData(self.t, self.df['flow'])
-                self.Fcurves[1].setData(self.t, self.df['eflow'])
+                self.Fcurves[0].setData(self.t, self.df['flow1'])
+                self.Fcurves[1].setData(self.t, self.df['flow2'])
                 
 ####################################################################
 
-                self.lblCD.setText(" ".join(("Countdown:", str(newData['countdown']))))
-                self.lblOven.setText("".join(("Oven: ", str(int(newData['toven'])), "/",
-                                              str(newData['spoven']), " degC")))
-                self.lblBand.setText("".join(("Band: ", str(int(newData['tband'])), "/",
-                                               str(newData['spband']), " degC")))
-                self.lblPump.setText("".join(("Pump (", "{:.2f}".format(newData['flow']), " lpm)")))
-                self.lblRes2.setText("".join(("Ext. Pump (", "{:.1f}".format(newData['eflow']), " lpm)")))
+##                self.lblCD.setText(" ".join(("Countdown:", str(newData['countdown']))))
+##                self.lblOven.setText("".join(("Oven: ", str(int(newData['toven'])), "/",
+##                                              str(newData['spoven']), " degC")))
+                self.lblBath.setText("".join(("Bath: ", str(int(newData['tbath'])), "/",
+                                               str(newData['stbath']), " degC")))
+                self.lblTube.setText("".join(("Tube: ", str(int(newData['tvoc'])), "/",
+                                               str(newData['svoc']), " degC")))
+                self.lblPump1.setText("".join(("Pump1 (", "{:.1f}".format(newData['flow1']), " slpm)")))
+                self.lblPump2.setText("".join(("Pump2 (", "{:.1f}".format(newData['flow2']), " slpm)")))
 
-                if (newData['countdown'] % 2 == 0):
-                    self.lblCD.setStyleSheet('color: black')
-                else:
-                    self.lblCD.setStyleSheet('color: red')
+##                if (newData['countdown'] % 2 == 0):
+##                    self.lblCD.setStyleSheet('color: black')
+##                else:
+##                    self.lblCD.setStyleSheet('color: red')
                 
-                if self.statusDict['oven']:
-                    self.lblOven.setStyleSheet('color: green')
+                if self.lampDict['run_flag']:
+                    self.lblLamp.setStyleSheet('color: green')
                 else:
-                    self.lblOven.setStyleSheet('color: red')
+                    self.lblLamp.setStyleSheet('color: red')
 
-                if self.statusDict['band']:
-                    self.lblBand.setStyleSheet('color: green')
+                if self.statusDict['voc1']:
+                    self.lblVOC1.setStyleSheet('color: green')
                 else:
-                    self.lblBand.setStyleSheet('color: red')
+                    self.lblVOC1.setStyleSheet('color: red')
 
-                if self.statusDict['fan']:
-                    self.lblFan.setStyleSheet('color: green')
+                if self.statusDict['voc2']:
+                    self.lblVOC2.setStyleSheet('color: green')
                 else:
-                    self.lblFan.setStyleSheet('color: red')
+                    self.lblVOC2.setStyleSheet('color: red')
 
-                if self.statusDict['pump']:
-                    self.lblPump.setStyleSheet('color: green')
+                if self.statusDict['tube_heat']:
+                    self.lblTube.setStyleSheet('color: green')
                 else:
-                    self.lblPump.setStyleSheet('color: red')
+                    self.lblTube.setStyleSheet('color: red')
 
-                if self.statusDict['licor']:
-                    self.lblLicor.setStyleSheet('color: green')
+                if self.statusDict['pump1']:
+                    self.lblPump1.setStyleSheet('color: green')
                 else:
-                    self.lblLicor.setStyleSheet('color: red')
+                    self.lblPump1.setStyleSheet('color: red')
 
-                if self.statusDict['valve']:
-                    self.lblValve.setStyleSheet('color: green')
+                if self.statusDict['pump2']:
+                    self.lblPump2.setStyleSheet('color: green')
                 else:
-                    self.lblValve.setStyleSheet('color: red')
+                    self.lblPump2.setStyleSheet('color: red')
+                    
+##                if self.statusDict['licor']:
+##                    self.lblLicor.setStyleSheet('color: green')
+##                else:
+##                    self.lblLicor.setStyleSheet('color: red')
+##
+##                if self.statusDict['valve']:
+##                    self.lblValve.setStyleSheet('color: green')
+##                else:
+##                    self.lblValve.setStyleSheet('color: red')
+##
+##                if self.statusDict['res']:
+##                    self.lblRes.setStyleSheet('color: green')
+##                else:
+##                    self.lblRes.setStyleSheet('color: red')
+##
 
-                if self.statusDict['res']:
-                    self.lblRes.setStyleSheet('color: green')
-                else:
-                    self.lblRes.setStyleSheet('color: red')
-
-                if self.statusDict['res2']:
-                    self.lblRes2.setStyleSheet('color: green')
-                else:
-                    self.lblRes2.setStyleSheet('color: red')
-
-                if (not self.statusDict['pump'] and not self.statusDict['valve'] and
-                        self.statusDict['res2'] and not self.statusDict['licor']):
-                    self.lblSample.setStyleSheet('color: green')
-                else:
-                    self.lblSample.setStyleSheet('color: red')
-
-                if (self.statusDict['pump']     and self.statusDict['valve'] and
-                    not self.statusDict['res2'] and self.statusDict['licor']):
-                    self.lblZeroAir.setStyleSheet('color: green')
-                else:
-                    self.lblZeroAir.setStyleSheet('color: red')
+##                if (not self.statusDict['pump'] and not self.statusDict['valve'] and
+##                        self.statusDict['res2'] and not self.statusDict['licor']):
+##                    self.lblSample.setStyleSheet('color: green')
+##                else:
+##                    self.lblSample.setStyleSheet('color: red')
+##
+##                if (self.statusDict['pump']     and self.statusDict['valve'] and
+##                    not self.statusDict['res2'] and self.statusDict['licor']):
+##                    self.lblZeroAir.setStyleSheet('color: green')
+##                else:
+##                    self.lblZeroAir.setStyleSheet('color: red')
                 
         except Exception as e:
             print >>sys.stderr, e
 ##            raise
 
-    def togglePump(self):
-        if self.statusDict['pump']:
-            commands = ['U0000']
+    def toggleAllLamps(self):
+        if self.lampDict['run_flag']:
+            n = int('0b01000000',2)
         else:
-            commands = ['U1000']
+            n = int('0b01011111',2)
+        command_string = 'L'+ binascii.unhexlify('%x' % n) + '000'
+        self.device.send_commands([command_string], open_port = True)
+
+    def toggleVOC1(self):
+        if self.statusDict['voc1']:
+            commands = ['C1000']
+        else:
+            commands = ['C1100']
         self.device.send_commands(commands, open_port = True)
 
-    def toggleBand(self):
-        if self.statusDict['band']:
-            commands = ['B0000']
+    def toggleVOC2(self):
+        if self.statusDict['voc2']:
+            commands = ['C2000']
         else:
-            commands = ['B1000']
+            commands = ['C2100']
         self.device.send_commands(commands, open_port = True)
 
-    def toggleValve(self):
-        if self.statusDict['valve']:
-            commands = ['V0000']
-        else:
-            commands = ['V1000']
-        self.device.send_commands(commands, open_port = True)
-
-    def toggleLicor(self):
-        if self.statusDict['licor']:
-            commands = ['L0000']
-        else:
-            commands = ['L1000']
-        self.device.send_commands(commands, open_port = True)
-
-    def toggleOven(self):
-        if self.statusDict['oven']:
-            commands = ['O0000']
-        else:
-            commands = ['O1000']
-        self.device.send_commands(commands, open_port = True)
-
-    def toggleRes2(self):
-        if self.statusDict['res2']:
-            commands = ['E0000']
-        else:
+    def togglePump1(self):
+        if self.statusDict['pump1']:
             commands = ['E1000']
+        else:
+            commands = ['E1100']
         self.device.send_commands(commands, open_port = True)
 
-    def startSample(self):
-        commands = ['U0000',
-                    'V0000',
-                    'E1000',
-                    'L0000']
+    def togglePump2(self):
+        if self.statusDict['pump2']:
+            commands = ['E2000']
+        else:
+            commands = ['E2100']
         self.device.send_commands(commands, open_port = True)
+        
 
-    def startZeroAir(self):
-        commands = ['L1000',
-                    'E0000',
-                    'V1000',
-                    'U1000']
-        self.device.send_commands(commands, open_port = True)
+##    def startSample(self):
+##        commands = ['U0000',
+##                    'V0000',
+##                    'E1000',
+##                    'L0000']
+##        self.device.send_commands(commands, open_port = True)
+##
+##    def startZeroAir(self):
+##        commands = ['L1000',
+##                    'E0000',
+##                    'V1000',
+##                    'U1000']
+##        self.device.send_commands(commands, open_port = True)
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
