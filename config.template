@@ -35,3 +35,6 @@ SUMMARY_PATH:  '/home/pi/fatcat-files/data/summaries'
 SUMMARY_FILE:   'summary_output.csv'
 INTEGRAL_LENGTH: 65
 EVENT_LENGTH: 120
+
+[CALIBRATION]
+UV_CONSTANT: 545.45

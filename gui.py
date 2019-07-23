@@ -14,7 +14,6 @@ import numpy as np
 import configparser
 from functools import partial # function mapping
 from collections import namedtuple
-import binascii # For lamp settings
 
 import pandas as pd
 
@@ -88,7 +87,7 @@ class Visualizer(object):
         self.datastring = ""
         self.graphLength = 600 # seconds
         self.deltaT = 0.25 # s, sampling time
-        self.numSamples = self.graphLength/self.deltaT
+        self.numSamples = int(self.graphLength/self.deltaT)
         self.photodiode_constant = 0.04545 # nA/mV
 
         self.keys = [
@@ -122,7 +121,7 @@ class Visualizer(object):
             float,  # flow2
             float,  # tuv
             float,   # iuv
-            int,     # svoc
+            int,     # stvoc
             float,   # tvoc
             int,     # stbath
             float,   # tbath
@@ -142,7 +141,7 @@ class Visualizer(object):
             'slpm', # flow2
             'degC', # tuv
             'mv',   # iuv 
-            'degC', # svoc
+            'degC', # stvoc
             'degC', # tvoc
             'degC', # stbath
             'degC', # tbath
@@ -158,22 +157,27 @@ class Visualizer(object):
         self.df = self.df.append([zeroDict]*self.numSamples,ignore_index=True)
             
         self.statusKeys = [
-            "pump1",
-            "pump2",
-            "voc1",
-            "voc2",
-            "tube_heat",
-            "rH",
+            "res4",
             "res3",
-            "res4"]
+            "rH",
+            "tube_heat",
+            "voc2",
+            "voc1",
+            "pump2",
+            "pump1"]
 
         self.lampKeys = [
-            "lamp1",
-            "lamp2",
-            "lamp3",
+            "run_flag",
+            "reslamp1",
+            "reslamp2",
             "lamp4",
-            "lamp5",
-            "run_flag"]
+            "lamp3",
+            "lamp2",
+            "lamp1",
+            "lamp0"
+            ]
+
+        self.lampString = '00000'
         
         self.statusDict = {}
         for k in self.statusKeys:
@@ -198,7 +202,7 @@ class Visualizer(object):
         self.PIDcurves[0] = self.PIDplot.plot(self.t, self.df['svoc1'], pen=pg.mkPen('y', width=1, style=QtCore.Qt.DashLine))
         self.PIDcurves[1] = self.PIDplot.plot(self.t, self.df['voc1'], pen=pg.mkPen('y', width=1), name='PID1')
         self.PIDcurves[2] = self.PIDplot.plot(self.t, self.df['svoc2'], pen=pg.mkPen('r', width=1, style=QtCore.Qt.DashLine))
-        self.PIDcurves[3] = self.PIDplot.plot(self.t, self.df['tvoc2'], pen=pg.mkPen('r', width=1), name='PID2')
+        self.PIDcurves[3] = self.PIDplot.plot(self.t, self.df['voc2'], pen=pg.mkPen('r', width=1), name='PID2')
         
 
 ##        self.Pcurves = dict()
@@ -238,16 +242,16 @@ class Visualizer(object):
 
         ## Create infotext widgets to be placed inside
         self.lblLamp      = QtGui.QLabel("Lamps")
-        self.lblBath      = QtGui.QLabel("Bath Heater")
-        self.lblTube      = QtGui.QLabel("Tube Heather")
+        self.lblBath      = QtGui.QLabel("Bath:")
+        self.lblBathT     = QtGui.QLabel("")
+        self.lblTube      = QtGui.QLabel("Tube:")
+        self.lblTubeT     = QtGui.QLabel("")
         self.lblVOC1      = QtGui.QLabel("VOC1 control")
         self.lblVOC2      = QtGui.QLabel("VOC2 control")
         self.lblPump1     = QtGui.QLabel("Pump1")
         self.lblPump2     = QtGui.QLabel("Pump2")
-##        self.lblValve     = QtGui.QLabel("Int. Valve")
-##        self.lblRes       = QtGui.QLabel("Res")
-##        self.lblSample    = QtGui.QLabel("Sample")
-##        self.lblZeroAir   = QtGui.QLabel("Zero Air")
+        self.lblLamps     = QtGui.QLabel("Lamps:")
+        self.lblLampsData = QtGui.QLabel("")
         
         self.lblCD        = QtGui.QLabel("0")
 
@@ -268,37 +272,43 @@ class Visualizer(object):
         self.btnPump2      = QtGui.QPushButton("")            # Turn pump 2 on/off
         self.btnPump2.setFixedWidth(self.button_size)
 
-##        self.btnSample    = QtGui.QPushButton("")            # activate sampling mode
-##        self.btnSample.setFixedWidth(self.button_size)
-##        self.btnZeroAir   = QtGui.QPushButton("")            # prepare for analisys
-##        self.btnZeroAir.setFixedWidth(self.button_size)
-
         self.btnLamp.clicked.connect(self.toggleAllLamps)
         self.btnVOC1.clicked.connect(self.toggleVOC1)
         self.btnVOC2.clicked.connect(self.toggleVOC2)
         self.btnPump1.clicked.connect(self.togglePump1)
         self.btnPump2.clicked.connect(self.togglePump2)
-##        self.btnSample.clicked.connect(self.startSample)
-##        self.btnZeroAir.clicked.connect(self.startZeroAir)
 
         ## Create a grid layout to manage the controls size and position
         self.controlsLayout = QtGui.QGridLayout()
         self.encloserLayout = QtGui.QVBoxLayout()
+        self.lampsButtonsLayout = QtGui.QHBoxLayout()
         self.encloserLayout.addLayout(self.controlsLayout)
+        self.encloserLayout.addLayout(self.lampsButtonsLayout)
         self.encloserLayout.addStretch(1)
 
-        ## Add widgets to the layout in their proper positions
-        self.controlsLayout.addWidget(self.lblLamp,    0, 1)
-        self.controlsLayout.addWidget(self.lblVoc1,    1, 1)
-        self.controlsLayout.addWidget(self.lblVoc2,    2, 1)
-        self.controlsLayout.addWidget(self.lblPump1,   3, 1)
-        self.controlsLayout.addWidget(self.lblPump2,   4, 1)
-        self.controlsLayout.addWidget(self.lblBath,     5, 0)
-        self.controlsLayout.addWidget(self.lblTube,     5, 1)
-##        self.controlsLayout.addWidget(self.lblSample,  9, 1)
-##        self.controlsLayout.addWidget(self.lblZeroAir,10, 1)
+        ## Create individual lamp buttons
+        self.lamps = []
+        for i in range(5):
+            self.lamps.append(i)
+            self.lamps[i] = QtGui.QPushButton(str(i))
+            self.lamps[i].setFixedWidth(self.button_size)
+            self.lamps[i].clicked.connect(partial(self.toggleLamp,i))
+            self.lampsButtonsLayout.addWidget(self.lamps[i])
 
-        self.controlsLayout.addWidget(self.lblCD,    8, 0, 1, 2)
+        ## Add widgets to the layout in their proper positions
+        self.controlsLayout.addWidget(self.lblLamp,      0, 1)
+        self.controlsLayout.addWidget(self.lblVOC1,      1, 1)
+        self.controlsLayout.addWidget(self.lblVOC2,      2, 1)
+        self.controlsLayout.addWidget(self.lblPump1,     3, 1)
+        self.controlsLayout.addWidget(self.lblPump2,     4, 1)
+        self.controlsLayout.addWidget(self.lblBath,      5, 0)
+        self.controlsLayout.addWidget(self.lblBathT,     5, 1)
+        self.controlsLayout.addWidget(self.lblTube,      6, 0)
+        self.controlsLayout.addWidget(self.lblTubeT,     6, 1)
+        self.controlsLayout.addWidget(self.lblLamps,     7, 0)
+        self.controlsLayout.addWidget(self.lblLampsData, 7, 1)
+
+##        self.controlsLayout.addWidget(self.lblCD,    8, 0, 1, 2)
 
         self.controlsLayout.addWidget(self.btnLamp,     0, 0)
         self.controlsLayout.addWidget(self.btnVOC1,     1, 0)
@@ -306,16 +316,20 @@ class Visualizer(object):
         self.controlsLayout.addWidget(self.btnPump1,    3, 0)
         self.controlsLayout.addWidget(self.btnPump2,    4, 0)
 ##        self.controlsLayout.addWidget(self.btnOven,  7, 0, 1, 2)
-##        self.controlsLayout.addWidget(self.btnSample,   9, 0)
-##        self.controlsLayout.addWidget(self.btnZeroAir, 10, 0)
+
+##        self.lampsButtonsLayout.addWidget(self.btnLamp0)
+##        self.lampsButtonsLayout.addWidget(self.btnLamp1)
+##        self.lampsButtonsLayout.addWidget(self.btnLamp2)
+##        self.lampsButtonsLayout.addWidget(self.btnLamp3)
+##        self.lampsButtonsLayout.addWidget(self.btnLamp4)
 
         ## Create a QVBox layout to manage the plots
         self.plotLayout = QtGui.QVBoxLayout()
 
         self.plotLayout.addWidget(self.PIDplot)
-        self.plotLayout.addWidget(self.Cplot)
+        self.plotLayout.addWidget(self.Fplot)
 ##        self.plotLayout.addWidget(self.Pplot)
-##        self.plotLayout.addWidget(self.Fplot)
+##        self.plotLayout.addWidget(self.Cplot)
 
         ## Create a QHBox layout to manage the plots
         self.centralLayout = QtGui.QHBoxLayout()
@@ -350,16 +364,15 @@ class Visualizer(object):
                 self.df = self.df.append([newData],ignore_index=True)
 
                 statusbyte = newData['status']
-                j = 0
-                for k in self.statusKeys:
+                for k, j in zip(self.statusKeys, range(len(self.statusKeys))):
                     self.statusDict[k] = int(statusbyte[j])
-                    j += 1
 
                 statusbyte = newData['lamps']
-                j = 0
-                for k in self.lampKeys:
+                self.lampString = ''
+                for k, j in zip(self.lampKeys, range(len(self.lampKeys))):
                     self.lampDict[k] = int(statusbyte[j])
-                    j += 1
+                    if j > 2:
+                        self.lampString = self.lampString + statusbyte[j]
                 
                 self.PIDcurves[0].setData(self.t, self.df['svoc1'])
                 self.PIDcurves[1].setData(self.t, self.df['voc1'])
@@ -375,13 +388,12 @@ class Visualizer(object):
                 
 ####################################################################
 
-##                self.lblCD.setText(" ".join(("Countdown:", str(newData['countdown']))))
-##                self.lblOven.setText("".join(("Oven: ", str(int(newData['toven'])), "/",
-##                                              str(newData['spoven']), " degC")))
-                self.lblBath.setText("".join(("Bath: ", str(int(newData['tbath'])), "/",
+                self.lblBathT.setText("".join((str(int(newData['tbath'])), "/",
                                                str(newData['stbath']), " degC")))
-                self.lblTube.setText("".join(("Tube: ", str(int(newData['tvoc'])), "/",
-                                               str(newData['svoc']), " degC")))
+                self.lblTubeT.setText("".join((str(int(newData['tvoc'])), "/",
+                                               str(newData['stvoc']), " degC")))
+                self.lblLampsData.setText("".join((str(int(newData['tuv'])), " degC, ",
+                                                   str(int(newData['iuv']*self.device.uv_constant/1000)), " uA" )))
                 self.lblPump1.setText("".join(("Pump1 (", "{:.1f}".format(newData['flow1']), " slpm)")))
                 self.lblPump2.setText("".join(("Pump2 (", "{:.1f}".format(newData['flow2']), " slpm)")))
 
@@ -390,10 +402,19 @@ class Visualizer(object):
 ##                else:
 ##                    self.lblCD.setStyleSheet('color: red')
                 
-                if self.lampDict['run_flag']:
+                if (self.lampDict['lamp0'] or self.lampDict['lamp1'] or self.lampDict['lamp2'] or
+                    self.lampDict['lamp3'] or self.lampDict['lamp4']):
                     self.lblLamp.setStyleSheet('color: green')
+                    self.lamps_status = True
                 else:
                     self.lblLamp.setStyleSheet('color: red')
+                    self.lamps_status = False
+
+                for status, btn in zip(self.lampString, self.lamps):
+                    if int(status) > 0:
+                        btn.setStyleSheet("background-color: green")
+                    else:
+                        btn.setStyleSheet("background-color: red")
 
                 if self.statusDict['voc1']:
                     self.lblVOC1.setStyleSheet('color: green')
@@ -453,13 +474,20 @@ class Visualizer(object):
 ##            raise
 
     def toggleAllLamps(self):
-        if self.lampDict['run_flag']:
-            n = int('0b01000000',2)
+        if self.lamps_status:
+            self.device.set_lamps('00000', open_port = True)
         else:
-            n = int('0b01011111',2)
-        command_string = 'L'+ binascii.unhexlify('%x' % n) + '000'
-        self.device.send_commands([command_string], open_port = True)
+            self.device.set_lamps('11111', open_port = True)
 
+    def toggleLamp(self, lamp):
+        print "Old Lamp String: " + self.lampString
+        new_value = str(int(self.lampString[lamp]) ^ 1)
+        s = list(self.lampString)
+        s[lamp] = new_value
+        new_string = "".join(s)
+        print "New lamp String: " + new_string
+        self.device.set_lamps(new_string, open_port = True)
+            
     def toggleVOC1(self):
         if self.statusDict['voc1']:
             commands = ['C1000']

@@ -13,11 +13,12 @@ class instrument(object):
             config = configparser.ConfigParser()
             config.read(config_file)
             self.serial_port_description = eval(config['SERIAL_SETTINGS']['SERIAL_PORT_DESCRIPTION'])
-            self.serial_baudrate = eval(config['SERIAL_SETTINGS']['SERIAL_BAUDRATE'])
-            self.serial_parity = eval(config['SERIAL_SETTINGS']['SERIAL_PARITY'])
-            self.serial_stopbits = eval(config['SERIAL_SETTINGS']['SERIAL_STOPBITS'])
-            self.serial_bytesize = eval(config['SERIAL_SETTINGS']['SERIAL_BYTESIZE'])
-            self.serial_timeout = eval(config['SERIAL_SETTINGS']['SERIAL_TIMEOUT'])
+            self.serial_baudrate         = eval(config['SERIAL_SETTINGS']['SERIAL_BAUDRATE'])
+            self.serial_parity           = eval(config['SERIAL_SETTINGS']['SERIAL_PARITY'])
+            self.serial_stopbits         = eval(config['SERIAL_SETTINGS']['SERIAL_STOPBITS'])
+            self.serial_bytesize         = eval(config['SERIAL_SETTINGS']['SERIAL_BYTESIZE'])
+            self.serial_timeout          = eval(config['SERIAL_SETTINGS']['SERIAL_TIMEOUT'])
+            self.uv_constant             = eval(config['CALIBRATION']['UV_CONSTANT'])
         else:
             self.log_message("INSTRUMENT", "Could not find the configuration file: " + config_file)
             exit()
@@ -25,21 +26,20 @@ class instrument(object):
         self.stop_str  = 'X0000'
         self.start_str = 'X1000'
         self.queries = [
-            "A?", # Response:"Duration of next burn cycle in seconds =%i\r\n"
-            "B?", # Response:"Status OVEN=%i BAND=%i\r\n"
-            "C?", # Response:"Status PUMP=%i SET_FLOW=%i [dl]\r\n"
-            "F?", # Response:"FLOW Controller Setpoint is %.1f SLPM\r\n"
-#            "L?", # Response:"Control LICOR: <ON> = L1000 or <OFF> = L0000 \r\n"
-            "N?", # Response:"Serial Number=%i\r\n"
-            "O?", # Response:"Status LICOR=%i VALVE=%i PUMP=%i\r\n"
-            "P?", # Response:"P1=%i P2=%i P3=%i\r\n"
-            "S?", # Response:"S1=%i S2=%i S3=%i\r\n"
-#            "T?", # getDateTimeString(str); RealtimeClock is not implemented yet
-                  # Response:(string,"\r\n");
-#            "U?", # Response:"Control PUMP: <ON> = U1000 or <OFF>= U0000 \r\n"
-#            "V?", # Response:"Control VALVE: <ON> = V1000 or <OFF> = V0000 \r\n"
+            "C?", # Response: "PID1=[value in mv], PID2=[value in mv], to Control PIDx: <ON> = Cx100 or <OFF> = Cx000"
+            "E?", # Response: "Status PUMP1=__, PUMP2=__, to Control PUMPx: <ON> = Ex100 or <OFF> = Ex000"
+            "F?", # Response: "SetPoint PUMP1=__ PUMP2=__ [%]"
+            "L?", # Response: "Control LAMPS 1 to 5: Lx000 (x= uint8 bitwise 0x00054321)"
+            "M?", # Response: "SET MassFlowController 2 = __ [ml]"
+            "N?", # Response: "Serial Number=____"
+            "p?", # Response: "Current p Value of control loop = __ ; Set with: p0001 to p0050"
+            "i?", # Response: "Current i Value of control loop = __ ; Set with: i0001 to i0050"
+            "P?", # Response: "VOC1 SETPOINT=____ [mV]; Set with: P0000 to P2500"
+            "Q?", # Response: "Tubeheater SETPOINT=__[C]; Set temp with: Q0001 to Q080"
+            "R?", # Response: "RH SETPOINT=___%; Set percentage with: R0000 to R0100"
+#            "T?", # Response: "time and date"; // TODO! Not ready yet because of missing battery;
 #            "X?", # Response:"Control DATASTREAM: <ON> = X1000 or <OFF> = X0000 \r\n"
-            "Z?"  # Response:"STATUSBYTE HEX = %X \r\n"
+            "Z?"  # Response: "LAMP_STATUS_BYTE hexadecimal = 0x00"
             ]
 
     def serial_ports(self):
@@ -93,6 +93,52 @@ class instrument(object):
             self.ser.write(c)
         if open_port:
             self.close_port()
+
+    def set_pump(self, pump, flow, open_port = False):
+        c = 'L'+str(pump)+'{0:03d}'.format(flow)
+        if flow >= 0 and flow <= 100 and ( pump == 1 or pump == 2):
+            self.send_commands([c], open_port = open_port)
+        else:
+            self.log_message("SERIAL", "Pump setting invalid: '" + c + "'")
+
+    def set_mfc2(self, flow, open_port = False): # flow must be in ml
+        c = 'M0'+'{0:03d}'.format(flow)
+        if flow >= 0 and flow <= 100:
+            self.send_commands([c], open_port = open_port)
+        else:
+            self.log_message("SERIAL", "MFC setting invalid: '" + c + "'")
+
+    def set_lamps(self, binary_pattern, open_port = False): # i.e. '11111' for all lamps on
+        lamps = int(binary_pattern, 2)
+        offset = int('01000000',2)
+        chr_nr = (lamps ^ offset)
+        c = 'L'+ chr(chr_nr) + '000'
+        print "sending command: " + c + " chr_nr: " + str(chr_nr)
+        if len(c) == 5:
+            self.send_commands([c], open_port = open_port)
+        else:
+            self.log_message("SERIAL", "Lamp pattern invalid: '" + c + "'")
+
+    def set_voc1(self, mv, open_port = False): # set point in milivolts
+        c = 'P'+'{0:04d}'.format(mv)
+        if mv > 0 and mv <= 2500:
+            self.send_commands([c], open_port = open_port)
+        else:
+            self.log_message("SERIAL", "VOC1 setting invalid: '" + c + "'")
+
+    def set_tubeT(self, temperature, open_port = False): # in degC
+        c = 'Q'+'{0:04d}'.format(temperature)
+        if temperature > 0 and temperature <= 80:
+            self.send_commands([c], open_port = open_port)
+        else:
+            self.log_message("SERIAL", "Tube temperature setting invalid: '" + c + "'")
+
+    def set_rH(self, rH, open_port = False): # in %rH
+        c = 'R'+'{0:04d}'.format(rH)
+        if rH > 0 and rH <= 100:
+            self.send_commands([c], open_port = open_port)
+        else:
+            self.log_message("SERIAL", "Relative humidity setting invalid: '" + c + "'")    
 
     def stop_datastream(self):
         # This function sends the stop datastream command (X0000) and
