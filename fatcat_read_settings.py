@@ -13,7 +13,7 @@ base_path = os.path.abspath(os.path.dirname(sys.argv[0]))
 sys.path.append(base_path + '/extras/')
 from instrument import instrument
 
-def create_status_file( path = "logs/status/", name = "fatcat_status.txt" ): 
+def create_status_file( path = "logs/status/", name = "ocu_status.txt" ): 
     #This function creates a new datafile name
     prefix = time.strftime("%Y%m%d-%H%M%S-")
     newname = path + prefix + name
