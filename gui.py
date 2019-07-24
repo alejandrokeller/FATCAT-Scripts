@@ -372,6 +372,7 @@ class Visualizer(object):
                 for k, j in zip(self.lampKeys, range(len(self.lampKeys))):
                     self.lampDict[k] = int(statusbyte[j])
                     if j > 2:
+                        ## LampString has the most significant bit to the left
                         self.lampString = self.lampString + statusbyte[j]
                 
                 self.PIDcurves[0].setData(self.t, self.df['svoc1'])
@@ -410,7 +411,7 @@ class Visualizer(object):
                     self.lblLamp.setStyleSheet('color: red')
                     self.lamps_status = False
 
-                for status, btn in zip(self.lampString, self.lamps):
+                for status, btn in zip(self.lampString[::-1], self.lamps):
                     if int(status) > 0:
                         btn.setStyleSheet("background-color: green")
                     else:
@@ -480,12 +481,15 @@ class Visualizer(object):
             self.device.set_lamps('11111', open_port = True)
 
     def toggleLamp(self, lamp):
-        print "Old Lamp String: " + self.lampString
-        new_value = str(int(self.lampString[lamp]) ^ 1)
-        s = list(self.lampString)
+        print "Old Lamp String: " + self.lampString[::-1]
+        ## Reverse the string to change lamps according to GUI
+        reverseString = self.lampString[::-1]
+        new_value = str(int(reverseString[lamp]) ^ 1)
+        s = list(reverseString)
         s[lamp] = new_value
-        new_string = "".join(s)
-        print "New lamp String: " + new_string
+        ## Join and reverse new string for compatibility with firmware
+        new_string = ("".join(s))[::-1]
+        print "New lamp String: " + new_string[::-1]
         self.device.set_lamps(new_string, open_port = True)
             
     def toggleVOC1(self):
