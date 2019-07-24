@@ -1,0 +1,160 @@
+///////////////////////////////////////
+//  Description of USB-data (VCOM)  //
+//  Firmware   OCU CNTR V0.5 		//
+//////////////////////////////////////
+
+Last Edit: 19.07.2019 Peter Steigmeier
+
+Changes :
+- V0.5 UV Photodiode sensitivity decreased to 545.45nA/V
+
+Notes: unfinished; 
+- Datastream order can be adjusted or expanded according needs
+
+todo: 
+- L-Command testing
+- Time command (no priority)
+- add main_settings.STATUSByte (Pump status etc.) if desired
+
+
+1.) Elements of regular Datastream oder USB
+===========================================
+(Continous Datastream can be stopped by "X0000" and restarted by "X1000")
+
+1. float i/2				i is incremented every 0.5s
+2. int SETPoint_VOC1		[mV] 	tab
+3. float reading.VOC1		[0.0  mV] tab
+4. int SETPoint_VOC2		[mV] 	tab
+5. float reading.VOC2		[0.0  mV] tab
+6. float reading.mfc1_signal	[0.00  ml] tab
+7. float reading.mfc2_signal	[0.00  ml] tab
+8. float reading.flow_sens1	[0.00slpm] tab
+9. float reading.flow_sens2	[0.00slpm] tab
+10. float reading.temperature	UV Reactor temperature [0.0 C] tab
+11. float reading.UV_CURR		UV Photodiode current (545.45nA/V) [0.0  mV] tab
+12. int SETPoint_TUBE	TubeHeater [C] tab
+13. float reading.TUBE_TEMP	Tubeheater [0.0 C] tab
+14. int SETPOINT_BATH 	[C] tab
+15. float reading.BATH_TEMP  [0.0 C] tab
+16. HEX STATUSByte			1 byte				
+17. HEX Lamp_Status_Byte 	1 byte
+18. return and newline						
+						
+2.) Description of general STATUSBYTE uint8bit
+==============================================						
+#define Statusbyte_PUMP1_Bit 0x01
+#define Statusbyte_PUMP2_Bit 0x02
+#define Statusbyte_VOC1_Bit 0x04
+#define Statusbyte_VOC2_Bit 0x08
+#define Statusbyte_TUBEHEATER_CONTROL_Bit 0x10
+#define Statusbyte_RH_CONTROL_Bit 0x20
+#define Statusbyte_RES3_Bit 0x40
+#define Statusbyte_RES4_Bit 0x80									
+
+									
+3.) Description of Lamp STATUSBYTE uint8bit
+===========================================
+#define Lamp1_Status_Bit 0x01
+#define Lamp2_Status_Bit 0x02
+#define Lamp3_Status_Bit 0x04
+#define Lamp4_Status_Bit 0x08
+#define Lamp5_Status_Bit 0x10
+
+
+
+4.a) Valid USB-Commands for Queries
+===================================
+C?
+Response: "PID1=[value in mv], PID2=[value in mv], to Control PIDx: <ON> = Cx100 or <OFF> = Cx000"
+
+E?
+Response: "Status PUMP1=__, PUMP2=__, to Control PUMPx: <ON> = Ex100 or <OFF> = Ex000"
+
+F?
+Response: "SetPoint PUMP1=__ PUMP2=__ [%]"
+
+L?
+Response: "Control LAMPS 1 to 5: Lx000 (x= uint8 bitwise 0x00054321)"
+
+M?
+Response: "SET MassFlowController 2 = __ [ml]"
+
+N?
+Response: "Serial Number=____"
+
+p?
+Response: "Current p Value of control loop = __ ; Set with: p0001 to p0050"
+
+i?
+Response: "Current i Value of control loop = __ ; Set with: i0001 to i0050"
+
+P?
+Response: "VOC1 SETPOINT=____ [mV]; Set with: P0000 to P2500"
+	
+Q?
+Response: "Tubeheater SETPOINT=__[C]; Set temp with: Q0001 to Q080"
+
+R?
+Response: "RH SETPOINT=___%; Set percentage with: R0000 to R0100"
+	
+T?
+Response: "time and date"; // TODO! Not ready yet because of missing battery;
+
+X?
+Response: "Control DATASTREAM: <ON> = X1000 or <OFF> = X0000"
+
+Z?
+Response: "LAMP_STATUS_BYTE hexadecimal = 0x00"
+
+
+
+4.b) Valid USB-Commands for Settings
+====================================
+
+C://  used for switch ON/OFF Control-loops; TODO:needs further clarification which is which!!
+Cx100= PIDx == ON or Cx000= PIDx == OFF
+
+E:
+E1100= PUMP1 == ON or E1000= PUMP1 == OFF
+E2100= PUMP2 == ON or E2000= PUMP2 == OFF
+
+F:
+F1000=Pump1 = 0 percentage; 
+F1098=Pump1 = 98% Duty cycle
+F2000=Pump2 = 0 percentage [0..100% PWM]
+
+L:	// Lamps 1 to 5 on and off (immediate)
+Lx000 = IF BIT[y] of x == 1 THEN LAMP y = ON, ELSE = OFF; y=0...4
+(Range may be dangerous, because nonprintable chars are involved;
+let's test it; we may switch to BIT[7 downto 3] as a workaround so everything stays readable;
+Even BETTER: b'010xxxxx' brings the range to hex64 to hex95 which are all readable asciis
+
+M:	//MFC2 MassFlow_Controller SetPoint
+M0100 = MFC2 Flow Setpoint is 100 [ml]; Range is : 0 - 100 ml
+
+N:	// Set Serial number 
+Nxxxx -> SN xxxx
+
+p:	// p - Value
+p0050 = control p_value of PID1 control loop = 50; Range is : 1..50
+
+i:	// i - Value
+i0050 = control i_value of PID1 control loop = 50; Range is : 1..50
+
+P:	// Setpoint VOC1 Loop
+P2500 = control VOC1 Setpoint  = 2500 [mV]; Range is : 1..2500
+		
+Q:	// Tubeheater temperature SETPOINT in [C];  OCU not yet ready, untested
+Q0001 to Q080; Range is 1..80C	
+		
+R:	// control RH BATH Setpoint  = Range 1..100 in [%]; OCU not yet ready, untested
+R0100 = 100
+			
+T:	// T set time ; command unfinished
+	// followed by [Y|M|D|h|m|s]0xx sets year, month, day, hour, minute, second to xx
+	// only year is set to 2000+xx.
+
+X: Stop or restart datastream; response to commands are still transmitted
+X0000 => STREAM OFF
+X1000 => STREAM ON
+
