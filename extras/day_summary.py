@@ -374,7 +374,7 @@ if __name__ == "__main__":
         report_plot = box_plot(x = report_df['date'] + ' ' + report_df['time'], y = report_df[new_column],
                               title = 'Total Carbon Concentration: ' + date_range, units = new_units,
                               filename = report_graph)
-        plt.show()
+        # plt.show()
 
     print stats_df.head()
     print results.summary.tail(20)

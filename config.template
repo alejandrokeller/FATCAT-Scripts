@@ -35,3 +35,10 @@ SUMMARY_PATH:  '/home/pi/fatcat-files/data/summaries'
 SUMMARY_FILE:   'summary_output.csv'
 INTEGRAL_LENGTH: 65
 EVENT_LENGTH: 120
+
+[FTP]
+SERVER: 'ftp.meteoswiss.ch'
+USER: 'mdar'
+PASS: 'MD4Rdata'
+HOME: '/incoming/HYGRO_CAMPAIGN/fatcat'
+
