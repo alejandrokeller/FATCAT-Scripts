@@ -430,6 +430,7 @@ def box_plot(x, y, units, title, filename, style='ggplot', format='svg', date_fo
 ##    ax_hist.set_ylim(ax_scatter.get_ylim())
 
     filename = filename.replace('.','_') + '_' + y.name + '-boxplot.' + format
+    filename = filename.replace(' ','_')
     plt.savefig(filename)
 
     return box

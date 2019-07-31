@@ -3,7 +3,7 @@
 # The script can also be used for generating an "average" event, e.g., to determine the baseline
 
 import configparser, argparse # for argument parsing
-from dateutil.parser import parse
+from dateutil.parser import parser
 import time, datetime, os, glob, sys
 
 import numpy as np
@@ -15,6 +15,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 #print(plt.style.available)
 
 from plot_event import Datafile, ResultsList, generate_df_stats, my_date_formater, my_days_format_function
+from plot_event import box_plot
 
 def day_plot(df, df_list, tc_column = 'tc', filename = "day_overview", title = "Day Overview", style='ggplot',
              format='svg'):
@@ -244,6 +245,9 @@ if __name__ == "__main__":
         summary_path = eval(config['DATA_ANALYSIS']['SUMMARY_PATH']) + '/'
         summary_file = eval(config['DATA_ANALYSIS']['SUMMARY_FILE'])
         tmax = eval(config['DATA_ANALYSIS']['INTEGRAL_LENGTH'])
+        flowrate = float(eval(config['DATA_ANALYSIS']['FLOW_RATE']))
+        sampling_time = float(eval(config['DATA_ANALYSIS']['SAMPLING_TIME']))
+        sampling_volume = flowrate*sampling_time/1000 # in m3
     else:
         events_path   = '~/fatcat-files/data/events/'  # if ini file cannot be found
         output_path   = events_path + 'graph/'
@@ -275,6 +279,12 @@ if __name__ == "__main__":
     all_parser.add_argument('--plot-complete', dest='allplots', action='store_true',
                             help='generate complete overview graph (with base CO2, etc.')
     parser.set_defaults(allplots=False)
+    concentration_parser = parser.add_mutually_exclusive_group(required=False)
+    concentration_parser.add_argument('--skip-concentration', dest='concentration_plot', action='store_false',
+                            help='do not generate the concentration plot(default)')
+    concentration_parser.add_argument('--plot-concentration', dest='concentration_plot', action='store_true',
+                            help='generate concentration plot based on sampling volume on .ini file')
+    parser.set_defaults(concentration_plot=False)
     
     
     args = parser.parse_args()
@@ -342,6 +352,29 @@ if __name__ == "__main__":
         f.write(header2)
         results.summary.to_csv(f, index=False, header=False)
         f.close()
+
+    ###### CREATED FOR THE METEOSWISS CAMPAIGN ######
+    if args.concentration_plot:
+        new_column = 'tc concentration'
+        new_units = r'$\mu$g-C/m$^3$'
+        report_keys = results.summary_keys
+        report_keys.append(new_column)
+        report_units = results.summary_units
+        report_units.append(new_units)
+        header_report = ",".join(report_keys) + "\n"
+        header_report += ",".join(report_units) + "\n"
+        report_df = results.summary
+        report_df[new_column] = (report_df[tc_column]/sampling_volume).round(2)
+        report_full_path = summary_path + "report/" + date_range + "-" + summary_file
+        with open(report_full_path, 'w') as f:
+            f.write(header_report)
+            report_df.to_csv(f, index=False, header=False)
+            f.close()
+        report_graph = report_full_path
+        report_plot = box_plot(x = report_df['date'] + ' ' + report_df['time'], y = report_df[new_column],
+                              title = 'Total Carbon Concentration: ' + date_range, units = new_units,
+                              filename = report_graph)
+        plt.show()
 
     print stats_df.head()
     print results.summary.tail(20)
