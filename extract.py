@@ -251,9 +251,10 @@ class Rawfile(object):
                print >>sys.stderr, 'End of file reachead while integrating last event ({0})!'.format(self.resultsDf['daytime'][eventIndex])
            i1 -= 1
 
-       co2     = (self.df['CO2'][i0:i1]-self.resultsDf['baseline'][eventIndex])
+       co2     = self.df['CO2'][i0:i1]-self.resultsDf['baseline'][eventIndex]
        seconds = self.df['Time'][i0:i1]
-       flow    = self.df['Flowrate'][i0:i1]
+       flow    = (self.df['Flowrate'][i0:i1]).astype('float64')
+       
        #deltatc  = co2*np.mean(flow)*ppmtoug        ### Evaluate TC using the average flow
        deltatc  = co2*flow*ppmtoug                 ### Evaluate TC using real time flow
        integral_y = deltatc[:j]

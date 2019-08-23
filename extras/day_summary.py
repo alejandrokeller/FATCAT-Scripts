@@ -10,6 +10,8 @@ import numpy as np
 import pandas as pd
 from pandas.plotting import register_matplotlib_converters
 
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 #print(plt.style.available)
