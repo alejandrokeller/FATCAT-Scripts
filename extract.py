@@ -211,7 +211,11 @@ class Rawfile(object):
             i0 = int(self.resultsDf['index'][eventIndex])
             runtime = self.resultsDf['runtime'][eventIndex]
             i1 = i0
-            elapsedTime = runtime - self.df['Time'][i1]
+            try:
+                elapsedTime = runtime - self.df['Time'][i1]
+            except:
+                print >>sys.stderr, "error at index=" + str(i1)
+                raise
             while (elapsedTime <= self.baselinelength and i1 >= 0):
                 i1 = i1 - 1
                 elapsedTime = runtime - self.df['Time'][i1]
