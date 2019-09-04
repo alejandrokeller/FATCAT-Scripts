@@ -11,7 +11,7 @@ import pandas as pd
 from pandas.plotting import register_matplotlib_converters
 
 import matplotlib
-matplotlib.use('Agg')
+matplotlib.use('Agg') # runs graphs silently without user interaction or from cronjobs
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 #print(plt.style.available)
