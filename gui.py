@@ -268,6 +268,10 @@ class Visualizer(object):
         
         self.lblCD        = QtGui.QLabel("0")
 
+        self.lblLicorT    = QtGui.QLabel("CO2: ")
+        self.lblLicorH2O  = QtGui.QLabel("H2O: ")
+
+
         ## Create button widgets for actions
         self.button_size = 30
         self.btnPump      = QtGui.QPushButton("")            # Turn internal pump on/off
@@ -303,18 +307,21 @@ class Visualizer(object):
         self.encloserLayout.addStretch(1)
 
         ## Add widgets to the layout in their proper positions
-        self.controlsLayout.addWidget(self.lblPump,    0, 1)
-        self.controlsLayout.addWidget(self.lblBand,    1, 1)
-        self.controlsLayout.addWidget(self.lblOven,    2, 1)
-        self.controlsLayout.addWidget(self.lblValve,   3, 1)
-        self.controlsLayout.addWidget(self.lblLicor,   4, 1)
-        self.controlsLayout.addWidget(self.lblRes2,    5, 1)
-        self.controlsLayout.addWidget(self.lblFan,     7, 0)
-        self.controlsLayout.addWidget(self.lblRes,     7, 1)
-        self.controlsLayout.addWidget(self.lblSample,  9, 1)
-        self.controlsLayout.addWidget(self.lblZeroAir,10, 1)
+        self.controlsLayout.addWidget(self.lblPump,      0, 1)
+        self.controlsLayout.addWidget(self.lblBand,      1, 1)
+        self.controlsLayout.addWidget(self.lblOven,      2, 1)
+        self.controlsLayout.addWidget(self.lblValve,     3, 1)
+        self.controlsLayout.addWidget(self.lblLicor,     4, 1)
+        self.controlsLayout.addWidget(self.lblRes2,      5, 1)
+        self.controlsLayout.addWidget(self.lblFan,       7, 0)
+        self.controlsLayout.addWidget(self.lblRes,       7, 1)
+        self.controlsLayout.addWidget(self.lblSample,    9, 1)
+        self.controlsLayout.addWidget(self.lblZeroAir,  10, 1)
 
-        self.controlsLayout.addWidget(self.lblCD,    8, 0, 1, 2)
+        self.controlsLayout.addWidget(self.lblCD,        8, 0, 1, 2)
+
+        self.controlsLayout.addWidget(self.lblLicorT,   11, 0, 1, 2)
+        self.controlsLayout.addWidget(self.lblLicorH2O, 12, 0, 1, 2)
 
         self.controlsLayout.addWidget(self.btnPump,     0, 0)
         self.controlsLayout.addWidget(self.btnBand,     1, 0)
@@ -419,13 +426,14 @@ class Visualizer(object):
                 
 ####################################################################
 
-                self.lblCD.setText(" ".join(("Countdown:", str(newData['countdown']))))
-                self.lblOven.setText("".join(("Oven: ", str(int(newData['toven'])), "/",
-                                              str(newData['spoven']), " degC")))
-                self.lblBand.setText("".join(("Band: ", str(int(newData['tband'])), "/",
-                                               str(newData['spband']), " degC")))
-                self.lblPump.setText("".join(("Pump (", "{:.2f}".format(newData['flow']), " lpm)")))
-                self.lblRes2.setText("".join(("Ext. Pump (", "{:.1f}".format(newData['eflow']), " lpm)")))
+                self.lblCD.setText("Countdown: {:.0f} ({:.0f} A)".format(newData['countdown'], newData['curr']))
+                self.lblOven.setText("Oven: {:.0f}/{:.0f} degC".format(newData['toven'], newData['spoven']))
+                self.lblBand.setText("Band: {:.0f}/{:.0f} degC".format(newData['tband'], newData['spband']))
+                self.lblPump.setText("Pump ({:.2f} lpm)".format(newData['flow']))
+                self.lblRes2.setText("Ext. Pump ({:.1f} lpm)".format(newData['eflow']))
+
+                self.lblLicorT.setText("CO2: {:.0f} ppm ({:.0f} degC)".format(newData['co2'], newData['tco2']))
+                self.lblLicorH2O.setText("H2O: {:.1f} mmol/mol".format(newData['h2o']))
 
                 if (newData['countdown'] % 2 == 0):
                     self.lblCD.setStyleSheet('color: black')
