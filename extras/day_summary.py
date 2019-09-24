@@ -11,7 +11,7 @@ import pandas as pd
 from pandas.plotting import register_matplotlib_converters
 
 import matplotlib
-if not os.isatty(sys.stdout.fileno()):
+if not sys.stdout.isatty():
     # runs graphs silently without user interaction
     # used if the script is run as cronjob or if
     # stdout has been redirected
