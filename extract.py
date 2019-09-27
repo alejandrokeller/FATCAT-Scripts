@@ -34,7 +34,7 @@ class EventError(Exception):
 
 class Rawfile(object):
     def __init__(self, datafile, events_path, integral_length,
-                 data_length, all_events = True,
+                 data_length, baseline_length, all_events = True,
                  baseline = False): # datafile is a valid filepointer
 
         #init data structure
@@ -57,7 +57,7 @@ class Rawfile(object):
 
         self.resultsDf = pd.DataFrame(columns = self.eventKeys)
         
-        self.baselinelength    = 5               # time for baseline calculation in seconds
+        self.baselinelength    = baseline_length # time for baseline calculation in seconds
         self.datalength        = data_length     # seconds of data for event file
         self.integrallength = integral_length    # length of integration in seconds
 
@@ -392,6 +392,7 @@ if __name__ == "__main__":
         integral_length = eval(config['DATA_ANALYSIS']['INTEGRAL_LENGTH'])
         baseline_path = eval(config['DATA_ANALYSIS']['BASELINE_PATH']) + '/'
         baseline_file = eval(config['DATA_ANALYSIS']['BASELINE_FILE'])
+        baseline_length = eval(config['DATA_ANALYSIS']['BASELINE_LENGTH'])
     else:
         raise ValueError('File \'%s\' is not a valid \'.ini\' file' % config_file)
 
@@ -457,7 +458,7 @@ if __name__ == "__main__":
     with args.datafile as file:
         mydata = Rawfile(file, events_path=events_path,
                          integral_length = integral_length, data_length = data_length,
-                         all_events = args.all, baseline = baseline)
+                         baseline_length = baseline_length, all_events = args.all, baseline = baseline)
         try:
             mydata.calculateAllBaseline()
             mydata.integrateAll()
