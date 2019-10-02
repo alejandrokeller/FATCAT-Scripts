@@ -17,7 +17,6 @@ sys.path.append(base_path + '/extras/')
 from fatcat_uploader import Uploader # httpsend command for uploading data
 from fatcat_uploader import FileUploader # httpsend command for uploading data
 from plot_event import Datafile
-from gui import hex2bin
 
 ppmtoug = 12.01/22.4 # factor to convert C in ppm to ug/lt at 0 degC and 1atm
 
@@ -26,13 +25,6 @@ def validdate(date_str):
         datetime.datetime.strptime(date_str, '%Y-%m-%d')
     except ValueError:
         raise ValueError("Incorrect date format, should be YYYY-MM-DD")
-
-def iserror(func, *args, **kw):
-    try:
-        func(*args, **kw)
-        return False
-    except Exception:
-        return True
 
 class EventError(Exception):
     def __init__(self, value):
@@ -85,46 +77,26 @@ class Rawfile(object):
             "CO2",
             "Flowrate",
         #    "Ind. Current",
-            "Cycle Countdown",
-            "Status Byte"]
-
-        self.dtypeDict = {
-            #"Daytime":"time",
-            "Time":             'float64',
-            "Sp Oven":          'int64',
-            "T Oven":           'float64',
-            "Max Allowed Coil": 'int64',
-            "T Coil":           'float64',
-            "Sp Band":          'int64',
-            "T Band":           'float64',
-            "Ext Flow":         'float64',
-            "T Cat":            'float64',
-            "CO2 Cell T":       'float64',
-            "CO2 Cell P":       'float64',
-            "CO2":              'float64',
-            "Flowrate":         'float64',
-            "Ind. Current":     'float64',
-            "Cycle Countdown":  'int64'}
+            "Cycle Countdown"]
 
         #### For compatibility with prior version #####
         self.keyDict = {
             "Daytime":"time",
             "Time":"runtime",
-            "Sp Oven":"spoven",
+        #    "Sp Oven",
             "T Oven":"toven",
-            "Max Allowed Coil":"spcoil",
-            "T Coil":"tcoil",
-            "Sp Band":"spband",
-            "T Band":"tband",
-            "Ext Flow":"eflow",
-            "T Cat":"tcat",
-            "CO2 Cell T":"tco2",
+        #    "Max Allowed Coil",
+        #    "T Coil",
+        #    "Sp Band",
+        #    "T Band",
+        #    "Ext Flow",
+        #    "T Cat",
+        #    "CO2 Cell T",
             "CO2 Cell P":"pco2",
             "CO2":"co2",
             "Flowrate":"flow",
-            "Ind. Current":"curr",
-            "Cycle Countdown":"countdown",
-            "Status Byte":"statusbyte"}
+        #    "Ind. Current",
+            "Cycle Countdown":"countdown"}
 
         self.uploadKeys = [
             "date",
@@ -136,16 +108,6 @@ class Rawfile(object):
             "tempoven",
             "tc",
             "userfile"]
-
-        self.statusKeys = [
-            "valve",
-            "pump",
-            "fan",
-            "oven",
-            "band",
-            "licor",
-            "res2",
-            "res"]
 
         self.fileData = pd.DataFrame(columns = self.keys)
         self._load()
@@ -162,7 +124,7 @@ class Rawfile(object):
 
         print >>sys.stderr, '{0} lines of data.\n{1} event(s) found at index(es): {2}'.format(self.numSamples, len(self.resultsDf), events)
 
-    def _countAndFetchEventsOld(self):
+    def _countAndFetchEvents(self):
         events = []
         event_flag = False
 
@@ -175,25 +137,6 @@ class Rawfile(object):
                 self.resultsDf = self.resultsDf.append(
                     {self.eventKeys[0]: int(index), self.eventKeys[1]: row['Time'], self.eventKeys[2]: row['Daytime']},
                     ignore_index=True).fillna(0)
-
-        return events
-
-    def _countAndFetchEvents(self):
-        events = []
-        event_flag = False
-
-        for index, row in self.df[self.on_status].iterrows():
-            if not events:
-                events.append(index)
-                event_flag = True
-            elif (row['Time'] > self.df['Time'][events[-1]] + self.datalength):
-                event_flag = True
-                events.append(index)
-            if event_flag:
-                  event_flag = False
-                  self.resultsDf = self.resultsDf.append(
-                      {self.eventKeys[0]: int(index), self.eventKeys[1]: row['Time'], self.eventKeys[2]: row['Daytime']},
-                      ignore_index=True).fillna(0)
 
         return events
 
@@ -245,12 +188,9 @@ class Rawfile(object):
         try:
             self._read_header()
             self.csvfile.seek(0, 0)
-            columns = pd.read_csv(self.csvfile, header=self.header, nrows = 1, sep='\t',
-                                  parse_dates=True).columns
+            columns = pd.read_csv(self.csvfile, header=self.header, nrows = 1, sep='\t', parse_dates=True).columns
             self.csvfile.seek(0, 0)
-            self.df = pd.read_csv(self.csvfile, skiprows = self.skiprows, sep='\t',
-                                  parse_dates=True, header = None, names=columns,
-                                  usecols = self.keys, dtype = self.dtypeDict)
+            self.df = pd.read_csv(self.csvfile, skiprows = self.skiprows, sep='\t', parse_dates=True, header = None, names=columns, usecols = self.keys)
 
             self.numSamples = len(self.df.index)
 
@@ -259,17 +199,6 @@ class Rawfile(object):
             raise
         else:
            print >>sys.stderr, "loaded successfully"
-           # validate status byte to find rows with errors
-           mask = self.df['Status Byte'].apply(lambda x: iserror(hex2bin, x))
-           #number_of_errors = (mask.values).sum() # fastest way to count errorlines
-           errors = self.df['Daytime'][mask].values.tolist()
-           # exclude errors
-           self.df = self.df[~mask]
-           print >>sys.stderr, "{} line(s) with errors removed at times: {}".format(len(errors), errors)
-           # extract oven status
-           self.df['Oven Status'] = [bool(int(hex2bin(x)[self.statusKeys.index("oven")])) for x in self.df['Status Byte']]
-           self.on_status = self.df['Oven Status']==True
-           #print >>sys.stderr, "oven on on {} rows of data".format(self.df[self.df['Oven Status']==True].shape[0])
            self.csvfile.close() 
 
     def calculateEventBaseline(self, eventIndex):
@@ -283,19 +212,16 @@ class Rawfile(object):
             runtime = self.resultsDf['runtime'][eventIndex]
             i1 = i0
             try:
-                elapsedTime = runtime - self.df['Time'].loc[i1]
+                elapsedTime = runtime - self.df['Time'][i1]
             except:
                 print >>sys.stderr, "error at index=" + str(i1)
                 raise
             while (elapsedTime <= self.baselinelength and i1 >= 0):
                 i1 = i1 - 1
-                elapsedTime = runtime - self.df['Time'].loc[i1]
+                elapsedTime = runtime - self.df['Time'][i1]
             else:
                 i1 += 1
-            # "i0-1" excludes the starting point of the event
-            # not necesary, but included for compatibility reasons
-            # may be changed to only "i0" without consequences
-            return round(np.mean(self.df['CO2'].loc[i1:i0-1]), 2)
+            return round(np.mean(self.df['CO2'][i1:i0]), 2)
 
     def calculateAllBaseline(self):
 
@@ -316,11 +242,11 @@ class Rawfile(object):
        i0 = int(self.resultsDf['index'][eventIndex])
        runtime = self.resultsDf['runtime'][eventIndex]
        i1 = i0
-       elapsedTime = self.df['Time'].loc[i1] - runtime
+       elapsedTime = self.df['Time'][i1] - runtime
        j = 0
        while elapsedTime <= self.datalength and i1 < self.numSamples - 1:
            i1 += 1
-           elapsedTime = self.df['Time'].loc[i1] - runtime
+           elapsedTime = self.df['Time'][i1] - runtime
            # search for index 
            if elapsedTime <= self.integrallength:
                j += 1
@@ -329,13 +255,9 @@ class Rawfile(object):
                print >>sys.stderr, 'End of file reachead while integrating last event ({0})!'.format(self.resultsDf['daytime'][eventIndex])
            i1 -= 1
 
-       # for back compatibility reasons to have always the same number of lines
-       # previous version used iloc instead of loc, thus excluded the last row
-       i1 = i1 - 1
-
-       co2     = self.df['CO2'].loc[i0:i1]-self.resultsDf['baseline'][eventIndex]
-       seconds = self.df['Time'].loc[i0:i1]
-       flow    = (self.df['Flowrate'].loc[i0:i1]).astype('float64')
+       co2     = self.df['CO2'][i0:i1]-self.resultsDf['baseline'][eventIndex]
+       seconds = self.df['Time'][i0:i1]
+       flow    = (self.df['Flowrate'][i0:i1]).astype('float64')
        
        #deltatc  = co2*np.mean(flow)*ppmtoug        ### Evaluate TC using the average flow
        deltatc  = co2*flow*ppmtoug                 ### Evaluate TC using real time flow
@@ -348,7 +270,7 @@ class Rawfile(object):
        co2 = co2.round(3)
        deltatc = deltatc.round(3)
        tc = tc_t.round(3)
-       maxT = max(self.df['T Oven'].loc[i0:i1])
+       maxT = max(self.df['T Oven'][i0:i1])
        dtcDf = pd.concat([co2,deltatc], axis = 1)
        newColNames = ['co2-event', 'dtc']
        dtcDf.columns = ['co2-event', 'dtc']
@@ -369,9 +291,9 @@ class Rawfile(object):
         colNames = colNames + newColNames
         units = units + newUnits
 
-        valuesDf = pd.concat([self.df.loc[i0:i1],df], axis = 1)
+        valuesDf = pd.concat([self.df.iloc[i0:i1],df], axis = 1)
 
-        filename = self.date + "-" + self.df['Daytime'].loc[i0][0:2] + self.df['Daytime'].loc[i0][3:5] + "-eventdata.csv"
+        filename = self.date + "-" + self.df['Daytime'][i0][0:2] + self.df['Daytime'][i0][3:5] + "-eventdata.csv"
         newfile = self.eventDir + filename
         
         header = filename + "\nsource: " + self.datafile + "\n" + ",".join(colNames) + "\n" + ",".join(units) + "\n"
