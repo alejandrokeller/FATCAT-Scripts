@@ -151,32 +151,21 @@ class Rawfile(object):
         self._load()
         
         print >>sys.stderr, '{1}\nCounting events in datafile "{0}"'.format(self.datafile, time.asctime( time.localtime(time.time()) ))
-        if all_events:
-            events = self._countAndFetchEvents()
-        else:
-            events = self._fetchLastEvents()
+##        if all_events:
+##            events = self._countAndFetchEvents()
+##        else:
+##            events = self._fetchLastEvents()
+        events = self._countAndFetchEvents()
         # in case there is not enough data for the last event ignore it
         if events[-1] >= self.numSamples - data_length*2: 
            events = events[:-2]
         self.numEvents  = len(events)
 
         print >>sys.stderr, '{0} lines of data.\n{1} event(s) found at index(es): {2}'.format(self.numSamples, len(self.resultsDf), events)
-
-    def _countAndFetchEventsOld(self):
-        events = []
-        event_flag = False
-
-        for index, row in self.df.iterrows():
-            if row['Cycle Countdown'] == 0:
-                event_flag = False
-            elif (event_flag == False and row['Cycle Countdown'] > 0):
-                event_flag = True
-                events.append(index)
-                self.resultsDf = self.resultsDf.append(
-                    {self.eventKeys[0]: int(index), self.eventKeys[1]: row['Time'], self.eventKeys[2]: row['Daytime']},
-                    ignore_index=True).fillna(0)
-
-        return events
+        if not all_events:
+            self.resultsDf = self.resultsDf.iloc[[-1]].reset_index(drop=True)
+            self.numEvents = 1
+            
 
     def _countAndFetchEvents(self):
         events = []
@@ -196,25 +185,6 @@ class Rawfile(object):
                       ignore_index=True).fillna(0)
 
         return events
-
-    def _fetchLastEvents(self):
-        events = []
-        event_flag = False
-
-        for index, row in self.df[::-1].iterrows():
-            if row['Cycle Countdown'] > 0:
-                event_flag = True
-                last_row = row
-            elif (event_flag == True and row['Cycle Countdown'] == 0):
-                event_flag = True
-                events.append(index+1)
-                self.resultsDf = self.resultsDf.append(
-                    {self.eventKeys[0]: int(index+1), self.eventKeys[1]: last_row['Time'], self.eventKeys[2]: last_row['Daytime']},
-                    ignore_index=True).fillna(0)
-                break
-
-        return events
-
 
     def _read_header(self):
         # rewind file
