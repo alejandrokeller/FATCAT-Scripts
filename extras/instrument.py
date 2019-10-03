@@ -23,8 +23,9 @@ class instrument(object):
             self.log_message("INSTRUMENT", "Could not find the configuration file: " + config_file)
             exit()
 
-        self.stop_str  = 'X0000'
-        self.start_str = 'X1000'
+        self.stop_str    = 'X0000'
+        self.start_str   = 'X1000'
+        self.zeroPID_str = 'Z1100'
         self.queries = [
             "C?", # Response: "PID1=[value in mv], PID2=[value in mv], to Control PIDx: <ON> = Cx100 or <OFF> = Cx000"
             "E?", # Response: "Status PUMP1=__, PUMP2=__, to Control PUMPx: <ON> = Ex100 or <OFF> = Ex000"
@@ -112,7 +113,8 @@ class instrument(object):
         lamps = int(binary_pattern, 2)
         offset = int('01000000',2)
         chr_nr = (lamps ^ offset)
-        c = 'L'+ chr(chr_nr) + '000'
+#        c = 'L'+ chr(chr_nr) + '000'
+        c = "".join(['L', chr(chr_nr), '000'])
         print "sending command: " + c + " chr_nr: " + str(chr_nr)
         if len(c) == 5:
             self.send_commands([c], open_port = open_port)
@@ -152,6 +154,11 @@ class instrument(object):
         # This function sends the start datastream command (X1000)
         self.log_message("SERIAL", "Starting datastream.")
         self.ser.write(self.start_str)
+
+    def zero_PID(self):
+        # This function sends the start datastream command (X1000)
+        self.log_message("SERIAL", "Setting VOC Zeropoint (at current reading).")
+        self.ser.write(self.zeroPID_str)
 
     def query_status(self, query):
         # This function sends a query to port 'ser' and returns the instrument response

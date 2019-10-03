@@ -62,7 +62,7 @@ def send_string(line, server_address, sock = 0):
 
 class Visualizer(object):
     def __init__(self, host_name='localhost', host_port=10000, config_file='config.ini'):
-        
+
         # init socket
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # Create a TCP/IP socket
         self.server_address = (host_name, host_port)
@@ -86,22 +86,28 @@ class Visualizer(object):
         #init data structure
         self.datastring = ""
         self.graphLength = 600 # seconds
-        self.deltaT = 0.25 # s, sampling time
+        self.deltaT = 0.5 # s, sampling time
         self.numSamples = int(self.graphLength/self.deltaT)
         self.photodiode_constant = 0.04545 # nA/mV
+        # set status to new application
+        self.firstLoop = True
 
         self.keys = [
             "runtime",
             "svoc1",
             "voc1",
+            "base1", # 20.9.2019 baseline VOC1
             "svoc2",
             "voc2",
+            "base2", # 20.9.2019 baseline VOC1
             "mfc1",
             "mfc2",
             "flow1",
             "flow2",
             "tuv",
             "iuv",
+            "inrH", # 20.9.2019 baseline VOC1
+            "inT", # 20.9.2019 baseline VOC1
             "stvoc",
             "tvoc",
             "stbath",
@@ -113,14 +119,18 @@ class Visualizer(object):
             float,  # runtime
             int,    # svoc1
             float,  # voc1
+            float,  # base1
             int,    # svoc2
             float,  # voc2
+            float,  # base2
             float,  # mfc1
             float,  # mfc2
             float,  # flow1
             float,  # flow2
             float,  # tuv
-            float,   # iuv
+            float,  # iuv
+            float,  # inrH
+            float,  # inT
             int,     # stvoc
             float,   # tvoc
             int,     # stbath
@@ -133,14 +143,18 @@ class Visualizer(object):
             's',    # runtime
             'mV',   # svoc1
             'mV',   # voc1
+            'mV',   # base1
             'mV',   # svoc2
             'mV',   # voc2
+            'mV',   # base2
             'ml',   # mfc1
             'ml',   # mfc2
             'slpm', # flow1
             'slpm', # flow2
             'degC', # tuv
-            'mv',   # iuv 
+            'mv',   # iuv
+            '%',    # inrH
+            'degC', # inT
             'degC', # stvoc
             'degC', # tvoc
             'degC', # stbath
@@ -195,7 +209,7 @@ class Visualizer(object):
 
         self.PIDplot = pg.PlotWidget()
         self.PIDplot.addLegend()
-        self.PIDplot.setRange(yRange=[0, 900])
+        #self.PIDplot.setRange(yRange=[0, 900])
         self.PIDplot.setLabel('left', "PID voltage", units='mV')
         self.PIDplot.setLabel('bottom', "t", units='s')
         self.PIDplot.showGrid(False, True)
@@ -226,12 +240,14 @@ class Visualizer(object):
 
         self.Fplot = pg.PlotWidget()
         self.Fplot.addLegend()
-        self.Fplot.setRange(yRange=[0, 10])
-        self.Fplot.setLabel('left', "Flow", units='slpm')
+        self.Fplot.setRange(yRange=[-0.005, 0.105])
+        self.Fplot.setLabel('left', "VOC Flow", units='lpm')
         self.Fplot.setLabel('bottom', "t", units='s')
         self.Fplot.showGrid(False, True)
-        self.Fcurves[0] = self.Fplot.plot(self.t, self.df['flow1'], pen=pg.mkPen('y', width=1), name='Flow1')
-        self.Fcurves[1] = self.Fplot.plot(self.t, self.df['flow2'], pen=pg.mkPen('r', width=1), name='Flow2')
+        self.Fcurves[0] = self.Fplot.plot(self.t, self.df['mfc1'], pen=pg.mkPen('y', width=1), name='MFC1')
+        self.Fcurves[1] = self.Fplot.plot(self.t, self.df['mfc2'], pen=pg.mkPen('r', width=1), name='MFC2')
+        # currently the set variable does not exists
+        #self.Fcurves[3] = self.Fplot.plot(self.t, self.df['smfc2'], pen=pg.mkPen('r', width=1, style=QtCore.Qt.DashLine))
 
 #####################################################################
 
@@ -242,86 +258,153 @@ class Visualizer(object):
 
         ## Create infotext widgets to be placed inside
         self.lblLamp      = QtGui.QLabel("Lamps")
+        self.lblVOCTctr   = QtGui.QLabel("VOC heater")
         self.lblBath      = QtGui.QLabel("Bath:")
         self.lblBathT     = QtGui.QLabel("")
-        self.lblTube      = QtGui.QLabel("Tube:")
+        self.lblTube      = QtGui.QLabel("VOC:")
         self.lblTubeT     = QtGui.QLabel("")
-        self.lblVOC1      = QtGui.QLabel("VOC1 control")
-        self.lblVOC2      = QtGui.QLabel("VOC2 control")
+        self.lblVOC1      = QtGui.QLabel("VOC1 ()")
+        self.lblVOC2      = QtGui.QLabel("VOC2 ()")
         self.lblPump1     = QtGui.QLabel("Pump1")
         self.lblPump2     = QtGui.QLabel("Pump2")
-        self.lblLamps     = QtGui.QLabel("Lamps:")
+        self.lblLamps     = QtGui.QLabel("OFR:")
         self.lblLampsData = QtGui.QLabel("")
+        # added 20.9.2019
+        self.lblInlet     = QtGui.QLabel("Inlet:")
+        self.lblInletData = QtGui.QLabel("")
         
         self.lblCD        = QtGui.QLabel("0")
 
         ## Create button widgets for actions
-        self.button_size = 30
+        button_size  = 27
         self.btnLamp      = QtGui.QPushButton("")            # Turn lamps on or off
-        self.btnLamp.setFixedWidth(self.button_size)
+        self.btnLamp.setFixedWidth(button_size)
+        self.btnLamp.setFixedHeight(button_size)
+        self.btnVOCTctr   = QtGui.QPushButton("")            # Turn VOC heater on or off
+        self.btnVOCTctr.setFixedHeight(button_size)
+        self.btnVOCTctr.setFixedWidth(button_size)
         self.btnBath      = QtGui.QPushButton("")            # Turn Bath Heating on/off
-        self.btnBath.setFixedWidth(self.button_size)
-        self.btnTube     = QtGui.QPushButton("")             # Turn Tube Heating on/off
-        self.btnTube.setFixedWidth(self.button_size)
-        self.btnVOC1     = QtGui.QPushButton("")             # TURN VOC1 control on/off
-        self.btnVOC1.setFixedWidth(self.button_size)
+        self.btnBath.setFixedWidth(button_size)
+        self.btnBath.setFixedHeight(button_size)
+        self.btnTube      = QtGui.QPushButton("")             # Turn Tube Heating on/off
+        self.btnTube.setFixedWidth(button_size)
+        self.btnTube.setFixedHeight(button_size)
+        self.btnVOC1      = QtGui.QPushButton("")             # TURN VOC1 control on/off
+        self.btnVOC1.setFixedWidth(button_size)
+        self.btnVOC1.setFixedHeight(button_size)
         self.btnVOC2      = QtGui.QPushButton("")            # TURN VOC2 control on/off
-        self.btnVOC2.setFixedWidth(self.button_size)
-        self.btnPump1      = QtGui.QPushButton("")            # Turn pump 1 on/off
-        self.btnPump1.setFixedWidth(self.button_size)
-        self.btnPump2      = QtGui.QPushButton("")            # Turn pump 2 on/off
-        self.btnPump2.setFixedWidth(self.button_size)
+        self.btnVOC2.setFixedWidth(button_size)
+        self.btnVOC2.setFixedHeight(button_size)
+        self.btnPump1     = QtGui.QPushButton("")            # Turn pump 1 on/off
+        self.btnPump1.setFixedWidth(button_size)
+        self.btnPump1.setFixedHeight(button_size)
+        self.btnPump2     = QtGui.QPushButton("")            # Turn pump 2 on/off
+        self.btnPump2.setFixedWidth(button_size)
+        self.btnPump2.setFixedHeight(button_size)
 
         self.btnLamp.clicked.connect(self.toggleAllLamps)
+        self.btnVOCTctr.clicked.connect(self.toggleVOCHeater)
         self.btnVOC1.clicked.connect(self.toggleVOC1)
         self.btnVOC2.clicked.connect(self.toggleVOC2)
         self.btnPump1.clicked.connect(self.togglePump1)
         self.btnPump2.clicked.connect(self.togglePump2)
 
+        ## Create widgets for controlling MFC2
+        self.btnMFC2      = QtGui.QPushButton(">>")  # Sends new MFC2 flow
+        self.btnMFC2.setFixedWidth(button_size)
+        self.btnMFC2.setFixedHeight(button_size)
+        self.btnMFC2.clicked.connect(self.setMFC2)
+        self.lblMFC2      = QtGui.QLabel("MFC2 (mlpm):")
+        self.spMFC2       = QtGui.QSpinBox()
+        self.spMFC2.setRange(0,100)
+
+        ## Create widgets for controlling VOC1
+        self.btnSVOC1      = QtGui.QPushButton(">>")  # Sends new MFC2 flow
+        self.btnSVOC1.setFixedWidth(button_size)
+        self.btnSVOC1.setFixedHeight(button_size)
+        self.btnSVOC1.clicked.connect(self.setSVOC1)
+        self.lblSVOC1      = QtGui.QLabel("VOC1 (mV):")
+        self.spSVOC1       = QtGui.QSpinBox()
+        self.spSVOC1.setRange(0,2500)
+
+        ## Create widgets for controlling VOC Heater
+        self.btnVOCT       = QtGui.QPushButton(">>")  # Sends new MFC2 flow
+        self.btnVOCT.setFixedWidth(button_size)
+        self.btnVOCT.setFixedHeight(button_size)
+        self.btnVOCT.clicked.connect(self.setVOCT)
+        self.lblVOCT       = QtGui.QLabel("VOC (degC):")
+        self.spVOCT        = QtGui.QSpinBox()
+        self.spVOCT.setRange(0,80)
+
+        ## Create widgets for serial commands
+        self.btnSERIAL     = QtGui.QPushButton(">>")  # Sends new MFC2 flow
+        self.btnSERIAL.setFixedWidth(button_size)
+        self.btnSERIAL.setFixedHeight(button_size)
+        self.btnSERIAL.clicked.connect(self.sendSerialCMD)
+        self.lblSERIAL     = QtGui.QLabel("Command:")
+        self.lineSERIAL    = QtGui.QLineEdit()
+        validator = QtGui.QRegExpValidator(QtCore.QRegExp("[abFpirRXZ][0-9]{4}"))
+        self.lineSERIAL.setValidator(validator)
+
         ## Create a grid layout to manage the controls size and position
         self.controlsLayout = QtGui.QGridLayout()
         self.encloserLayout = QtGui.QVBoxLayout()
         self.lampsButtonsLayout = QtGui.QHBoxLayout()
+        self.mfcLayout = QtGui.QGridLayout()
         self.encloserLayout.addLayout(self.controlsLayout)
         self.encloserLayout.addLayout(self.lampsButtonsLayout)
+        self.encloserLayout.addLayout(self.mfcLayout)
         self.encloserLayout.addStretch(1)
 
         ## Create individual lamp buttons
         self.lamps = []
         for i in range(5):
             self.lamps.append(i)
-            self.lamps[i] = QtGui.QPushButton(str(i))
-            self.lamps[i].setFixedWidth(self.button_size)
+            self.lamps[i] = QtGui.QPushButton("L{}".format(i))
+            self.lamps[i].setFixedWidth(1.2*button_size)
+            self.lamps[i].setFixedHeight(button_size)
             self.lamps[i].clicked.connect(partial(self.toggleLamp,i))
             self.lampsButtonsLayout.addWidget(self.lamps[i])
 
         ## Add widgets to the layout in their proper positions
         self.controlsLayout.addWidget(self.lblLamp,      0, 1)
-        self.controlsLayout.addWidget(self.lblVOC1,      1, 1)
-        self.controlsLayout.addWidget(self.lblVOC2,      2, 1)
-        self.controlsLayout.addWidget(self.lblPump1,     3, 1)
-        self.controlsLayout.addWidget(self.lblPump2,     4, 1)
-        self.controlsLayout.addWidget(self.lblBath,      5, 0)
-        self.controlsLayout.addWidget(self.lblBathT,     5, 1)
-        self.controlsLayout.addWidget(self.lblTube,      6, 0)
-        self.controlsLayout.addWidget(self.lblTubeT,     6, 1)
-        self.controlsLayout.addWidget(self.lblLamps,     7, 0)
-        self.controlsLayout.addWidget(self.lblLampsData, 7, 1)
+        self.controlsLayout.addWidget(self.lblVOCTctr,   1, 1)
+        self.controlsLayout.addWidget(self.lblVOC1,      2, 1)
+        self.controlsLayout.addWidget(self.lblVOC2,      3, 1)
+        self.controlsLayout.addWidget(self.lblPump1,     4, 1)
+        self.controlsLayout.addWidget(self.lblPump2,     5, 1)
+###### Future temperature control for the VOC bottle
+#        self.controlsLayout.addWidget(self.lblBath,      6, 0)
+#        self.controlsLayout.addWidget(self.lblBathT,     6, 1)
+        self.controlsLayout.addWidget(self.lblTube,      7, 0)
+        self.controlsLayout.addWidget(self.lblTubeT,     7, 1)
+        self.controlsLayout.addWidget(self.lblLamps,     8, 0)
+        self.controlsLayout.addWidget(self.lblLampsData, 8, 1)
+        self.controlsLayout.addWidget(self.lblInlet,     9, 0)
+        self.controlsLayout.addWidget(self.lblInletData, 9, 1)
 
-##        self.controlsLayout.addWidget(self.lblCD,    8, 0, 1, 2)
+##        self.controlsLayout.addWidget(self.lblCD,    9, 0, 1, 2) # example of two spaces horizontal (one vertical)
 
         self.controlsLayout.addWidget(self.btnLamp,     0, 0)
-        self.controlsLayout.addWidget(self.btnVOC1,     1, 0)
-        self.controlsLayout.addWidget(self.btnVOC2,     2, 0)
-        self.controlsLayout.addWidget(self.btnPump1,    3, 0)
-        self.controlsLayout.addWidget(self.btnPump2,    4, 0)
-##        self.controlsLayout.addWidget(self.btnOven,  7, 0, 1, 2)
+        self.controlsLayout.addWidget(self.btnVOCTctr,  1, 0)
+        self.controlsLayout.addWidget(self.btnVOC1,     2, 0)
+        self.controlsLayout.addWidget(self.btnVOC2,     3, 0)
+        self.controlsLayout.addWidget(self.btnPump1,    4, 0)
+        self.controlsLayout.addWidget(self.btnPump2,    5, 0)
 
-##        self.lampsButtonsLayout.addWidget(self.btnLamp0)
-##        self.lampsButtonsLayout.addWidget(self.btnLamp1)
-##        self.lampsButtonsLayout.addWidget(self.btnLamp2)
-##        self.lampsButtonsLayout.addWidget(self.btnLamp3)
-##        self.lampsButtonsLayout.addWidget(self.btnLamp4)
+        ## Add Widgets to the MFCLayout
+        self.mfcLayout.addWidget(self.lblSVOC1,    0, 0)
+        self.mfcLayout.addWidget(self.spSVOC1,     0, 1)
+        self.mfcLayout.addWidget(self.btnSVOC1,    0, 2)
+        self.mfcLayout.addWidget(self.lblVOCT,     1, 0)
+        self.mfcLayout.addWidget(self.spVOCT,      1, 1)
+        self.mfcLayout.addWidget(self.btnVOCT,     1, 2)
+        self.mfcLayout.addWidget(self.lblMFC2,     2, 0)
+        self.mfcLayout.addWidget(self.spMFC2,      2, 1)
+        self.mfcLayout.addWidget(self.btnMFC2,     2, 2)
+        self.mfcLayout.addWidget(self.lblSERIAL,   3, 0)
+        self.mfcLayout.addWidget(self.lineSERIAL,  3, 1)
+        self.mfcLayout.addWidget(self.btnSERIAL,   3, 2)
 
         ## Create a QVBox layout to manage the plots
         self.plotLayout = QtGui.QVBoxLayout()
@@ -330,6 +413,9 @@ class Visualizer(object):
         self.plotLayout.addWidget(self.Fplot)
 ##        self.plotLayout.addWidget(self.Pplot)
 ##        self.plotLayout.addWidget(self.Cplot)
+
+
+        
 
         ## Create a QHBox layout to manage the plots
         self.centralLayout = QtGui.QHBoxLayout()
@@ -374,18 +460,29 @@ class Visualizer(object):
                     if j > 2:
                         ## LampString has the most significant bit to the left
                         self.lampString = self.lampString + statusbyte[j]
-                
-                self.PIDcurves[0].setData(self.t, self.df['svoc1'])
-                self.PIDcurves[1].setData(self.t, self.df['voc1'])
-                self.PIDcurves[2].setData(self.t, self.df['svoc2'])
-                self.PIDcurves[3].setData(self.t, self.df['voc2'])
+
+                if self.statusDict['voc1']:
+                    self.PIDcurves[0].setData(self.t, self.df['svoc1'])
+                    self.PIDcurves[1].setData(self.t, self.df['voc1'])
+#                    self.PIDcurves[1].setData(self.t, self.df['voc1'] - self.df['base1'])
+                else:
+                    self.PIDcurves[0].clear()
+                    self.PIDcurves[1].clear()
+                if self.statusDict['voc2']:
+                    self.PIDcurves[2].setData(self.t, self.df['svoc2'])
+                    self.PIDcurves[3].setData(self.t, self.df['voc2'])
+                else:
+                    self.PIDcurves[2].clear()
+                    self.PIDcurves[3].clear()
+#                    self.PIDcurves[3].setData(self.t, self.df['voc2'] - self.df['base2'])
 
 ##                self.Pcurves[0].setData(self.t, self.df['pco2'])
 ##
 ##                self.Ccurves[0].setData(self.t, self.df['co2'])
 
-                self.Fcurves[0].setData(self.t, self.df['flow1'])
-                self.Fcurves[1].setData(self.t, self.df['flow2'])
+                # Data is received in mlpm. Dividing through 1000 to use pyqugraph autolabeling
+                self.Fcurves[0].setData(self.t, self.df['mfc1']/1000)
+                self.Fcurves[1].setData(self.t, self.df['mfc2']/1000)
                 
 ####################################################################
 
@@ -397,7 +494,22 @@ class Visualizer(object):
                                                    str(int(newData['iuv']*self.device.uv_constant/1000)), " uA" )))
                 self.lblPump1.setText("".join(("Pump1 (", "{:.1f}".format(newData['flow1']), " slpm)")))
                 self.lblPump2.setText("".join(("Pump2 (", "{:.1f}".format(newData['flow2']), " slpm)")))
+                self.lblInletData.setText("".join((str(int(newData['inT'])), " degC, ",
+                                                   str(int(newData['inrH'])), "% rH" )))
+                self.lblVOC1.setText("".join(("VOC1: ",str(int(newData['voc1'])), "/",
+                                               str(newData['svoc1']), " mV")))
+                self.lblVOC2.setText("".join(("VOC2: ",str(int(newData['voc2'])), " mV")))
+                #self.lblMFC2.setText("".join(("MFC2: ",str(int(newData['mfc2'])), " mlpm")))
 
+                # Initialize some indicators
+                if self.firstLoop:
+                    self.firstLoop = False
+                    self.spMFC2.setValue(int(newData['mfc2']))
+                    self.spSVOC1.setValue(int(newData['svoc1']))
+                    self.spVOCT.setValue(int(newData['stvoc']))
+                    
+
+################# Example of color toggle
 ##                if (newData['countdown'] % 2 == 0):
 ##                    self.lblCD.setStyleSheet('color: black')
 ##                else:
@@ -428,9 +540,9 @@ class Visualizer(object):
                     self.lblVOC2.setStyleSheet('color: red')
 
                 if self.statusDict['tube_heat']:
-                    self.lblTube.setStyleSheet('color: green')
+                    self.lblVOCTctr.setStyleSheet('color: green')
                 else:
-                    self.lblTube.setStyleSheet('color: red')
+                    self.lblVOCTctr.setStyleSheet('color: red')
 
                 if self.statusDict['pump1']:
                     self.lblPump1.setStyleSheet('color: green')
@@ -474,6 +586,24 @@ class Visualizer(object):
             print >>sys.stderr, e
 ##            raise
 
+    def sendSerialCMD(self):
+        commands = [self.lineSERIAL.text().encode("ascii")]
+        print >> sys.stderr, commands
+        self.device.send_commands(commands, open_port = True)
+        self.lineSERIAL.clear()
+
+    def setMFC2(self):
+        commands = ['M{:04d}'.format(self.spMFC2.value())]
+        self.device.send_commands(commands, open_port = True)
+
+    def setSVOC1(self):
+        commands = ['P{:04d}'.format(self.spSVOC1.value())]
+        self.device.send_commands(commands, open_port = True)
+
+    def setVOCT(self):
+        commands = ['Q{:04d}'.format(self.spVOCT.value())]
+        self.device.send_commands(commands, open_port = True)
+            
     def toggleAllLamps(self):
         if self.lamps_status:
             self.device.set_lamps('00000', open_port = True)
@@ -491,7 +621,14 @@ class Visualizer(object):
         new_string = ("".join(s))[::-1]
         print "New lamp String: " + new_string[::-1]
         self.device.set_lamps(new_string, open_port = True)
-            
+
+    def toggleVOCHeater(self):
+        if self.statusDict['tube_heat']:
+            commands = ['q0000']
+        else:
+            commands = ['q1000']
+        self.device.send_commands(commands, open_port = True)
+        
     def toggleVOC1(self):
         if self.statusDict['voc1']:
             commands = ['C1000']

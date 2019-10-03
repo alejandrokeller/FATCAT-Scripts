@@ -8,5 +8,5 @@ from instrument import instrument
 config_file = os.path.abspath(base_path + '/config.ini')
 device = instrument(config_file = config_file)
 
-device.log_message("COMMANDS", "Turning induction oven on...")
-device.send_commands(['O1000'], open_port = True)
+device.log_message("COMMANDS", "Setting PID baseline (at current value)...")
+device.send_commands(['Z1100'], open_port = True)
