@@ -23,23 +23,25 @@ class instrument(object):
             self.log_message("INSTRUMENT", "Could not find the configuration file: " + config_file)
             exit()
 
-        self.stop_str    = 'X0000'
-        self.start_str   = 'X1000'
-        self.zeroPID_str = 'Z1100'
+        self.stop_str    = 'X0000!'
+        self.start_str   = 'X1000!'
+        self.zeroPID_str = 'Z1100!'
         self.queries = [
+            "a?", # Response: "p values: P1=x; P2=5; BATH:0; Set: px000 to px999" controls pump and humidification
+            "b?", # Response: "i values: P1=x; P2=5; BATH:0; Set: ix000 to ix999" controls pump and humidification
             "C?", # Response: "PID1=[value in mv], PID2=[value in mv], to Control PIDx: <ON> = Cx100 or <OFF> = Cx000"
             "E?", # Response: "Status PUMP1=__, PUMP2=__, to Control PUMPx: <ON> = Ex100 or <OFF> = Ex000"
             "F?", # Response: "SetPoint PUMP1=__ PUMP2=__ [%]"
             "L?", # Response: "Control LAMPS 1 to 5: Lx000 (x= uint8 bitwise 0x00054321)"
-#            "M?", # Response: "SET MassFlowController 2 = __ [ml]"
+            "M?", # Response: "SET MassFlowController 2 = __ [ml], Set:M0000 to M0100"
             "N?", # Response: "Serial Number=____"
-#            "p?", # Response: "Current p Value of control loop = __ ; Set with: p0001 to p0050"
-#            "i?", # Response: "Current i Value of control loop = __ ; Set with: i0001 to i0050"
+            "p?", # Response: "p val of VOC1 control loop = __ ; Set with: p0000 to p0999"
+            "i?", # Response: "i val of VOC1 control loop = __ ; Set with: i0001 to i0999"
             "P?", # Response: "VOC1 SETPOINT=____ [mV]; Set with: P0000 to P2500"
-#            "Q?", # Response: "Tubeheater SETPOINT=__[C]; Set temp with: Q0001 to Q080"
-#            "R?", # Response: "RH SETPOINT=___%; Set percentage with: R0000 to R0100"
+            "Q?", # Response: "Tubeheater SETPOINT=__[C]; Set temp with: Q0001 to Q080"
+            "R?", # Response: "RH SETPOINT=___%; Set percentage with: R0000 to R0100"
 #            "T?", # Response: "time and date"; // TODO! Not ready yet because of missing battery;
-#            "X?", # Response:"Control DATASTREAM: <ON> = X1000 or <OFF> = X0000 \r\n"
+            "X?", # Response:"Control DATASTREAM: <ON> = X1000 or <OFF> = X0000 \r\n"
             "Z?"  # Response: "LAMP_STATUS_BYTE hexadecimal = 0x00"
             ]
 
@@ -91,6 +93,11 @@ class instrument(object):
         if open_port:
             self.open_port()
         for c in commands:
+            # check that the command is terminated as a question (?) or an action (!)
+            if c[-1] != '?' and c[-1] != '!':
+                # terminate it as action with a char '!' if needed
+                c += '!'
+#            self.log_message("SERIAL", "Sending command: '" + c + "'")
             self.ser.write(c)
         if open_port:
             self.close_port()
@@ -142,31 +149,43 @@ class instrument(object):
         else:
             self.log_message("SERIAL", "Relative humidity setting invalid: '" + c + "'")    
 
-    def stop_datastream(self):
+    def stop_datastream(self, open_port = False):
         # This function sends the stop datastream command (X0000) and
         # waits until there is no furter answer
         self.log_message("SERIAL", "Stopping datastream.")
-        self.ser.write(self.stop_str)
+        if open_port:
+            self.open_port()
+        self.send_commands([self.stop_str], open_port = False)
+        #self.ser.write(self.stop_str)
         while len(self.ser.readline()):
             pass
+        if open_port:
+            self.close_port()
 
-    def start_datastream(self):
+    def start_datastream(self, open_port = False):
         # This function sends the start datastream command (X1000)
         self.log_message("SERIAL", "Starting datastream.")
-        self.ser.write(self.start_str)
+        self.send_commands([self.start_str], open_port = open_port)
+        #self.ser.write(self.start_str)
 
-    def zero_PID(self):
+    def zero_PID(self, open_port = False):
         # This function sends the start datastream command (X1000)
         self.log_message("SERIAL", "Setting VOC Zeropoint (at current reading).")
-        self.ser.write(self.zeroPID_str)
+        #self.ser.write(self.zeroPID_str)
+        self.send_commands([self.zeroPID_str], open_port = open_port)
 
-    def query_status(self, query):
+    def query_status(self, query, open_port = False):
         # This function sends a query to port 'ser' and returns the instrument response
         self.log_message("SERIAL", "Sending command '" + query + "'")
-        self.ser.write(query)
+        if open_port:
+            self.open_port()
+        self.send_commands([query], open_port = False)
+        #self.ser.write(query)
         answer = ""
         while not answer.endswith("\n"):
             answer=self.ser.readline()
+        if open_port:
+            self.close_port()
         return answer
 
     def readline(self):

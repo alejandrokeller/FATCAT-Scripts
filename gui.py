@@ -468,8 +468,10 @@ class Visualizer(object):
                 else:
                     self.PIDcurves[0].clear()
                     self.PIDcurves[1].clear()
+
                 if self.statusDict['voc2']:
-                    self.PIDcurves[2].setData(self.t, self.df['svoc2'])
+                    self.PIDcurves[2].clear()
+                    #self.PIDcurves[2].setData(self.t, self.df['svoc2'])
                     self.PIDcurves[3].setData(self.t, self.df['voc2'])
                 else:
                     self.PIDcurves[2].clear()
