@@ -88,6 +88,11 @@ class Rawfile(object):
             "Cycle Countdown",
             "Status Byte"]
 
+        # columns to save on the event file
+        self.eventfileKeys = self.keys[:]
+        self.eventfileKeys.remove("Status Byte")
+
+        # force use following data types when reading the rawfile
         self.dtypeDict = {
             #"Daytime":"time",
             "Time":             'float64',
@@ -126,6 +131,7 @@ class Rawfile(object):
             "Cycle Countdown":"countdown",
             "Status Byte":"statusbyte"}
 
+        # Keys to upload data to a sql database (not been used in long time)
         self.uploadKeys = [
             "date",
             "time",
@@ -137,6 +143,7 @@ class Rawfile(object):
             "tc",
             "userfile"]
 
+        # interpretation of bits on the "Status Byte" column
         self.statusKeys = [
             "valve",
             "pump",
@@ -235,7 +242,8 @@ class Rawfile(object):
            errors = self.df['Daytime'][mask].values.tolist()
            # exclude errors
            self.df = self.df[~mask]
-           print >>sys.stderr, "{} line(s) with errors removed at times: {}".format(len(errors), errors)
+           if len(errors):
+               print >>sys.stderr, "{} line(s) with errors removed at times: {}".format(len(errors), errors)
            # extract oven status
            self.df['Oven Status'] = [bool(int(hex2bin(x)[self.statusKeys.index("oven")])) for x in self.df['Status Byte']]
            self.on_status = self.df['Oven Status']==True
@@ -331,7 +339,7 @@ class Rawfile(object):
 
         units = []
         colNames = []
-        for k in self.keys:
+        for k in self.eventfileKeys:
             key = str(k)
             #units.append(self.unitsDict[key.replace(" ","")])
             units.append(self.unitsDict[key])
@@ -339,7 +347,7 @@ class Rawfile(object):
         colNames = colNames + newColNames
         units = units + newUnits
 
-        valuesDf = pd.concat([self.df.loc[i0:i1],df], axis = 1)
+        valuesDf = pd.concat([self.df.loc[i0:i1, self.eventfileKeys],df], axis = 1)
 
         filename = self.date + "-" + self.df['Daytime'].loc[i0][0:2] + self.df['Daytime'].loc[i0][3:5] + "-eventdata.csv"
         newfile = self.eventDir + filename
