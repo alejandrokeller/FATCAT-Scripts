@@ -11,11 +11,12 @@ if __name__ == "__main__":
 
     config_file = os.path.abspath(base_path + "/config.ini")
     
-    description_text = """Send the list of serial commands to FATCAT. e.g.:
-         S1xxx -> 000...999 -> Set target temperature of OVEN;
-         S2xxx -> 000...999 -> Set target temperature of BANDheater;
-         P1xxx -> 000...100 P-ControlParameter of OVEN;
-         P2xxx -> 000...100 P-ControlParameter of BANDHeater;
+    description_text = """Send the list of serial commands to the Coating Unit. e.g.:
+         Rxxxx -> 0000...0100 -> Setpoint of rH controller (%rH);
+         Qxxxx -> 0000...0080 -> Setpoint of VOC Tube (degC);
+         Fyxxx -> x in 000...999 -> Setpoint of PUMP #y (ml/min);
+         Pxxxx -> 0000...2500 -> Setpoint of VOC1 loop (mV);
+         Mxxxx -> 0000...0100 -> Setpoint of MFC2 loop (ml/min);
          Nxxxx -> set the serial number from unit to SN xxxx"""
 
     parser = argparse.ArgumentParser(description=description_text)
