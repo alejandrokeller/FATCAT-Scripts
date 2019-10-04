@@ -40,20 +40,20 @@ if __name__ == "__main__":
     device = instrument(config_file = config_file)
     device.open_port()
     device.stop_datastream()
-    fatcat_status = ""
+    status_str = ""
 
     for q in device.queries:
-        fatcat_status += device.query_status(q)
+        status_str += device.query_status(q)
 
     device.start_datastream()
     device.close_port()
 
-    print >>sys.stderr, fatcat_status
+    print >>sys.stderr, status_str
 
     newname = create_status_file(path=logs_path)
     print >>sys.stderr, "Writing to Datafile: " + newname
     fo = open(newname, "a")
-    fo.write(fatcat_status)
+    fo.write(status_str)
     fo.close()
 
     print >>sys.stderr, "bye..."
