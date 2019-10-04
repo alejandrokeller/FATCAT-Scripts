@@ -1,12 +1,14 @@
-import time
+import time, datetime
 import serial
 import serial.tools.list_ports
 import os, sys, configparser
+from datetime import timedelta
 
 class instrument(object):
     def __init__(self, config_file):
 
         self.port = "n/a"
+        self.query_timeout = 2 # timout in seconds
 
         # Read the name of the serial port
         if os.path.exists(config_file):
@@ -52,8 +54,7 @@ class instrument(object):
             "Q?", # Response: "Tubeheater SETPOINT=__[C]; Set temp with: Q0001 to Q080"
             "R?", # Response: "RH SETPOINT=___%; Set percentage with: R0000 to R0100"
 #            "T?", # Response: "time and date"; // TODO! Not ready yet because of missing battery;
-            "X?", # Response:"Control DATASTREAM: <ON> = X1000 or <OFF> = X0000 \r\n"
-            "Z?"  # Response: "LAMP_STATUS_BYTE hexadecimal = 0x00"
+            "X?" # Response:"Control DATASTREAM: <ON> = X1000 or <OFF> = X0000 \r\n"
             ]
 
     def serial_ports(self):
@@ -192,8 +193,12 @@ class instrument(object):
         self.send_commands([query], open_port = False)
         #self.ser.write(query)
         answer = ""
+        wait_until = datetime.datetime.now() + timedelta(seconds=self.query_timeout)
         while not answer.endswith("\n"):
             answer=self.ser.readline()
+            if wait_until < datetime.datetime.now():
+                answer+="timeout while waiting for responde to query " + query + "\n"
+                break
         if open_port:
             self.close_port()
         return answer
