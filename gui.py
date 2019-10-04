@@ -77,9 +77,9 @@ class Visualizer(object):
 
         # init pyqt
         self.app = QtGui.QApplication([])
-###        self.win = pg.GraphicsWindow(title="TC Analyzer")
+###        self.win = pg.GraphicsWindow(title="OCU")
 ###        self.win.showFullScreen()
-###        self.win.setWindowTitle('TC Analyzer')
+###        self.win.setWindowTitle('OCU Control Panel')
         pg.setConfigOptions(antialias=False)
         pg.setConfigOption('foreground', 'w')
 
@@ -218,24 +218,6 @@ class Visualizer(object):
         self.PIDcurves[2] = self.PIDplot.plot(self.t, self.df['svoc2'], pen=pg.mkPen('r', width=1, style=QtCore.Qt.DashLine))
         self.PIDcurves[3] = self.PIDplot.plot(self.t, self.df['voc2'], pen=pg.mkPen('r', width=1), name='PID2')
         
-
-##        self.Pcurves = dict()
-##
-##        self.Pplot = pg.PlotWidget()
-##        self.Pplot.setRange(yRange=[50, 100])
-##        self.Pplot.setLabel('left', "CO2 Press.", units='kPa')
-##        self.Pplot.setLabel('bottom', "t", units='s')
-##        self.Pplot.showGrid(False, True)
-##        self.Pcurves[0] = self.Pplot.plot(self.t, self.df['pco2'], pen=pg.mkPen('y', width=1))
-##
-##        self.Ccurves = dict()
-##
-##        self.Cplot = pg.PlotWidget()
-##        self.Cplot.setLabel('left', "CO2", units='ppm')
-##        self.Cplot.setLabel('bottom', "t", units='s')
-##        self.Cplot.showGrid(False, True)
-##        self.Ccurves[0] = self.Cplot.plot(self.t, self.df['co2'], pen=pg.mkPen('y', width=1))
-
         self.Fcurves = dict()
 
         self.Fplot = pg.PlotWidget()
@@ -411,11 +393,6 @@ class Visualizer(object):
 
         self.plotLayout.addWidget(self.PIDplot)
         self.plotLayout.addWidget(self.Fplot)
-##        self.plotLayout.addWidget(self.Pplot)
-##        self.plotLayout.addWidget(self.Cplot)
-
-
-        
 
         ## Create a QHBox layout to manage the plots
         self.centralLayout = QtGui.QHBoxLayout()
@@ -464,7 +441,6 @@ class Visualizer(object):
                 if self.statusDict['voc1']:
                     self.PIDcurves[0].setData(self.t, self.df['svoc1'])
                     self.PIDcurves[1].setData(self.t, self.df['voc1'])
-#                    self.PIDcurves[1].setData(self.t, self.df['voc1'] - self.df['base1'])
                 else:
                     self.PIDcurves[0].clear()
                     self.PIDcurves[1].clear()
@@ -476,11 +452,6 @@ class Visualizer(object):
                 else:
                     self.PIDcurves[2].clear()
                     self.PIDcurves[3].clear()
-#                    self.PIDcurves[3].setData(self.t, self.df['voc2'] - self.df['base2'])
-
-##                self.Pcurves[0].setData(self.t, self.df['pco2'])
-##
-##                self.Ccurves[0].setData(self.t, self.df['co2'])
 
                 # Data is received in mlpm. Dividing through 1000 to use pyqugraph autolabeling
                 self.Fcurves[0].setData(self.t, self.df['mfc1']/1000)
@@ -555,35 +526,7 @@ class Visualizer(object):
                     self.lblPump2.setStyleSheet('color: green')
                 else:
                     self.lblPump2.setStyleSheet('color: red')
-                    
-##                if self.statusDict['licor']:
-##                    self.lblLicor.setStyleSheet('color: green')
-##                else:
-##                    self.lblLicor.setStyleSheet('color: red')
-##
-##                if self.statusDict['valve']:
-##                    self.lblValve.setStyleSheet('color: green')
-##                else:
-##                    self.lblValve.setStyleSheet('color: red')
-##
-##                if self.statusDict['res']:
-##                    self.lblRes.setStyleSheet('color: green')
-##                else:
-##                    self.lblRes.setStyleSheet('color: red')
-##
-
-##                if (not self.statusDict['pump'] and not self.statusDict['valve'] and
-##                        self.statusDict['res2'] and not self.statusDict['licor']):
-##                    self.lblSample.setStyleSheet('color: green')
-##                else:
-##                    self.lblSample.setStyleSheet('color: red')
-##
-##                if (self.statusDict['pump']     and self.statusDict['valve'] and
-##                    not self.statusDict['res2'] and self.statusDict['licor']):
-##                    self.lblZeroAir.setStyleSheet('color: green')
-##                else:
-##                    self.lblZeroAir.setStyleSheet('color: red')
-                
+                                    
         except Exception as e:
             print >>sys.stderr, e
 ##            raise
@@ -595,16 +538,13 @@ class Visualizer(object):
         self.lineSERIAL.clear()
 
     def setMFC2(self):
-        commands = ['M{:04d}'.format(self.spMFC2.value())]
-        self.device.send_commands(commands, open_port = True)
+        self.device.set_mfc2(self.spMFC2.value() ,open_port = True)
 
     def setSVOC1(self):
-        commands = ['P{:04d}'.format(self.spSVOC1.value())]
-        self.device.send_commands(commands, open_port = True)
+        self.device.set_voc1(self.spSVOC1.value() ,open_port = True)
 
     def setVOCT(self):
-        commands = ['Q{:04d}'.format(self.spVOCT.value())]
-        self.device.send_commands(commands, open_port = True)
+        self.device.set_tubeT(self.spVOCT.value() ,open_port = True)
             
     def toggleAllLamps(self):
         if self.lamps_status:
@@ -626,53 +566,39 @@ class Visualizer(object):
 
     def toggleVOCHeater(self):
         if self.statusDict['tube_heat']:
-            commands = ['q0000']
+            commands = ['q0000!']
         else:
-            commands = ['q1000']
+            commands = ['q1000!']
         self.device.send_commands(commands, open_port = True)
         
     def toggleVOC1(self):
         if self.statusDict['voc1']:
-            commands = ['C1000']
+            commands = ['C1000!']
         else:
-            commands = ['C1100']
+            commands = ['C1100!']
         self.device.send_commands(commands, open_port = True)
 
     def toggleVOC2(self):
         if self.statusDict['voc2']:
-            commands = ['C2000']
+            commands = ['C2000!']
         else:
-            commands = ['C2100']
+            commands = ['C2100!']
         self.device.send_commands(commands, open_port = True)
 
     def togglePump1(self):
         if self.statusDict['pump1']:
-            commands = ['E1000']
+            commands = ['E1000!']
         else:
-            commands = ['E1100']
+            commands = ['E1100!']
         self.device.send_commands(commands, open_port = True)
 
     def togglePump2(self):
         if self.statusDict['pump2']:
-            commands = ['E2000']
+            commands = ['E2000!']
         else:
-            commands = ['E2100']
+            commands = ['E2100!']
         self.device.send_commands(commands, open_port = True)
-        
 
-##    def startSample(self):
-##        commands = ['U0000',
-##                    'V0000',
-##                    'E1000',
-##                    'L0000']
-##        self.device.send_commands(commands, open_port = True)
-##
-##    def startZeroAir(self):
-##        commands = ['L1000',
-##                    'E0000',
-##                    'V1000',
-##                    'U1000']
-##        self.device.send_commands(commands, open_port = True)
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':

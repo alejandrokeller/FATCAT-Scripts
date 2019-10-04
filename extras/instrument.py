@@ -103,14 +103,14 @@ class instrument(object):
             self.close_port()
 
     def set_pump(self, pump, flow, open_port = False):
-        c = 'L'+str(pump)+'{0:03d}'.format(flow)
+        c = 'L{}{0:03d}!'.format(pump,flow)
         if flow >= 0 and flow <= 100 and ( pump == 1 or pump == 2):
             self.send_commands([c], open_port = open_port)
         else:
             self.log_message("SERIAL", "Pump setting invalid: '" + c + "'")
 
     def set_mfc2(self, flow, open_port = False): # flow must be in ml
-        c = 'M0'+'{0:03d}'.format(flow)
+        c = 'M{0:04d}!'.format(flow)
         if flow >= 0 and flow <= 100:
             self.send_commands([c], open_port = open_port)
         else:
@@ -120,30 +120,29 @@ class instrument(object):
         lamps = int(binary_pattern, 2)
         offset = int('01000000',2)
         chr_nr = (lamps ^ offset)
-#        c = 'L'+ chr(chr_nr) + '000'
-        c = "".join(['L', chr(chr_nr), '000'])
+        c = "".join(['L', chr(chr_nr), '000!'])
         print "sending command: " + c + " chr_nr: " + str(chr_nr)
-        if len(c) == 5:
+        if len(c) == 6 and 64 <= chr_nr <= 95:
             self.send_commands([c], open_port = open_port)
         else:
             self.log_message("SERIAL", "Lamp pattern invalid: '" + c + "'")
 
     def set_voc1(self, mv, open_port = False): # set point in milivolts
-        c = 'P'+'{0:04d}'.format(mv)
-        if mv > 0 and mv <= 2500:
+        c = 'P{0:04d}!'.format(mv)
+        if mv >= 0 and mv <= 2500:
             self.send_commands([c], open_port = open_port)
         else:
             self.log_message("SERIAL", "VOC1 setting invalid: '" + c + "'")
 
     def set_tubeT(self, temperature, open_port = False): # in degC
-        c = 'Q'+'{0:04d}'.format(temperature)
+        c = 'Q{0:04d}!'.format(temperature)
         if temperature > 0 and temperature <= 80:
             self.send_commands([c], open_port = open_port)
         else:
             self.log_message("SERIAL", "Tube temperature setting invalid: '" + c + "'")
 
     def set_rH(self, rH, open_port = False): # in %rH
-        c = 'R'+'{0:04d}'.format(rH)
+        c = 'R{0:04d}!'.format(rH)
         if rH > 0 and rH <= 100:
             self.send_commands([c], open_port = open_port)
         else:
