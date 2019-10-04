@@ -23,9 +23,20 @@ class instrument(object):
             self.log_message("INSTRUMENT", "Could not find the configuration file: " + config_file)
             exit()
 
-        self.stop_str    = 'X0000!'
-        self.start_str   = 'X1000!'
-        self.zeroPID_str = 'Z1100!'
+        self.stop_str      = 'X0000!'
+        self.start_str     = 'X1000!'
+        self.zeroPID_str   = 'Z1100!'
+        self.tube_off_str  = 'q0000!'
+        self.tube_on_str   = 'q1000!'
+        self.voc1_off_str  = 'C1000!'
+        self.voc1_on_str   = 'C1100!'
+        self.voc2_off_str  = 'C2000!'
+        self.voc2_on_str   = 'C2100!'
+        self.pump1_off_str = 'E1000!'
+        self.pump1_on_str  = 'E1100!'
+        self.pump2_off_str = 'E2000!'
+        self.pump2_on_str  = 'E2100!'
+        
         self.queries = [
             "a?", # Response: "p values: P1=x; P2=5; BATH:0; Set: px000 to px999" controls pump and humidification
             "b?", # Response: "i values: P1=x; P2=5; BATH:0; Set: ix000 to ix999" controls pump and humidification

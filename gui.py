@@ -566,37 +566,37 @@ class Visualizer(object):
 
     def toggleVOCHeater(self):
         if self.statusDict['tube_heat']:
-            commands = ['q0000!']
+            commands = [self.device.tube_off_str]
         else:
-            commands = ['q1000!']
+            commands = [self.device.tube_on_str]
         self.device.send_commands(commands, open_port = True)
         
     def toggleVOC1(self):
         if self.statusDict['voc1']:
-            commands = ['C1000!']
+            commands = [self.device.voc1_off_str]
         else:
-            commands = ['C1100!']
+            commands = [self.device.voc1_on_str]
         self.device.send_commands(commands, open_port = True)
 
     def toggleVOC2(self):
         if self.statusDict['voc2']:
-            commands = ['C2000!']
+            commands = [self.device.voc2_off_str]
         else:
-            commands = ['C2100!']
+            commands = [self.device.voc2_on_str]
         self.device.send_commands(commands, open_port = True)
 
     def togglePump1(self):
         if self.statusDict['pump1']:
-            commands = ['E1000!']
+            commands = [self.device.pump1_off_str]
         else:
-            commands = ['E1100!']
+            commands = [self.device.pump1_on_str]
         self.device.send_commands(commands, open_port = True)
 
     def togglePump2(self):
         if self.statusDict['pump2']:
-            commands = ['E2000!']
+            commands = [self.device.pump2_off_str]
         else:
-            commands = ['E2100!']
+            commands = [self.device.pump2_on_str]
         self.device.send_commands(commands, open_port = True)
 
 
