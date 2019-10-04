@@ -1,0 +1,128 @@
+Description USB Output Datastream and Commands OCU Ver 0.9	2								26.Sept. 2019 PST
+
+Changes made to V 0.92
+
+if (i % 2 == 0)			// i = 1/2 seconds, so every 0.5 seconds do :
+	{ // produce an output string that will be sent to USB (currently NO storage to SDcard)
+sprintf(s, "%.1f\t%i\t%.1f\t%.1f\t%i\t%.1f\t%.1f\t%.2f\t%.2f\t%.2f\t%.2f\t%.1f\t%.1f\t%.1f\t%.1f\t%i\t%.1f\t%i\t%.1f\t%02X\t%02X\r\n",	                     ----  --- ----- ----- --- ----  ----  ----  ----  ----  ----  ----  ----  ---  ----  ---  ----  ----  ---- ----  ---- ---
+1	2   3     4    5    6     7     8     9     10    11    12    13    14   15    16   17    18    19   20    21   _22_
+
+i/4.0,				//1  i is incremented every 0.25s;		like this we get seconds out of i
+main_settings.SETPoint_VOC1,	//2  [mV] tab					setpoint for control-loop VOC1
+INTADCread.VOC1,		//3  [0.0  mV] tab				last reading of VOC1 Sensor
+PID1_baseline,			//4  [0.0  mV] tab				substracted baseline since last zeroing
+main_settings.SETPoint_VOC2,	//5  [mV] tab					setpoint for fixed value of VOC2        ???MFC
+INTADCread.VOC2,		//6  [0.0  mV] tab				last reading of VOC2 sensor
+PID2_baseline,			//7  [0.0  mV] tab				substracted baseline VOC2 since last zeroing
+INTADCread.mfc1_signal,		//8  [0.00  ml] tab				last reading of mass flow controller 1
+INTADCread.mfc2_signal,		//9  [0.00  ml] tab				last reading of mass flow controller 2
+INTADCread.flow_sens1,		//10  [0.00slpm] tab				last reading of flow sensor 1
+INTADCread.flow_sens2,		//11  [0.00slpm] tab				last reading of flow sensor 2
+INTADCread.temperature,		//12  [0.0 C] tab				UV reactor temperature
+INTADCread.UV_CURR,		//13  [0.0  mV] tab				UV light sensor current (todo:calc I/U conv factor)
+AD5593_ADC_CH0,			//14  [0.0  %] tab				humiditiy at inlet (Sensirion SHT31A)
+AD5593_ADC_CH1,			//15  [0.0 C]  tab				temperature at inlet (Sensirion SHT31A)
+main_settings.SETPoint_TUBE,	//16  [C] tab					setpoint tube heater
+AD5593_ADC_CH2,			//17  [0.0  C] tab				last reading of tube heater temperature
+main_settings.SETPoint_BATH,	//18  SETPOINT BATH [C] tab		ignore	<== Humidifier not yet populatd in hardware
+AD5593_ADC_CH3,			//19  BATH_TEMP  [0.0 C] tab		ignore	<== Humidifier not yet populatd in hardware
+main_settings.STATUSByte,	//20  HEX Byte					statusbyte
+Lamp_Status_Byte);		//21  new with OCU:				Lamp_Status_Byte
+				//22 RETURN & NEW LINE
+
+ 
+// Description of Statusbyte Bits
+
+#define Statusbyte_PUMP1_Bit 0x01			// SET if pump1 is ON			
+#define Statusbyte_PUMP2_Bit 0x02			// SET if pump2 is ON
+#define Statusbyte_VOC1_Bit 0x04			// SET if VOC1 sensor is powered ON
+#define Statusbyte_VOC2_Bit 0x08			// SET if VOC2 sensor is powered ON
+#define Statusbyte_TUBEHEATER_CONTROL_Bit 0x10		// SET if tube heater controller is active
+#define Statusbyte_BATHHEATER_CONTROL_Bit 0x20		// SET if bath heater (humidifier) control is active
+#define Statusbyte_UNUSED_6_Bit 0x40			// unused
+#define Statusbyte_UNUESD_7_Bit 0x80			// unused
+
+
+// Description of Lamp Statusbyte Bits
+
+#define Lamp1_Status_Bit 0x01				// SET if lamp 1 is ON
+#define Lamp2_Status_Bit 0x02				// SET if lamp 2 is ON
+#define Lamp3_Status_Bit 0x04				// SET if lamp 3 is ON
+#define Lamp4_Status_Bit 0x08				// SET if lamp 4 is ON
+#define Lamp5_Status_Bit 0x10				// SET if lamp 5 is ON
+#define Lamp_Run_Flag 0x40				// preliminary : SET if ALL LAMPS concurrently switched ON manually at keyboard
+
+
+
+Valid USB-Commands for Settings
+==========================
+
+a:	// Set p – Values a1xxx  a2xxx a3xxx
+a1050 = set p-value of Pump1 control loop = 50; Range is : 1..999
+a2150 = set p-value of Pump2 control loop = 150; Range is : 1..999
+a3099 = set p-value of Humidifier control loop = 99; Range is : 1..999  (internally divided by 16 for calculation!)
+
+
+b:	// Set i – Values b1xxx  b2xxx b3xxx
+b1050 = set i-value of Pump1 control loop = 50; Range is : 1..999 (internally divided by 32 for calculation!)
+b2150 = set i-value of Pump2 control loop = 150; Range is : 1..999 (internally divided by 32 for calculation!)
+b3099 = set i-value of Humidifier control loop = 99; Range is : 1..999 (internally divided by 32 for calculation!)
+
+
+
+C:	//  used to switch ON/OFF POWER OF VOC Sensors. (including deactivated control-loops)
+Cx100= PIDx == ON or Cx000= PIDx == OFF
+
+E:	// internal 0.5lpm Pumps
+E1100= PUMP1 == ON or E1000= PUMP1 == OFF
+E2100= PUMP2 == ON or E2000= PUMP2 == OFF
+
+F:	// Setpoints Pumps  => will later be changed to PI-loops with controlling flow
+F1000=Pump1 = 0 [ml];
+F1980=Pump1 = 980 [ml] in ctrolled loop through PWM
+F2000=Pump2 = 0 [0..999ml]
+
+L:	// Lamps 1 to 5 on and off (immediate)
+Lx000 = IF BIT[y] of x == 1 THEN LAMP y = ON, ELSE = OFF; y=0...4
+(Range may be dangerous, because nonprintable chars are involved;
+let's test it; we may switch to BIT[7 downto 3] as a workaround so everything stays readable;
+Even BETTER: b'010xxxxx' brings the range to hex64 to hex95 which are all readable asciis
+
+M:	//MFC2 MassFlow_Controller SetPoint
+M0100 = MFC2 Flow Setpoint is 100 [ml]; Range is : 0 - 100 ml
+
+N:	// Set Serial number
+Nxxxx -> SN xxxx
+
+p:	// p - Value
+p0050 = control p_value of PID1 control loop = 50; Range is : 1..999  (internally divided by 16 for calculation!)
+
+i:	// i - Value
+i0050 = control i_value of PID1 control loop = 50; Range is : 1..999   (internally divided by 32 for calculation!)
+
+P:	// Setpoint VOC1 Loop
+P2500 = control VOC1 Setpoint  = 2500 [mV]; Range is : 1..2500
+		
+q:	// Tubeheater ON / OFF
+q1000 Tubeheater => ON or q0000  Tubeheater => OFF
+
+Q:	// Tubeheater temperature SETPOINT in [C];
+Q0001 to Q0080; Range is 1..80C (artificially limited, use other materials to extend range)
+
+r:	// Humidifier control-loop ON / OFF
+r1000 Bathheater => ON or r0000  Bathheater => OFF
+		
+R:	// control RH BATH Setpoint  = Range 1..100 in [%]; OCU not yet ready, untested
+R0100 = 100
+			
+T:	// T set time ; command unfinished
+	// followed by [Y|M|D|h|m|s]0xx sets year, month, day, hour, minute, second to xx
+	// only year is set to 2000+xx.
+
+X:	// Stop or restart datastream; response to commands are still transmitted
+X0000 => STREAM OFF
+X1000 => STREAM ON
+
+Z:	// immediate Nulling of PID; algo? how long? Is depending on: works only if sensors powered with "C" command!
+Z1100 =>  average over 1.5sec interval; adjust for baseline in display and calculation
+
