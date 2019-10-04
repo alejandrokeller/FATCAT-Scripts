@@ -96,11 +96,11 @@ class Rawfile(object):
         self.dtypeDict = {
             #"Daytime":"time",
             "Time":             'float64',
-            "Sp Oven":          'int64',
+            "Sp Oven":          'float64',
             "T Oven":           'float64',
-            "Max Allowed Coil": 'int64',
+            "Max Allowed Coil": 'float64',
             "T Coil":           'float64',
-            "Sp Band":          'int64',
+            "Sp Band":          'float64',
             "T Band":           'float64',
             "Ext Flow":         'float64',
             "T Cat":            'float64',
@@ -109,7 +109,7 @@ class Rawfile(object):
             "CO2":              'float64',
             "Flowrate":         'float64',
             "Ind. Current":     'float64',
-            "Cycle Countdown":  'int64'}
+            "Cycle Countdown":  'float64'}
 
         #### For compatibility with prior version #####
         self.keyDict = {
