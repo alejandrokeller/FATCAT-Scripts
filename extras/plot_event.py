@@ -33,9 +33,22 @@ class Datafile(object):
         self.datafile   = datafile.name
         self.outputDir  = output_path
         self.date       = time.strftime("%Y-%m-%d")
+        skip_rows       = 3
+        header          = 2
         self.internname = datafile.readline().rstrip('\n') # first line contains the original filename
         self.rawdata    = datafile.readline().rstrip('\n') # second line points to raw data
-        self.keys       = datafile.readline().rstrip('\n').replace(" ","").split(',')
+        temp            = datafile.readline().rstrip('\n') # test for sampling volume information
+        try:
+            self.volume = float(temp.split(' ')[1])
+            if self.volume > 0:
+##                print >>sys.stderr, 'Using volume data found in file: {} m^3'.format(self.volume)
+                self.keys = datafile.readline().rstrip('\n').replace(" ","").split(',')
+                skip_rows += 1
+                header    += 1
+        except:
+            self.keys       = temp.replace(" ","").split(',')
+            self.volume = False
+##        self.keys       = datafile.readline().rstrip('\n').replace(" ","").split(',')
         self.units      = datafile.readline().rstrip('\n').replace(" ","").split(',')
 
         # Use TeX notation :-)
@@ -44,7 +57,7 @@ class Datafile(object):
         self.units = replace_in_list(self.units, 'ug/min', r'$\mu$g-C/min')
 
         datafile.seek(0, 0)
-        self.df = pd.read_csv(datafile, header=[2], skiprows=[3])      # loads the datafile
+        self.df = pd.read_csv(datafile, header=[header], skiprows=[skip_rows])      # loads the datafile
         datafile.close()
         self.df.columns=self.keys
 
@@ -70,7 +83,9 @@ class Datafile(object):
             "co2-base",
             "maxtemp",
             "tc",
-            "tc-baseline"
+            "tc-baseline",
+            "tc concentration",
+            "sample"
             ]
 
         # Create a subset of the DataFrame and load data up to the desired integral time
@@ -83,6 +98,16 @@ class Datafile(object):
             self.tc_df = (self.df[(self.df['elapsed-time'] <= self.tmax)])[self.tc_keys]
 
         # Create the results DataSeries, integrating dtc and, if available, dtc-baseline
+        if 'dtc-baseline' in self.df:
+            tc_corrected = round(np.trapz(self.tc_df['dtc-baseline'], x=self.tc_df['elapsed-time'])/60, 3)
+            print >>sys.stderr, "tc_corrected = {}, volue = {}".format(tc_corrected, self.volume)
+            if self.volume:
+                concentration = round(tc_corrected/self.volume, 2)
+            else:
+                concentration = '-'
+        else:
+            tc_corrected = '-'
+            concentration = '-'
         self.results = {
             "date": self.extract_date(),
             "time": self.df['time'][0] if 'time' in self.df else '-',
@@ -90,7 +115,10 @@ class Datafile(object):
             "co2-base": round(self.df['co2'].mean() - self.df['co2-event'].mean(), 2),
             "maxtemp": max(self.df['toven']),
             "tc": round(np.trapz(self.tc_df['dtc'], x=self.tc_df['elapsed-time'])/60, 3),
-            "tc-baseline": round(np.trapz(self.tc_df['dtc-baseline'], x=self.tc_df['elapsed-time'])/60, 3) if 'dtc-baseline' in self.df else '-'
+            "tc-baseline": tc_corrected,
+#            "tc-baseline": round(np.trapz(self.tc_df['dtc-baseline'], x=self.tc_df['elapsed-time'])/60, 3) if 'dtc-baseline' in self.df else '-'
+            "tc concentration": concentration, 
+            "sample": self.volume if self.volume else '-'
             }
         self.result_units = {
             "date": 'yyyy-mm-dd',
@@ -99,7 +127,9 @@ class Datafile(object):
             "co2-base": 'ppm',
             "maxtemp": r'$^\circ$C',
             "tc": r'$\mu$g-C',
-            "tc-baseline": r'$\mu$g-C'
+            "tc-baseline": r'$\mu$g-C',
+            "tc concentration": r'$\mu$g-C/m$^3$',
+            "sample": r'm$^3$'
             }
 
     def extract_date(self):
@@ -127,6 +157,11 @@ class Datafile(object):
             else:
                 self.tc_df = (self.df[(self.df['elapsed-time'] <= self.tmax)])[self.tc_keys]
             self.results["tc-baseline"] = round(np.trapz(self.tc_df['dtc-baseline'], x=self.tc_df['elapsed-time'])/60,3)
+
+            if self.volume:
+                self.results.update({
+                    "tc concentration": round(self.results["tc-baseline"]/self.volume, 2)
+                    })
 
     def create_plot(self, x='elapsed-time', y='dtc', y2='dtc-baseline', style='ggplot', format='svg', err=False, error_interval = 4, mute = False):
 

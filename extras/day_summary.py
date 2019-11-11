@@ -323,7 +323,7 @@ if __name__ == "__main__":
     except:
         print >>sys.stderr, "No event flies found in the desired range: {} to {}".format(args.START.strftime('%Y-%m-%d'), args.END.strftime('%Y-%m-%d'))
         exit()
-    print str(len(file_list)) + " files found in the time range: " + date_range
+    print >>sys.stderr, str(len(file_list)) + " files found in the time range: " + date_range
 
     # open the baseline DataFrame if it exists
     filename = baseline_path + baseline_file
@@ -364,13 +364,14 @@ if __name__ == "__main__":
         new_column = 'tc concentration'
         new_units = r'$\mu$g-C/m$^3$'
         report_keys = results.summary_keys
-        report_keys.append(new_column)
         report_units = results.summary_units
-        report_units.append(new_units)
         header_report = ",".join(report_keys) + "\n"
         header_report += ",".join(report_units) + "\n"
         report_df = results.summary
-        report_df[new_column] = (report_df[tc_column]/sampling_volume).round(2)
+        for idx, row in report_df.iterrows():
+            if  report_df.loc[idx,'sample'] == '-':
+                report_df.loc[idx,new_column] = (report_df.loc[idx,tc_column]/sampling_volume).round(2)
+        report_df[new_column] = pd.to_numeric(report_df[new_column])
         report_full_path = summary_path + "report/" + date_range + "-" + summary_file
         with open(report_full_path, 'w') as f:
             f.write(header_report)

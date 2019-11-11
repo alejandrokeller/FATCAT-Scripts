@@ -78,7 +78,7 @@ class Rawfile(object):
         #    "T Coil",
         #    "Sp Band",
         #    "T Band",
-        #    "Ext Flow",
+            "Ext flow",
         #    "T Cat",
         #    "CO2 Cell T",
             "CO2 Cell P",
@@ -91,6 +91,7 @@ class Rawfile(object):
         # columns to save on the event file
         self.eventfileKeys = self.keys[:]
         self.eventfileKeys.remove("Status Byte")
+        self.eventfileKeys.remove("Ext flow")
 
         # force use following data types when reading the rawfile
         self.dtypeDict = {
@@ -102,7 +103,7 @@ class Rawfile(object):
             "T Coil":           'float64',
             "Sp Band":          'float64',
             "T Band":           'float64',
-            "Ext Flow":         'float64',
+            "Ext flow":         'float64',
             "T Cat":            'float64',
             "CO2 Cell T":       'float64',
             "CO2 Cell P":       'float64',
@@ -121,7 +122,7 @@ class Rawfile(object):
             "T Coil":"tcoil",
             "Sp Band":"spband",
             "T Band":"tband",
-            "Ext Flow":"eflow",
+            "Ext flow":"eflow",
             "T Cat":"tcat",
             "CO2 Cell T":"tco2",
             "CO2 Cell P":"pco2",
@@ -145,14 +146,14 @@ class Rawfile(object):
 
         # interpretation of bits on the "Status Byte" column
         self.statusKeys = [
-            "valve",
-            "pump",
+            "valve",   # internal valve
+            "pump",    # internal pump
             "fan",
-            "oven",
-            "band",
-            "licor",
-            "res2",
-            "res"]
+            "oven",    # induction furnace
+            "band",    # cat. heater
+            "licor",   # external valve
+            "res2",    # external pump
+            "res"]     
 
         self.fileData = pd.DataFrame(columns = self.keys)
         self._load()
@@ -167,6 +168,11 @@ class Rawfile(object):
         if events[-1] >= self.numSamples - data_length*2: 
            events = events[:-2]
         self.numEvents  = len(events)
+            
+        self.sample_volume = []
+        for event in range(0,self.numEvents):
+            self.sample_volume.append(self.calculateSamplingVolume(event))
+        self.resultsDf['sample'] = self.sample_volume
 
         print >>sys.stderr, '{0} lines of data.\n{1} event(s) found at index(es): {2}'.format(self.numSamples, len(self.resultsDf), events)
         if not all_events:
@@ -178,6 +184,8 @@ class Rawfile(object):
         events = []
         event_flag = False
 
+        # self.on_status is the list of rows of self.df marked with True if "Oven Status" is True
+        # value is False otherwise
         for index, row in self.df[self.on_status].iterrows():
             if not events:
                 events.append(index)
@@ -227,7 +235,8 @@ class Rawfile(object):
             self.csvfile.seek(0, 0)
             self.df = pd.read_csv(self.csvfile, skiprows = self.skiprows, sep='\t',
                                   parse_dates=True, header = None, names=columns,
-                                  usecols = self.keys, dtype = self.dtypeDict)
+                                  usecols = self.keys, dtype = self.dtypeDict,
+                                  error_bad_lines = False)
 
             self.numSamples = len(self.df.index)
 
@@ -246,9 +255,32 @@ class Rawfile(object):
                print >>sys.stderr, "{} line(s) with errors removed at times: {}".format(len(errors), errors)
            # extract oven status
            self.df['Oven Status'] = [bool(int(hex2bin(x)[self.statusKeys.index("oven")])) for x in self.df['Status Byte']]
+           self.df['Valve Status'] = [bool(int(hex2bin(x)[self.statusKeys.index("valve")])) for x in self.df['Status Byte']]
            self.on_status = self.df['Oven Status']==True
+           self.sample_on = self.df['Valve Status']==True
            #print >>sys.stderr, "oven on on {} rows of data".format(self.df[self.df['Oven Status']==True].shape[0])
-           self.csvfile.close() 
+           self.csvfile.close()
+
+    def calculateSamplingVolume(self, eventIndex):
+        if eventIndex >= self.numEvents:
+           try:
+               raise EventError(2)
+           except EventError as e:
+               print >>sys.stderr, "Event out of range"
+        else:
+            event_runtime = int(self.resultsDf['runtime'][eventIndex])
+            if eventIndex > 0:
+                start_runtime = int(self.resultsDf['runtime'][eventIndex - 1])
+            else:
+                start_runtime = int(self.df['Time'][0])
+            df_subset = self.df[(self.df['Valve Status']==True) & (self.df['Time'] >= start_runtime)
+                                & (self.df['Time'] < event_runtime)]
+            flow = df_subset["Ext flow"] + df_subset["Flowrate"]
+            time = df_subset["Time"]
+            sample_volume = np.trapz(flow, x=time)/60/1000
+            #print >>sys.stderr, "{} m^3 sampled during event {}".format(sample_volume, eventIndex)
+            return sample_volume 
+            
 
     def calculateEventBaseline(self, eventIndex):
         if eventIndex >= self.numEvents:
@@ -331,11 +363,13 @@ class Rawfile(object):
        newColNames = ['co2-event', 'dtc']
        dtcDf.columns = ['co2-event', 'dtc']
 
-       self.saveEvent(i0, i1, dtcDf, newColNames = newColNames, newUnits = ['ppm', 'ug/min'])
+       sample_info = "volume: {:.5f} m^3".format(self.resultsDf['sample'][eventIndex])
+
+       self.saveEvent(i0, i1, dtcDf, newColNames = newColNames, newUnits = ['ppm', 'ug/min'], additional_data = sample_info)
 
        return tc, maxT
 
-    def saveEvent(self, i0, i1, df, newColNames, newUnits):  #### create output file for event
+    def saveEvent(self, i0, i1, df, newColNames, newUnits, additional_data = False):  #### create output file for event
 
         units = []
         colNames = []
@@ -352,7 +386,11 @@ class Rawfile(object):
         filename = self.date + "-" + self.df['Daytime'].loc[i0][0:2] + self.df['Daytime'].loc[i0][3:5] + "-eventdata.csv"
         newfile = self.eventDir + filename
         
-        header = filename + "\nsource: " + self.datafile + "\n" + ",".join(colNames) + "\n" + ",".join(units) + "\n"
+        #header = filename + "\nsource: " + self.datafile + "\n" + ",".join(colNames) + "\n" + ",".join(units) + "\n"
+        header = "{}\nsource: {}\n".format(filename, self.datafile)
+        if additional_data:
+            header = header + additional_data + "\n"
+        header = header + ",".join(colNames) + "\n" + ",".join(units) + "\n"
         with open(newfile, "w") as fw:
             fw.write(header)
             valuesDf.to_csv(fw, index=False, header=False)
@@ -371,8 +409,6 @@ class Rawfile(object):
 
     def printResults(self, header = True, all_events = True):
         formatString = '{0}\t{1:.0f}\t{2:.2f}\t{3:.2f}\t{4:.0f}\t{5:.3f}'
-        if self.baseline:
-            formatString += '\t{6:.3f}'
 
         if header:
             col_names = 'event time\tindex\truntime\tco2 base\tmax T_oven\ttc'
@@ -380,6 +416,12 @@ class Rawfile(object):
             if self.baseline:
                 col_names += '\ttc-baseline'
                 col_units += '\tug-C'
+            if self.sample_volume:
+                col_names += '\tsample'
+                col_units += '\tm^3'
+            if (self.baseline and self.sample_volume):
+                col_names += '\ttc conc'
+                col_units += '\tug/m^3'
             print "datafile:", self.datafile
             print col_names
             print col_units
@@ -389,16 +431,17 @@ class Rawfile(object):
         else:
             start = self.numEvents - 1
         for event in range(start,self.numEvents):
-            if self.baseline:
-                print formatString.format(self.resultsDf['daytime'][event],
-                            self.resultsDf['index'][event],
-                            self.resultsDf['runtime'][event], self.resultsDf['baseline'][event],
-                            self.resultsDf['maxtoven'][event], self.resultsDf['tc'][event], self.resultsDf['tc'][event] - self.baseline)
-            else:
-                print formatString.format(self.resultsDf['daytime'][event],
+            data_str = formatString.format(self.resultsDf['daytime'][event],
                             self.resultsDf['index'][event],
                             self.resultsDf['runtime'][event], self.resultsDf['baseline'][event],
                             self.resultsDf['maxtoven'][event], self.resultsDf['tc'][event])
+            if self.baseline:
+                data_str = data_str + '\t{:.3f}'.format(self.resultsDf['tc'][event] - self.baseline)
+            if self.sample_volume:
+                data_str = data_str + '\t{:.5f}'.format(self.resultsDf['sample'][event])
+            if (self.baseline and self.sample_volume):
+                data_str = data_str + '\t{:.2f}'.format((self.resultsDf['tc'][event] - self.baseline)/self.resultsDf['sample'][event])
+            print data_str
 
     def uploadData(self, date, all_events = True, istart = 0):
 
