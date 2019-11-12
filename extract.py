@@ -273,12 +273,14 @@ class Rawfile(object):
                 start_runtime = int(self.resultsDf['runtime'][eventIndex - 1])
             else:
                 start_runtime = int(self.df['Time'][0])
-            df_subset = self.df[(self.df['Valve Status']==True) & (self.df['Time'] >= start_runtime)
+            df_subset = self.df[(self.df['Valve Status']==False) & (self.df['Time'] >= start_runtime)
                                 & (self.df['Time'] < event_runtime)]
             flow = df_subset["Ext flow"] + df_subset["Flowrate"]
             time = df_subset["Time"]
             sample_volume = np.trapz(flow, x=time)/60/1000
-            #print >>sys.stderr, "{} m^3 sampled during event {}".format(sample_volume, eventIndex)
+##            print >>sys.stderr, "{} m^3 sampled during event {}".format(sample_volume, eventIndex)
+##            print >>sys.stderr, "Start runtime: {}; end: {}".format(start_runtime, event_runtime)
+##            print >>sys.stderr, "{} m^3 sampled during event {}. Runtime: {}-{}".format(sample_volume, eventIndex, time.iloc[0], time.iloc[-1])
             return sample_volume 
             
 
