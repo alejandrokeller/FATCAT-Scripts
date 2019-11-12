@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import configparser, argparse        # for argument parsing
-import os, sys
+import os, sys, glob
 import ast             # for datastring parsing
 from collections import namedtuple
 import numpy as np
@@ -365,7 +365,10 @@ class Rawfile(object):
        newColNames = ['co2-event', 'dtc']
        dtcDf.columns = ['co2-event', 'dtc']
 
-       sample_info = "volume: {:.5f} m^3".format(self.resultsDf['sample'][eventIndex])
+       if self.resultsDf['sample'][eventIndex] > 0:
+           sample_info = "volume: {:.5f} m^3".format(self.resultsDf['sample'][eventIndex])
+       else:
+           sample_info = False
 
        self.saveEvent(i0, i1, dtcDf, newColNames = newColNames, newUnits = ['ppm', 'ug/min'], additional_data = sample_info)
 
@@ -442,7 +445,10 @@ class Rawfile(object):
             if self.sample_volume:
                 data_str = data_str + '\t{:.5f}'.format(self.resultsDf['sample'][event])
             if (self.baseline and self.sample_volume):
-                data_str = data_str + '\t{:.2f}'.format((self.resultsDf['tc'][event] - self.baseline)/self.resultsDf['sample'][event])
+                if self.resultsDf['sample'][event] > 0:
+                    data_str = data_str + '\t{:.2f}'.format((self.resultsDf['tc'][event] - self.baseline)/self.resultsDf['sample'][event])
+                else:
+                    data_str = data_str + '\t-'
             print data_str
 
     def uploadData(self, date, all_events = True, istart = 0):
@@ -494,13 +500,16 @@ if __name__ == "__main__":
         baseline_path = eval(config['DATA_ANALYSIS']['BASELINE_PATH']) + '/'
         baseline_file = eval(config['DATA_ANALYSIS']['BASELINE_FILE'])
         baseline_length = eval(config['DATA_ANALYSIS']['BASELINE_LENGTH'])
+        data_path = eval(config['GENERAL_SETTINGS']['DATA_PATH']) + '/'
+        data_ext = eval(config['LOGGER']['EXTENSION'])
     else:
         raise ValueError('File \'%s\' is not a valid \'.ini\' file' % config_file)
 
     parser = argparse.ArgumentParser(description='Process FatCat datafiles.')
     parser.add_argument('datafile', metavar='file', type=argparse.FileType('r'),
-                    nargs='?', default=sample_file,
-                    help='file to be processed. Leave empty to test with: {}'.format(sample_file))
+                        nargs='*', help='List of event files to be processed. Leave empty for newest file')
+##                    nargs='?', default=sample_file,
+##                    help='file to be processed. Leave empty to test with: {}'.format(sample_file))
     head_parser = parser.add_mutually_exclusive_group(required=False)
     head_parser.add_argument('--header', dest='head', action='store_true',
                     help='include file header in output (default)')
@@ -556,7 +565,15 @@ if __name__ == "__main__":
     else:
         baseline = False
 
-    with args.datafile as file:
+    # Get the last datafile if none is given
+    if not args.datafile:
+        list_of_datafiles = glob.glob(data_path + '*' + data_ext) # * means all if need specific format then *.csv
+        latest_datafile = max(list_of_datafiles, key=os.path.getctime)
+##        print >>sys.stderr, "Using file: {}".format(latest_datafile)
+        args.datafile = [open(latest_datafile, 'r')]
+
+##    with args.datafile as file:
+    for file in args.datafile:
         mydata = Rawfile(file, events_path=events_path,
                          integral_length = integral_length, data_length = data_length,
                          baseline_length = baseline_length, all_events = args.all, baseline = baseline)
