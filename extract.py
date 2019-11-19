@@ -34,6 +34,15 @@ def iserror(func, *args, **kw):
     except Exception:
         return True
 
+# converter to catch errors in csv files 
+def conv(val):
+    if not val:
+        return np.nan
+    try:
+        return np.float64(val)
+    except:        
+        return np.nan
+
 class EventError(Exception):
     def __init__(self, value):
         self.value = value
@@ -232,34 +241,56 @@ class Rawfile(object):
             self.csvfile.seek(0, 0)
             columns = pd.read_csv(self.csvfile, header=self.header, nrows = 1, sep='\t',
                                   parse_dates=True).columns
-            self.csvfile.seek(0, 0)
-            self.df = pd.read_csv(self.csvfile, skiprows = self.skiprows, sep='\t',
-                                  parse_dates=True, header = None, names=columns,
-                                  usecols = self.keys, dtype = self.dtypeDict,
-                                  error_bad_lines = False)
-
-            self.numSamples = len(self.df.index)
-
         except Exception as e:
+            print >>sys.stderr, "Could not read the file header"
             print >>sys.stderr, e
             raise
-        else:
-           print >>sys.stderr, "loaded successfully"
-           # validate status byte to find rows with errors
-           mask = self.df['Status Byte'].apply(lambda x: iserror(hex2bin, x))
-           #number_of_errors = (mask.values).sum() # fastest way to count errorlines
-           errors = self.df['Daytime'][mask].values.tolist()
-           # exclude errors
-           self.df = self.df[~mask]
-           if len(errors):
-               print >>sys.stderr, "{} line(s) with errors removed at times: {}".format(len(errors), errors)
-           # extract oven status
-           self.df['Oven Status'] = [bool(int(hex2bin(x)[self.statusKeys.index("oven")])) for x in self.df['Status Byte']]
-           self.df['Valve Status'] = [bool(int(hex2bin(x)[self.statusKeys.index("valve")])) for x in self.df['Status Byte']]
-           self.on_status = self.df['Oven Status']==True
-           self.sample_on = self.df['Valve Status']==True
-           #print >>sys.stderr, "oven on on {} rows of data".format(self.df[self.df['Oven Status']==True].shape[0])
-           self.csvfile.close()
+        try:
+            self.csvfile.seek(0, 0)
+            newDict = {}
+            for key in self.dtypeDict:
+                newDict[key]=conv
+                
+            self.df = pd.read_csv(self.csvfile, skiprows = self.skiprows, sep='\t',
+                                  parse_dates=True, header = None, names=columns,
+                                  usecols = self.keys, error_bad_lines = False,
+                                  dtype = self.dtypeDict
+                                  )
+
+            self.numSamples = len(self.df.index)
+        except Exception as e:
+            print >>sys.stderr, "Error loading file with the standard pandas dtypes, using converter for slow import instead"
+            self.csvfile.seek(0, 0)
+            newDict = {}
+            for key in self.dtypeDict:
+                newDict[key]=conv
+                
+            self.df = pd.read_csv(self.csvfile, skiprows = self.skiprows, sep='\t',
+                                  parse_dates=True, header = None, names=columns,
+                                  usecols = self.keys, error_bad_lines = False,
+                                  converters = newDict
+                                  )
+
+            self.numSamples = len(self.df.index)
+#            print >>sys.stderr, e
+#            raise
+#        else:
+        print >>sys.stderr, "loaded successfully"
+        # validate status byte to find rows with errors
+        mask = self.df['Status Byte'].apply(lambda x: iserror(hex2bin, x))
+        #number_of_errors = (mask.values).sum() # fastest way to count errorlines
+        errors = self.df['Daytime'][mask].values.tolist()
+        # exclude errors
+        self.df = self.df[~mask]
+        if len(errors):
+            print >>sys.stderr, "{} line(s) with 'Status Byte' errors removed at times: {}".format(len(errors), errors)
+        # extract oven status
+        self.df['Oven Status'] = [bool(int(hex2bin(x)[self.statusKeys.index("oven")])) for x in self.df['Status Byte']]
+        self.df['Valve Status'] = [bool(int(hex2bin(x)[self.statusKeys.index("valve")])) for x in self.df['Status Byte']]
+        self.on_status = self.df['Oven Status']==True
+        self.sample_on = self.df['Valve Status']==True
+        #print >>sys.stderr, "oven on on {} rows of data".format(self.df[self.df['Oven Status']==True].shape[0])
+        self.csvfile.close()
 
     def calculateSamplingVolume(self, eventIndex):
         if eventIndex >= self.numEvents:
