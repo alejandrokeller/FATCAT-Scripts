@@ -247,16 +247,13 @@ class Rawfile(object):
             raise
         try:
             self.csvfile.seek(0, 0)
-            newDict = {}
-            for key in self.dtypeDict:
-                newDict[key]=conv
-                
+#            start_time = time.time()
             self.df = pd.read_csv(self.csvfile, skiprows = self.skiprows, sep='\t',
                                   parse_dates=True, header = None, names=columns,
                                   usecols = self.keys, error_bad_lines = False,
                                   dtype = self.dtypeDict
                                   )
-
+#            print("--- %s seconds ---" % (time.time() - start_time))
             self.numSamples = len(self.df.index)
         except Exception as e:
             print >>sys.stderr, "Error loading file with the standard pandas dtypes, using converter for slow import instead"
@@ -264,17 +261,15 @@ class Rawfile(object):
             newDict = {}
             for key in self.dtypeDict:
                 newDict[key]=conv
-                
+#            start_time = time.time()
             self.df = pd.read_csv(self.csvfile, skiprows = self.skiprows, sep='\t',
                                   parse_dates=True, header = None, names=columns,
                                   usecols = self.keys, error_bad_lines = False,
                                   converters = newDict
                                   )
-
+#            print("--- %s seconds ---" % (time.time() - start_time))
             self.numSamples = len(self.df.index)
-#            print >>sys.stderr, e
-#            raise
-#        else:
+
         print >>sys.stderr, "loaded successfully"
         # validate status byte to find rows with errors
         mask = self.df['Status Byte'].apply(lambda x: iserror(hex2bin, x))
