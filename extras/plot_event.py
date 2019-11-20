@@ -18,6 +18,8 @@ from matplotlib.ticker import FuncFormatter
 import matplotlib.animation as animation
 #print(plt.style.available)
 
+from fit import my_fit
+
 def replace_in_list(a, old, new):
     for n, i in enumerate(a):
         if i == old:
@@ -38,6 +40,7 @@ class Datafile(object):
         self.internname = datafile.readline().rstrip('\n') # first line contains the original filename
         self.rawdata    = datafile.readline().rstrip('\n') # second line points to raw data
         temp            = datafile.readline().rstrip('\n') # test for sampling volume information
+        self.fit_coeff  = [] # variable to hold the fitting results
         try:
             self.volume = float(temp.split(' ')[1])
             if self.volume > 0:
@@ -141,7 +144,7 @@ class Datafile(object):
         except ValueError:
             return '-'
 
-    def add_baseline(self, baseline):
+    def add_baseline(self, baseline, fit = False):
         if 'dtc' in baseline:
             self.keys.append('baseline') # add a new column with the baseline values
             self.units.append('ug/min')
@@ -162,6 +165,13 @@ class Datafile(object):
                 self.results.update({
                     "tc concentration": round(self.results["tc-baseline"]/self.volume, 2)
                     })
+
+            # fit the data
+            if fit:
+                print >>sys.stderr, "fitting event {}".format(self.datafile)
+                self.keys.append('fitted data') # add a new column with the baseline values
+                self.units.append('ug/min')
+                self.df['fitted data'], self.fit_coeff = my_fit(self.df['elapsed-time'], self.df['dtc-baseline'])
 
     def create_plot(self, x='elapsed-time', y='dtc', y2='dtc-baseline', style='ggplot', format='svg', err=False, error_interval = 4, mute = False):
 
@@ -256,6 +266,7 @@ class ResultsList(object):
         self.summary_units = []
         self.files = []
         self.n = 0
+        self.ncoeff = 3 # number of fitted gausian curves
 
         # CREATE a DataFrame to Hold the mean value.
         self.average_keys = [
@@ -284,6 +295,38 @@ class ResultsList(object):
         self.df_concat = pd.DataFrame(columns=self.average_keys)
         self.df_list = []
 
+        # CREATE a DataFrame to Hold fitted coefficients
+        self.fit_coeff_keys = ['date', 'time', 'sample']
+        self.fit_coeff_units = ['yyyy-mm-dd', 'hh:mm:ss', r'm$^3$']
+        self.coeff = ['A','xc','sigma']
+        self.coef_units_dict = {
+            'A': r'$\mu$g-C',
+            'xc': 's',
+            'sigma': 's'
+            }
+        self.coef_units_decimals = {
+            'A': 2,
+            'xc': 1,
+            'sigma': 1
+            }
+        for n in range(self.ncoeff):
+            for c in self.coeff:
+                self.fit_coeff_keys.append('{}{}'.format(c,n))
+                self.fit_coeff_units.append(self.coef_units_dict[c])
+        self.coeff_df = pd.DataFrame(columns=self.fit_coeff_keys)
+
+    def append_coeff(self, coeff_dict):
+        newDict = {
+            'date':   self.summary["date"].iloc[-1] ,
+            'time':   self.summary["time"].iloc[-1],
+            'sample': self.summary["sample"].iloc[-1]
+            }
+        for n in range(self.ncoeff):
+            for c in self.coeff:
+                newDict['{}{}'.format(c,n)] = round(coeff_dict[n][c], self.coef_units_decimals[c])
+        self.coeff_df = self.coeff_df.append(newDict, ignore_index = True)
+
+        
     def append_event(self, datafile):
         self.files.append(datafile.internname)
         if self.summary.empty:
@@ -293,7 +336,13 @@ class ResultsList(object):
                 self.sd_keys.append('dtc-baseline' + '-sd')
                 self.all_keys.append('dtc-baseline')
                 self.all_keys.append('dtc-baseline' + '-sd')
+                if 'fitted data' in datafile.df:
+                    self.average_keys.append('fitted data')
+                    self.sd_keys.append('fitted data' + '-sd')
+                    self.all_keys.append('fitted data')
+                    self.all_keys.append('fitted data' + '-sd')
                 self.df_concat = pd.DataFrame(columns=self.average_keys)
+            
             self.summary = pd.DataFrame(columns=datafile.result_keys).append(datafile.results, ignore_index = True)
             self.summary_keys = datafile.result_keys
             for k in self.summary_keys:
@@ -316,6 +365,9 @@ class ResultsList(object):
         # concatenate them
         self.df_list.append(subset_df)
         self.df_concat = pd.concat((self.df_concat, subset_df))
+
+        if 'fitted data' in datafile.df:
+            self.append_coeff(datafile.fit_coeff)
         
         self.n = self.n + 1
 
@@ -596,6 +648,7 @@ if __name__ == "__main__":
                             help='only plot delta-TC')
     parser.set_defaults(tplot=True)
     parser.add_argument('--individual-plots', help='Stop at individual event plots [slow]', action='store_true')
+    parser.add_argument('--fit', dest='fit', help='Fit triple gaussian to data', action='store_true')
     parser.add_argument('--fix-co2', dest='fix', help='fix the co2-event in the event file', action='store_true')
     
     args = parser.parse_args()
@@ -604,15 +657,16 @@ if __name__ == "__main__":
     if os.path.exists(config_file):
         config = configparser.ConfigParser()
         config.read(config_file)
-        events_path   = eval(config['GENERAL_SETTINGS']['EVENTS_PATH']) + '/'
-        output_path   = eval(config['GENERAL_SETTINGS']['EVENTS_PATH']) + '/graph/'
-        plot_style    = eval(config['GRAPH_SETTINGS']['PLOT_STYLE'])
-        plot_format   = eval(config['GRAPH_SETTINGS']['FILE_FORMAT'])
+        events_path    = eval(config['GENERAL_SETTINGS']['EVENTS_PATH']) + '/'
+        output_path    = eval(config['GENERAL_SETTINGS']['EVENTS_PATH']) + '/graph/'
+        plot_style     = eval(config['GRAPH_SETTINGS']['PLOT_STYLE'])
+        plot_format    = eval(config['GRAPH_SETTINGS']['FILE_FORMAT'])
         error_interval = eval(config['GRAPH_SETTINGS']['ERROR_EVERY'])
-        baseline_path = eval(config['DATA_ANALYSIS']['BASELINE_PATH']) + '/'
-        baseline_file = eval(config['DATA_ANALYSIS']['BASELINE_FILE'])
-        summary_path = eval(config['DATA_ANALYSIS']['SUMMARY_PATH']) + '/'
-        summary_file = eval(config['DATA_ANALYSIS']['SUMMARY_FILE'])
+        baseline_path  = eval(config['DATA_ANALYSIS']['BASELINE_PATH']) + '/'
+        baseline_file  = eval(config['DATA_ANALYSIS']['BASELINE_FILE'])
+        summary_path   = eval(config['DATA_ANALYSIS']['SUMMARY_PATH']) + '/'
+        summary_file   = eval(config['DATA_ANALYSIS']['SUMMARY_FILE'])
+        fit_file       = eval(config['DATA_ANALYSIS']['FIT_FILE'])
         tmax = eval(config['DATA_ANALYSIS']['INTEGRAL_LENGTH'])
     else:
         events_path   = '~/fatcat-files/data/events/'  # if ini file cannot be found
@@ -628,6 +682,7 @@ if __name__ == "__main__":
         print >>sys.stderr, 'Could not find the configuration file {0}'.format(config_file)
 
     summary_full_path = summary_path + summary_file
+    fit_full_path = summary_path + fit_file
 
     # open the baseline DataFrame if it exists
     filename = baseline_path + baseline_file
@@ -675,16 +730,26 @@ if __name__ == "__main__":
         for f in args.datafile:
             mydata = Datafile(f, output_path = output_path, tmax = tmax)
             if 'dtc' in baseline:
-                mydata.add_baseline(baseline = baseline)
+                mydata.add_baseline(baseline = baseline, fit = args.fit)
                 box_y = 'tc-baseline'
             else:
                 box_y = 'tc'
+                args.fit = False
+                
             results.append_event(mydata)
 
             if args.tplot:
-                mydata.create_dualplot(style=plot_style, format=plot_format, mute = not args.individual_plots)
+                if args.fit:
+                    mydata.create_dualplot(y2='dtc-baseline', y3='fitted data',
+                                           style=plot_style, format=plot_format, mute = not args.individual_plots)
+                else:
+                    mydata.create_dualplot(style=plot_style, format=plot_format, mute = not args.individual_plots)
             else:
-                mydata.create_plot(style=plot_style, format=plot_format, mute = not args.individual_plots)
+                if args.fit:
+                    mydata.create_plot(y='dtc-baseline', y2='fitted data',
+                                       style=plot_style, format=plot_format, mute = not args.individual_plots)
+                else:
+                    mydata.create_plot(style=plot_style, format=plot_format, mute = not args.individual_plots)
 
         # write the results table to the summary file and include the stats in file header
         stats_df = generate_df_stats(results.summary)
@@ -699,8 +764,19 @@ if __name__ == "__main__":
 
         print stats_df.head()
         print results.summary.tail(20)
+
+        if args.fit:
+            header2 = ",".join(results.fit_coeff_keys) + "\n" + ",".join(results.fit_coeff_units) + "\n"
+            with open(fit_full_path, 'w') as f:
+                f.write(header1)
+                f.write(header2)
+                results.coeff_df.to_csv(f,index=False, header=False)
+                f.close()
         
         filename = summary_path + summary_file.replace('.','_') + '-boxplot.' + plot_format
         if results.n > 1:
             box_plot(results.summary['date']+' '+results.summary['time'], results.summary[box_y], r'$\mu$g-C', 'Total Carbon', filename, format=plot_format, date_format='%Y-%m-%d %H:%M:%S')
-            results.animated_plot()
+            if args.fit:
+                results.animated_plot(y2='dtc-baseline', y3='fitted data')
+            else:
+                results.animated_plot()
