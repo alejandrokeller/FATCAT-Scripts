@@ -10,6 +10,8 @@ import numpy as np
 import pandas as pd
 from pandas.plotting import register_matplotlib_converters
 
+import itertools
+
 import matplotlib
 #matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -298,16 +300,27 @@ class ResultsList(object):
         # CREATE a DataFrame to Hold fitted coefficients
         self.fit_coeff_keys = ['date', 'time', 'sample']
         self.fit_coeff_units = ['yyyy-mm-dd', 'hh:mm:ss', r'm$^3$']
-        self.coeff = ['A','xc','sigma']
+        self.coeff = ['A',
+                      'AStDevErr',
+                      'xc',
+                      'xcStDevErr',
+                      'sigma',
+                      'sigmaStDevErr']
         self.coef_units_dict = {
             'A': r'$\mu$g-C',
             'xc': 's',
-            'sigma': 's'
+            'sigma': 's',
+            'AStDevErr': r'$\mu$g-C',
+            'xcStDevErr': 's',
+            'sigmaStDevErr': 's'
             }
         self.coef_units_decimals = {
             'A': 2,
             'xc': 1,
-            'sigma': 1
+            'sigma': 1,
+            'AStDevErr': 3,
+            'xcStDevErr': 2,
+            'sigmaStDevErr': 2
             }
         for n in range(self.ncoeff):
             for c in self.coeff:
@@ -523,6 +536,31 @@ def box_plot(x, y, units, title, filename, style='ggplot', format='svg', date_fo
     plt.savefig(filename)
 
     return box
+
+def bubble_plot(xdata, ydata, axisnames, units, title=None, style='ggplot', size = None, color = None, label = None,
+                xerror = None, yerror = None, filename="fitted_coefficients_plot", format='svg'):
+    plt.style.use(style)
+
+    plot = plt.figure("scatter plot")
+    for x, y, s, c, l, xerr, yerr in itertools.izip_longest(xdata, ydata, size, color, label, xerror, yerror, fillvalue=None):
+        plt.scatter(x, y, s=s, color=c, alpha=0.3, edgecolors='none', label=l)
+        lerr = r'$\sigma_\operatorname{' + l + r'}$'
+        plt.errorbar(x, y, xerr=xerr, yerr=yerr, fmt='none', label=lerr)
+    if label:
+        plt.legend(loc='lower right')
+    plt.grid(True)
+    xlabel = '{} ({})'.format(axisnames[0], units[0])
+    ylabel = '{} ({})'.format(axisnames[1], units[1])
+    #plt.xlim(self.df[x].min(), self.df[x].max())
+    if title:
+        plt.title(title)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    filename = filename.replace('.','_') + '.' + format
+    filename = filename.replace(' ','_')
+    plt.savefig(filename)
+
+    return plot
 
 ##def is_date(string, fuzzy=False):
 ##    """
@@ -772,6 +810,24 @@ if __name__ == "__main__":
                 f.write(header2)
                 results.coeff_df.to_csv(f,index=False, header=False)
                 f.close()
+
+            # Generate a bubble plot to study the goodness of the fit
+            xdata = []
+            ydata = []
+            size = []
+            xerror = []
+            yerror = []
+            for i in range(3):
+                xdata.append(results.coeff_df['sigma{}'.format(i)])
+                xerror.append(results.coeff_df['sigmaStDevErr{}'.format(i)])
+                ydata.append(results.coeff_df['xc{}'.format(i)])
+                yerror.append(results.coeff_df['xcStDevErr{}'.format(i)])
+                size.append(results.coeff_df['A{}'.format(i)]*1000)
+            color = ['tab:blue', 'tab:orange', 'tab:green']
+            filename = fit_full_path.replace('.','_') + '-FitCoeffPlot'
+            bubble_plot(xdata, ydata, axisnames = ["sigma", "xc"], units = ["s", "s"], title="Fittet parameters", size = size, color = color,
+                        label = ["hvoc", "lvoc", "ec"], xerror = xerror, yerror = yerror,
+                        filename = filename, format=plot_format,)
         
         filename = summary_path + summary_file.replace('.','_') + '-boxplot.' + plot_format
         if results.n > 1:
