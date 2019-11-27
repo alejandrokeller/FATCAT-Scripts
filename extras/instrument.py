@@ -116,6 +116,20 @@ class instrument(object):
             answer=self.ser.readline()
         return answer
 
+    def set_mfc1(self, flow, open_port = False): # flow must be in dl
+        c = 'F{:04d}'.format(pump,flow)
+        if flow >= 0 and flow <= 20:
+            self.send_commands([c], open_port = open_port)
+        else:
+            self.log_message("SERIAL", "Internal MFC setting invalid: '" + c + "'")
+
+    def set_mfc2(self, flow, open_port = False): # flow must be in dl
+        c = 'C{0:04d}!'.format(flow)
+        if flow >= 0 and flow <= 170:
+            self.send_commands([c], open_port = open_port)
+        else:
+            self.log_message("SERIAL", "External MFC setting invalid: '" + c + "'")
+
     def readline(self):
         return self.ser.readline()
 

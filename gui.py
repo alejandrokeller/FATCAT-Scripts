@@ -87,6 +87,8 @@ class Visualizer(object):
         self.numSamples = 1200
         self.datastring = ""
         self.deltaT = 0.5 # s, sampling time
+        # set status to new application
+        self.firstLoop = True
 
         self.keys = [
             "runtime",
@@ -121,7 +123,7 @@ class Visualizer(object):
             float,  # tcoil
             int,    # spband
             float,  # tband
-            float,  # sflow
+            float,  # eflow
             float,  # tcat
             float,  # tco2
             float,  # pco2
@@ -147,7 +149,7 @@ class Visualizer(object):
             "°C",       # tcoil
             "°C",       # spband
             "°C",       # tband
-            "lpm",      # sflow
+            "lpm",      # eflow
             "°C",       # tcat
             "°C",       # tco2
             "kPa",      # pco2
@@ -265,6 +267,8 @@ class Visualizer(object):
         self.lblRes       = QtGui.QLabel("Res")
         self.lblSample    = QtGui.QLabel("Sample")
         self.lblZeroAir   = QtGui.QLabel("Zero Air")
+        self.lblESample   = QtGui.QLabel("Sample Em.")
+        self.lblEAnalysis = QtGui.QLabel("Analyze Em.")
         
         self.lblCD        = QtGui.QLabel("0")
 
@@ -290,6 +294,10 @@ class Visualizer(object):
         self.btnSample.setFixedWidth(self.button_size)
         self.btnZeroAir   = QtGui.QPushButton("")            # prepare for analisys
         self.btnZeroAir.setFixedWidth(self.button_size)
+        self.btnESample   = QtGui.QPushButton("")            # activate emissions sampling mode
+        self.btnESample.setFixedWidth(self.button_size)
+        self.btnEAnalysis = QtGui.QPushButton("")            # prepare for emissions analisys
+        self.btnEAnalysis.setFixedWidth(self.button_size)
 
         self.btnPump.clicked.connect(self.togglePump)
         self.btnBand.clicked.connect(self.toggleBand)
@@ -299,39 +307,77 @@ class Visualizer(object):
         self.btnRes2.clicked.connect(self.toggleRes2)
         self.btnSample.clicked.connect(self.startSample)
         self.btnZeroAir.clicked.connect(self.startZeroAir)
+        self.btnESample.clicked.connect(self.SampleEmissions)
+        self.btnEAnalysis.clicked.connect(self.AnalizeEmissions)
+
+        ## Create widgets for controlling Internal MFC
+        self.btnMFC1      = QtGui.QPushButton(">>")  # Sends new MFC2 flow
+        self.btnMFC1.setFixedWidth(self.button_size)
+        self.btnMFC1.setFixedHeight(self.button_size)
+        self.btnMFC1.clicked.connect(self.setMFC1)
+        self.lblMFC1      = QtGui.QLabel("Pump (dlpm):")
+        self.spMFC1       = QtGui.QSpinBox()
+        self.spMFC1.setRange(0,20)
+        
+        ## Create widgets for controlling External MFC
+        self.btnMFC2      = QtGui.QPushButton(">>")  # Sends new MFC2 flow
+        self.btnMFC2.setFixedWidth(self.button_size)
+        self.btnMFC2.setFixedHeight(self.button_size)
+        self.btnMFC2.clicked.connect(self.setMFC2)
+        self.lblMFC2      = QtGui.QLabel("E. Pump (dlpm):")
+        self.spMFC2       = QtGui.QSpinBox()
+        self.spMFC2.setRange(0,170)
 
         ## Create a grid layout to manage the controls size and position
         self.controlsLayout = QtGui.QGridLayout()
+        self.mfcLayout = QtGui.QGridLayout()
         self.encloserLayout = QtGui.QVBoxLayout()
         self.encloserLayout.addLayout(self.controlsLayout)
+        self.encloserLayout.addLayout(self.mfcLayout)
         self.encloserLayout.addStretch(1)
 
         ## Add widgets to the layout in their proper positions
-        self.controlsLayout.addWidget(self.lblPump,      0, 1)
-        self.controlsLayout.addWidget(self.lblBand,      1, 1)
-        self.controlsLayout.addWidget(self.lblOven,      2, 1)
-        self.controlsLayout.addWidget(self.lblValve,     3, 1)
-        self.controlsLayout.addWidget(self.lblLicor,     4, 1)
-        self.controlsLayout.addWidget(self.lblRes2,      5, 1)
-        self.controlsLayout.addWidget(self.lblFan,       7, 0)
-        self.controlsLayout.addWidget(self.lblRes,       7, 1)
-        self.controlsLayout.addWidget(self.lblSample,    9, 1)
-        self.controlsLayout.addWidget(self.lblZeroAir,  10, 1)
+        self.controlsLayout.addWidget(self.lblPump,       0, 1)
+        self.controlsLayout.addWidget(self.lblBand,       1, 1)
+        self.controlsLayout.addWidget(self.lblOven,       2, 1)
+        self.controlsLayout.addWidget(self.lblValve,      3, 1)
+        self.controlsLayout.addWidget(self.lblLicor,      4, 1)
+        self.controlsLayout.addWidget(self.lblRes2,       5, 1)
+        self.controlsLayout.addWidget(self.lblFan,        7, 0)
+        self.controlsLayout.addWidget(self.lblRes,        7, 1)
+        self.controlsLayout.addWidget(self.lblSample,     9, 1)
+        self.controlsLayout.addWidget(self.lblZeroAir,   10, 1)
+        self.controlsLayout.addWidget(self.lblESample,   13, 1)
+        self.controlsLayout.addWidget(self.lblEAnalysis, 14, 1)
 
         self.controlsLayout.addWidget(self.lblCD,        8, 0, 1, 2)
 
         self.controlsLayout.addWidget(self.lblLicorT,   11, 0, 1, 2)
         self.controlsLayout.addWidget(self.lblLicorH2O, 12, 0, 1, 2)
 
-        self.controlsLayout.addWidget(self.btnPump,     0, 0)
-        self.controlsLayout.addWidget(self.btnBand,     1, 0)
-        self.controlsLayout.addWidget(self.btnOven,     2, 0)
-        self.controlsLayout.addWidget(self.btnValve,    3, 0)
-        self.controlsLayout.addWidget(self.btnLicor,    4, 0)
-        self.controlsLayout.addWidget(self.btnRes2,     5, 0)
+        self.controlsLayout.addWidget(self.btnPump,       0, 0)
+        self.controlsLayout.addWidget(self.btnBand,       1, 0)
+        self.controlsLayout.addWidget(self.btnOven,       2, 0)
+        self.controlsLayout.addWidget(self.btnValve,      3, 0)
+        self.controlsLayout.addWidget(self.btnLicor,      4, 0)
+        self.controlsLayout.addWidget(self.btnRes2,       5, 0)
         #self.controlsLayout.addWidget(self.btnOven,  7, 0, 1, 2)
-        self.controlsLayout.addWidget(self.btnSample,   9, 0)
-        self.controlsLayout.addWidget(self.btnZeroAir, 10, 0)
+        self.controlsLayout.addWidget(self.btnSample,     9, 0)
+        self.controlsLayout.addWidget(self.btnZeroAir,   10, 0)
+        self.controlsLayout.addWidget(self.btnESample,   13, 0)
+        self.controlsLayout.addWidget(self.btnEAnalysis, 14, 0)
+
+         ## Add Widgets to the MFCLayout
+        self.mfcLayout.addWidget(self.lblMFC1,     0, 0)
+        self.mfcLayout.addWidget(self.spMFC1,      0, 1)
+        self.mfcLayout.addWidget(self.btnMFC1,     0, 2)
+        self.mfcLayout.addWidget(self.lblMFC2,     1, 0)
+        self.mfcLayout.addWidget(self.spMFC2,      1, 1)
+        self.mfcLayout.addWidget(self.btnMFC2,     1, 2)
+        #self.mfcLayout.addWidget(self.lblSERIAL,   2, 0)
+        #self.mfcLayout.addWidget(self.lineSERIAL,  2, 1)
+        #self.mfcLayout.addWidget(self.btnSERIAL,   2, 2)
+
 
         ## Create a QVBox layout to manage the plots
         self.plotLayout = QtGui.QVBoxLayout()
@@ -435,6 +481,12 @@ class Visualizer(object):
                 self.lblLicorT.setText("CO2: {:.0f} ppm ({:.0f} degC)".format(newData['co2'], newData['tco2']))
                 self.lblLicorH2O.setText("H2O: {:.1f} mmol/mol".format(newData['h2o']))
 
+                # Initialize some indicators
+                if self.firstLoop:
+                    self.firstLoop = False
+                    self.spMFC1.setValue(int(newData['flow']*10))
+                    self.spMFC2.setValue(int(newData['eflow']*10))
+
                 if (newData['countdown'] % 2 == 0):
                     self.lblCD.setStyleSheet('color: black')
                 else:
@@ -491,10 +543,28 @@ class Visualizer(object):
                     self.lblZeroAir.setStyleSheet('color: green')
                 else:
                     self.lblZeroAir.setStyleSheet('color: red')
+
+                if (self.statusDict['pump'] and not self.statusDict['valve'] and
+                        self.statusDict['res2'] and not self.statusDict['licor']):
+                    self.lblESample.setStyleSheet('color: green')
+                else:
+                    self.lblESample.setStyleSheet('color: red')
+
+                if (self.statusDict['pump']     and self.statusDict['valve'] and
+                    self.statusDict['res2'] and self.statusDict['licor']):
+                    self.lblEAnalysis.setStyleSheet('color: green')
+                else:
+                    self.lblEAnalysis.setStyleSheet('color: red')
                 
         except Exception as e:
             print >>sys.stderr, e
 ##            raise
+
+    def setMFC1(self):
+        self.device.set_mfc1(self.spMFC1.value() ,open_port = True)
+
+    def setMFC2(self):
+        self.device.set_mfc2(self.spMFC2.value() ,open_port = True)
 
     def togglePump(self):
         if self.statusDict['pump']:
@@ -550,6 +620,24 @@ class Visualizer(object):
                     'E0000',
                     'V1000',
                     'U1000']
+        self.device.send_commands(commands, open_port = True)
+
+    def SampleEmissions(self):
+        c = 'C{0:04d}!'.format(self.spMFC2.value())
+        commands = ['U1000', # internal pump on
+                    c,       # set external flow rate 
+                    'V0000', # sample goes through bypass
+                    'E1000', # external pump on
+                    'L0000'] # external valve off
+        self.device.send_commands(commands, open_port = True)
+
+    def AnalizeEmissions(self):
+        c = 'C{0:04d}!'.format(self.spMFC2.value()+self.spMFC1.value())
+        commands = ['L1000', # external valve on
+                    'E1000', # external pump on
+                    c,       # increment external flow rate
+                    'V1000', # sample goes to instrument filter
+                    'U1000'] # internal pump on
         self.device.send_commands(commands, open_port = True)
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
