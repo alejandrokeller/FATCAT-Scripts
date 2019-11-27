@@ -171,9 +171,14 @@ class Datafile(object):
             # fit the data
             if fit:
                 print >>sys.stderr, "fitting event {}".format(self.datafile)
-                self.keys.append('fitted data') # add a new column with the baseline values
-                self.units.append('ug/min')
-                self.df['fitted data'], self.fit_coeff = my_fit(self.df['elapsed-time'], self.df['dtc-baseline'])
+                try:
+                    self.keys.append('fitted data') # add a new column with the baseline values
+                    self.units.append('ug/min')
+                    self.df['fitted data'], self.fit_coeff, self.r_squared = my_fit(self.df['elapsed-time'], self.df['dtc-baseline'])
+                except:
+                    print >>sys.stderr, "error fitting the event"
+                else:
+                    print >>sys.stderr, "fitted {}, r-squared = {}".format(self.datafile, round(self.r_squared, 4))
 
     def create_plot(self, x='elapsed-time', y='dtc', y2='dtc-baseline', style='ggplot', format='svg', err=False, error_interval = 4, mute = False):
 
@@ -326,9 +331,11 @@ class ResultsList(object):
             for c in self.coeff:
                 self.fit_coeff_keys.append('{}{}'.format(c,n))
                 self.fit_coeff_units.append(self.coef_units_dict[c])
+        self.fit_coeff_keys.append('r-squared')
+        self.fit_coeff_units.append('-')
         self.coeff_df = pd.DataFrame(columns=self.fit_coeff_keys)
 
-    def append_coeff(self, coeff_dict):
+    def append_coeff(self, coeff_dict, r_squared = False):
         newDict = {
             'date':   self.summary["date"].iloc[-1] ,
             'time':   self.summary["time"].iloc[-1],
@@ -337,6 +344,8 @@ class ResultsList(object):
         for n in range(self.ncoeff):
             for c in self.coeff:
                 newDict['{}{}'.format(c,n)] = round(coeff_dict[n][c], self.coef_units_decimals[c])
+        newDict['r-squared'] = round(r_squared, 4)
+        
         self.coeff_df = self.coeff_df.append(newDict, ignore_index = True)
 
         
@@ -380,7 +389,7 @@ class ResultsList(object):
         self.df_concat = pd.concat((self.df_concat, subset_df))
 
         if 'fitted data' in datafile.df:
-            self.append_coeff(datafile.fit_coeff)
+            self.append_coeff(datafile.fit_coeff, datafile.r_squared)
         
         self.n = self.n + 1
 
@@ -778,13 +787,13 @@ if __name__ == "__main__":
 
             if args.tplot:
                 if args.fit:
-                    mydata.create_dualplot(y2='dtc-baseline', y3='fitted data',
+                    mydata.create_dualplot(y3='dtc-baseline', y2='fitted data',
                                            style=plot_style, format=plot_format, mute = not args.individual_plots)
                 else:
                     mydata.create_dualplot(style=plot_style, format=plot_format, mute = not args.individual_plots)
             else:
                 if args.fit:
-                    mydata.create_plot(y='dtc-baseline', y2='fitted data',
+                    mydata.create_plot(y2='dtc-baseline', y='fitted data',
                                        style=plot_style, format=plot_format, mute = not args.individual_plots)
                 else:
                     mydata.create_plot(style=plot_style, format=plot_format, mute = not args.individual_plots)
@@ -833,6 +842,6 @@ if __name__ == "__main__":
         if results.n > 1:
             box_plot(results.summary['date']+' '+results.summary['time'], results.summary[box_y], r'$\mu$g-C', 'Total Carbon', filename, format=plot_format, date_format='%Y-%m-%d %H:%M:%S')
             if args.fit:
-                results.animated_plot(y2='dtc-baseline', y3='fitted data')
+                results.animated_plot(y3='dtc-baseline', y2='fitted data')
             else:
                 results.animated_plot()
