@@ -179,9 +179,13 @@ class Rawfile(object):
         self.numEvents  = len(events)
             
         self.sample_volume = []
+        self.sample_co2 = []
         for event in range(0,self.numEvents):
-            self.sample_volume.append(self.calculateSamplingVolume(event))
+            volume, co2 = self._calculateSamplingVolume(event)
+            self.sample_volume.append(volume)
+            self.sample_co2.append(co2)
         self.resultsDf['sample'] = self.sample_volume
+        self.resultsDf['sample co2'] = self.sample_co2
 
         print >>sys.stderr, '{0} lines of data.\n{1} event(s) found at index(es): {2}'.format(self.numSamples, len(self.resultsDf), events)
         if not all_events:
@@ -282,12 +286,13 @@ class Rawfile(object):
         # extract oven status
         self.df['Oven Status'] = [bool(int(hex2bin(x)[self.statusKeys.index("oven")])) for x in self.df['Status Byte']]
         self.df['Valve Status'] = [bool(int(hex2bin(x)[self.statusKeys.index("valve")])) for x in self.df['Status Byte']]
+        self.df['Pump Status'] = [bool(int(hex2bin(x)[self.statusKeys.index("pump")])) for x in self.df['Status Byte']]
         self.on_status = self.df['Oven Status']==True
         self.sample_on = self.df['Valve Status']==True
         #print >>sys.stderr, "oven on on {} rows of data".format(self.df[self.df['Oven Status']==True].shape[0])
         self.csvfile.close()
 
-    def calculateSamplingVolume(self, eventIndex):
+    def _calculateSamplingVolume(self, eventIndex):
         if eventIndex >= self.numEvents:
            try:
                raise EventError(2)
@@ -304,10 +309,21 @@ class Rawfile(object):
             flow = df_subset["Ext flow"] + df_subset["Flowrate"]
             time = df_subset["Time"]
             sample_volume = np.trapz(flow, x=time)/60/1000
+
+            # calculate subset only if the internal pump was active
+            df_subset = self.df[(self.df['Pump Status']==True) & (self.df['Valve Status']==False) & (self.df['Time'] >= start_runtime)
+                                & (self.df['Time'] < event_runtime)]
+            if len(df_subset) > 0:
+                co2  = (df_subset["Ext flow"] + df_subset["Flowrate"])*df_subset["CO2"]
+                time = df_subset["Time"]
+                sample_co2 = np.trapz(co2, x=time)/60/1000/sample_volume # weigthed using sampling flowrate
+            else:
+                sample_co2 = 0
 ##            print >>sys.stderr, "{} m^3 sampled during event {}".format(sample_volume, eventIndex)
 ##            print >>sys.stderr, "Start runtime: {}; end: {}".format(start_runtime, event_runtime)
 ##            print >>sys.stderr, "{} m^3 sampled during event {}. Runtime: {}-{}".format(sample_volume, eventIndex, time.iloc[0], time.iloc[-1])
-            return sample_volume 
+##            print >>sys.stderr, "{:.0f}ppm average co2 for event {}".format(co2, eventIndex)
+            return sample_volume, sample_co2
             
 
     def calculateEventBaseline(self, eventIndex):
@@ -393,6 +409,8 @@ class Rawfile(object):
 
        if self.resultsDf['sample'][eventIndex] > 0:
            sample_info = "volume: {:.5f} m^3".format(self.resultsDf['sample'][eventIndex])
+           if self.resultsDf['sample co2'][eventIndex] > 0:
+               sample_info += "\nsample_co2: {:.1f} ppm (average)".format(self.resultsDf['sample co2'][eventIndex])
        else:
            sample_info = False
 

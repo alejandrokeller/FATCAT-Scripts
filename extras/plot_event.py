@@ -41,20 +41,35 @@ class Datafile(object):
         header          = 2
         self.internname = datafile.readline().rstrip('\n') # first line contains the original filename
         self.rawdata    = datafile.readline().rstrip('\n') # second line points to raw data
-        temp            = datafile.readline().rstrip('\n') # test for sampling volume information
         self.fit_coeff  = [] # variable to hold the fitting results
+
+        # for back compatibility, the next 4 lines will be tested to see if the event
+        # includes also information about sampling volume and volume weigthed co2
+        temp            = [] # for testing lines
+        for i in range(4):
+            temp.append(datafile.readline().rstrip('\n'))
         try:
-            self.volume = float(temp.split(' ')[1])
+            self.volume = float(temp[0].split(' ')[1])
             if self.volume > 0:
-##                print >>sys.stderr, 'Using volume data found in file: {} m^3'.format(self.volume)
-                self.keys = datafile.readline().rstrip('\n').replace(" ","").split(',')
-                skip_rows += 1
-                header    += 1
+                try:
+                    self.sample_co2 = float(temp[1].split(' ')[1])
+                    if self.sample_co2 > 0:
+                        #print >>sys.stderr, 'Using vol. weithed co2 data found in file: {:.0f} ppm'.format(self.co2)
+                        skip_rows += 2
+                        header    += 2
+                        self.keys  = temp[2].replace(" ","").split(',')
+                        self.units = temp[3].replace(" ","").split(',')
+                except:
+                    self.keys  = temp[1].replace(" ","").split(',')
+                    self.units = temp[2].replace(" ","").split(',')
+                    skip_rows += 1
+                    header    += 1
+                    self.sample_co2 = False
         except:
-            self.keys       = temp.replace(" ","").split(',')
+            self.keys  = temp[0].replace(" ","").split(',')
+            self.units = temp[1].replace(" ","").split(',')
             self.volume = False
-##        self.keys       = datafile.readline().rstrip('\n').replace(" ","").split(',')
-        self.units      = datafile.readline().rstrip('\n').replace(" ","").split(',')
+            self.sample_co2 = False
 
         # Use TeX notation :-)
         self.units = replace_in_list(self.units, 'ug-C', r'$\mu$g-C')
@@ -105,7 +120,7 @@ class Datafile(object):
         # Create the results DataSeries, integrating dtc and, if available, dtc-baseline
         if 'dtc-baseline' in self.df:
             tc_corrected = round(np.trapz(self.tc_df['dtc-baseline'], x=self.tc_df['elapsed-time'])/60, 3)
-            print >>sys.stderr, "tc_corrected = {}, volue = {}".format(tc_corrected, self.volume)
+            print >>sys.stderr, "tc_corrected = {}, volume = {}".format(tc_corrected, self.volume)
             if self.volume:
                 concentration = round(tc_corrected/self.volume, 2)
             else:
@@ -123,7 +138,8 @@ class Datafile(object):
             "tc-baseline": tc_corrected,
 #            "tc-baseline": round(np.trapz(self.tc_df['dtc-baseline'], x=self.tc_df['elapsed-time'])/60, 3) if 'dtc-baseline' in self.df else '-'
             "tc concentration": concentration, 
-            "sample": self.volume if self.volume else '-'
+            "sample": self.volume if self.volume else '-',
+            "sample co2": self.sample_co2 if self.sample_co2 else '-'
             }
         self.result_units = {
             "date": 'yyyy-mm-dd',
@@ -134,7 +150,8 @@ class Datafile(object):
             "tc": r'$\mu$g-C',
             "tc-baseline": r'$\mu$g-C',
             "tc concentration": r'$\mu$g-C/m$^3$',
-            "sample": r'm$^3$'
+            "sample": r'm$^3$',
+            "sample co2": 'ppm'
             }
 
     def extract_date(self):
