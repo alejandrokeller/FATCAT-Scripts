@@ -402,11 +402,11 @@ class Rawfile(object):
        else:
            sample_info = False
 
-       self.saveEvent(i0, i1, dtcDf, newColNames = newColNames, newUnits = ['ppm', 'ug/min'], additional_data = sample_info)
+       self._saveEvent(i0, i1, dtcDf, newColNames = newColNames, newUnits = ['ppm', 'ug/min'], additional_data = sample_info)
 
        return tc, maxT
 
-    def saveEvent(self, i0, i1, df, newColNames, newUnits, additional_data = False):  #### create output file for event
+    def _saveEvent(self, i0, i1, df, newColNames, newUnits, additional_data = False):  #### create output file for event
 
         units = []
         colNames = []
@@ -457,6 +457,9 @@ class Rawfile(object):
             if (self.baseline and self.sample_volume):
                 col_names += '\ttc conc'
                 col_units += '\tug/m^3'
+            if self.sample_co2:
+                col_names += '\tsample co2'
+                col_units += '\tppm'
             print "datafile:", self.datafile
             print col_names
             print col_units
@@ -477,6 +480,11 @@ class Rawfile(object):
             if (self.baseline and self.sample_volume):
                 if self.resultsDf['sample'][event] > 0:
                     data_str = data_str + '\t{:.2f}'.format((self.resultsDf['tc'][event] - self.baseline)/self.resultsDf['sample'][event])
+                else:
+                    data_str = data_str + '\t-'
+            if self.sample_co2:
+                if self.resultsDf['sample co2'][event] > 0:
+                    data_str = data_str + '\t{:.1f}'.format(self.resultsDf['sample co2'][event])
                 else:
                     data_str = data_str + '\t-'
             print data_str
