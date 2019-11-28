@@ -352,7 +352,7 @@ class ResultsList(object):
         self.fit_coeff_units.append('-')
         self.coeff_df = pd.DataFrame(columns=self.fit_coeff_keys)
 
-    def append_coeff(self, coeff_dict, r_squared = False):
+    def _append_coeff(self, coeff_dict, r_squared = False):
         newDict = {
             'date':   self.summary["date"].iloc[-1] ,
             'time':   self.summary["time"].iloc[-1],
@@ -406,21 +406,9 @@ class ResultsList(object):
         self.df_concat = pd.concat((self.df_concat, subset_df))
 
         if 'fitted data' in datafile.df:
-            self.append_coeff(datafile.fit_coeff, datafile.r_squared)
+            self._append_coeff(datafile.fit_coeff, datafile.r_squared)
         
         self.n = self.n + 1
-
-    def build_mean(self):
-        by_row_index = self.df_concat.groupby(self.df_concat.index)
-        df_means = by_row_index.mean()
-
-        return df_means
-
-    def build_sd(self):
-        by_row_index = self.df_concat.groupby(self.df_concat.index)
-        df_stds = by_row_index.std()
-
-        return df_stds
 
     def build_average_df(self):
         by_row_index = self.df_concat.groupby(self.df_concat.index)
