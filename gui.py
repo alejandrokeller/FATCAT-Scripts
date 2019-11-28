@@ -267,8 +267,8 @@ class Visualizer(object):
         self.lblRes       = QtGui.QLabel("Res")
         self.lblSample    = QtGui.QLabel("Sample")
         self.lblZeroAir   = QtGui.QLabel("Zero Air")
-        self.lblESample   = QtGui.QLabel("Sample Em.")
-        self.lblEAnalysis = QtGui.QLabel("Analyze Em.")
+        self.lblESample   = QtGui.QLabel("Sample (int. pump on)")
+        self.lblEAnalysis = QtGui.QLabel("Zero Air +bypass")
         
         self.lblCD        = QtGui.QLabel("0")
 

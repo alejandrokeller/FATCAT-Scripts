@@ -117,7 +117,7 @@ class instrument(object):
         return answer
 
     def set_mfc1(self, flow, open_port = False): # flow must be in dl
-        c = 'F{:04d}'.format(pump,flow)
+        c = 'F{:04d}'.format(flow)
         if flow >= 0 and flow <= 20:
             self.send_commands([c], open_port = open_port)
         else:
