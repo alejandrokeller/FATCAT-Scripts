@@ -168,10 +168,6 @@ class Rawfile(object):
         self._load()
         
         print >>sys.stderr, '{1}\nCounting events in datafile "{0}"'.format(self.datafile, time.asctime( time.localtime(time.time()) ))
-##        if all_events:
-##            events = self._countAndFetchEvents()
-##        else:
-##            events = self._fetchLastEvents()
         events = self._countAndFetchEvents()
         # in case there is not enough data for the last event ignore it
         if events[-1] >= self.numSamples - data_length*2: 
@@ -251,13 +247,11 @@ class Rawfile(object):
             raise
         try:
             self.csvfile.seek(0, 0)
-#            start_time = time.time()
             self.df = pd.read_csv(self.csvfile, skiprows = self.skiprows, sep='\t',
                                   parse_dates=True, header = None, names=columns,
                                   usecols = self.keys, error_bad_lines = False,
                                   dtype = self.dtypeDict
                                   )
-#            print("--- %s seconds ---" % (time.time() - start_time))
             self.numSamples = len(self.df.index)
         except Exception as e:
             print >>sys.stderr, "Error loading file with the standard pandas dtypes, using converter for slow import instead"
@@ -265,13 +259,11 @@ class Rawfile(object):
             newDict = {}
             for key in self.dtypeDict:
                 newDict[key]=conv
-#            start_time = time.time()
             self.df = pd.read_csv(self.csvfile, skiprows = self.skiprows, sep='\t',
                                   parse_dates=True, header = None, names=columns,
                                   usecols = self.keys, error_bad_lines = False,
                                   converters = newDict
                                   )
-#            print("--- %s seconds ---" % (time.time() - start_time))
             self.numSamples = len(self.df.index)
 
         print >>sys.stderr, "loaded successfully"
@@ -289,7 +281,7 @@ class Rawfile(object):
         self.df['Pump Status'] = [bool(int(hex2bin(x)[self.statusKeys.index("pump")])) for x in self.df['Status Byte']]
         self.on_status = self.df['Oven Status']==True
         self.sample_on = self.df['Valve Status']==True
-        #print >>sys.stderr, "oven on on {} rows of data".format(self.df[self.df['Oven Status']==True].shape[0])
+
         self.csvfile.close()
 
     def _calculateSamplingVolume(self, eventIndex):
@@ -319,10 +311,7 @@ class Rawfile(object):
                 sample_co2 = np.trapz(co2, x=time)/60/1000/sample_volume # weigthed using sampling flowrate
             else:
                 sample_co2 = 0
-##            print >>sys.stderr, "{} m^3 sampled during event {}".format(sample_volume, eventIndex)
-##            print >>sys.stderr, "Start runtime: {}; end: {}".format(start_runtime, event_runtime)
-##            print >>sys.stderr, "{} m^3 sampled during event {}. Runtime: {}-{}".format(sample_volume, eventIndex, time.iloc[0], time.iloc[-1])
-##            print >>sys.stderr, "{:.0f}ppm average co2 for event {}".format(co2, eventIndex)
+
             return sample_volume, sample_co2
             
 
@@ -395,8 +384,7 @@ class Rawfile(object):
        deltatc  = co2*flow*ppmtoug                 ### Evaluate TC using real time flow
        integral_y = deltatc[:j]
        integral_x = seconds[:j]
-       #tc_s = simps(deltatc, runtime)/60           ### Integrate using simpson's rule
-       #tc_t = np.trapz(deltatc, x=runtime)/60      ### Integrate using trapezoidal rule
+       #tc_s = simps(integral_y, integral_x)/60           ### Integrate using simpson's rule
        tc_t = np.trapz(integral_y, x=integral_x)/60 ### Integrate using trapezoidal rule
 
        co2 = co2.round(3)
@@ -424,7 +412,6 @@ class Rawfile(object):
         colNames = []
         for k in self.eventfileKeys:
             key = str(k)
-            #units.append(self.unitsDict[key.replace(" ","")])
             units.append(self.unitsDict[key])
             colNames.append(self.keyDict[key])
         colNames = colNames + newColNames
@@ -435,7 +422,6 @@ class Rawfile(object):
         filename = self.date + "-" + self.df['Daytime'].loc[i0][0:2] + self.df['Daytime'].loc[i0][3:5] + "-eventdata.csv"
         newfile = self.eventDir + filename
         
-        #header = filename + "\nsource: " + self.datafile + "\n" + ",".join(colNames) + "\n" + ",".join(units) + "\n"
         header = "{}\nsource: {}\n".format(filename, self.datafile)
         if additional_data:
             header = header + additional_data + "\n"
@@ -552,8 +538,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process FatCat datafiles.')
     parser.add_argument('datafile', metavar='file', type=argparse.FileType('r'),
                         nargs='*', help='List of event files to be processed. Leave empty for newest file')
-##                    nargs='?', default=sample_file,
-##                    help='file to be processed. Leave empty to test with: {}'.format(sample_file))
     head_parser = parser.add_mutually_exclusive_group(required=False)
     head_parser.add_argument('--header', dest='head', action='store_true',
                     help='include file header in output (default)')
@@ -616,7 +600,6 @@ if __name__ == "__main__":
 ##        print >>sys.stderr, "Using file: {}".format(latest_datafile)
         args.datafile = [open(latest_datafile, 'r')]
 
-##    with args.datafile as file:
     for file in args.datafile:
         mydata = Rawfile(file, events_path=events_path,
                          integral_length = integral_length, data_length = data_length,
