@@ -296,20 +296,20 @@ class Rawfile(object):
                 start_runtime = int(self.resultsDf['runtime'][eventIndex - 1])
             else:
                 start_runtime = int(self.df['Time'][0])
-            df_subset = self.df[(self.df['Valve Status']==False) & (self.df['Time'] >= start_runtime)
-                                & (self.df['Time'] < event_runtime)]
-            flow = df_subset["Ext flow"] + df_subset["Flowrate"]
+            df_subset = self.df[(self.df['Time'] < event_runtime) & (self.df['Time'] >= start_runtime)]
+            # np.where is used to acount for sampling interuptions
+            # instead of using the condition as part of the subset building.
+            # bypass needs to be deactivated for the sample to enter FATCAT
+            flow = np.where(df_subset['Valve Status']==False,
+                            df_subset["Ext flow"] + df_subset["Flowrate"], 0)
             time = df_subset["Time"]
             sample_volume = np.trapz(flow, x=time)/60/1000
             if len(df_subset) > 0:
                  print >> sys.stderr, "sample interval found: {}-{}".format(df_subset['Daytime'][df_subset.index[0]],df_subset['Daytime'][df_subset.index[-1]])
 
-            # calculate subset only if the internal pump was active
-            df_subset = self.df[(self.df['Pump Status']==True) & (self.df['Valve Status']==False) & (self.df['Time'] >= start_runtime)
-                                & (self.df['Time'] < event_runtime)]
-            if len(df_subset) > 0:
-                co2  = (df_subset["Ext flow"] + df_subset["Flowrate"])*df_subset["CO2"]
-                time = df_subset["Time"]
+            if sample_volume > 0:
+                # use co2 data only if the internal pump was active
+                co2  = np.where(df_subset['Pump Status']==True, flow*df_subset["CO2"], 0)
                 sample_co2 = np.trapz(co2, x=time)/60/1000/sample_volume # weigthed using sampling flowrate
             else:
                 sample_co2 = 0
