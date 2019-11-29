@@ -611,17 +611,22 @@ if __name__ == "__main__":
         args.datafile = [open(latest_datafile, 'r')]
 
     for file in args.datafile:
-        mydata = Rawfile(file, events_path=events_path,
-                         integral_length = integral_length, data_length = data_length,
-                         baseline_length = baseline_length, all_events = args.all, baseline = baseline)
         try:
-            mydata.calculateAllBaseline()
-            mydata.integrateAll()
-            mydata.printResults(header = args.head, all_events = args.all)
+            mydata = Rawfile(file, events_path=events_path,
+                             integral_length = integral_length, data_length = data_length,
+                             baseline_length = baseline_length, all_events = args.all, baseline = baseline)
         except:
-            print >>sys.stderr, "Oops!  could not calculate tc table.  Try again..."
-            raise
+            print >>sys.stderr, "Oops! could not load the file {}. Check if it is a valid FATCAT FILE".format(file.name)
+            #raise
+        else:
+            try:
+                mydata.calculateAllBaseline()
+                mydata.integrateAll()
+                mydata.printResults(header = args.head, all_events = args.all)
+            except:
+                print >>sys.stderr, "Oops!  could not calculate tc table.  Try again..."
+                raise
 
-        if args.upload:
-                print >>sys.stderr, "uploading events to DB..."
-                mydata.uploadData(date, all_events = args.all, istart = startIndex)
+            if args.upload:
+                    print >>sys.stderr, "uploading events to DB..."
+                    mydata.uploadData(date, all_events = args.all, istart = startIndex)
