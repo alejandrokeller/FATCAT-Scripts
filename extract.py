@@ -301,6 +301,8 @@ class Rawfile(object):
             flow = df_subset["Ext flow"] + df_subset["Flowrate"]
             time = df_subset["Time"]
             sample_volume = np.trapz(flow, x=time)/60/1000
+            if len(df_subset) > 0:
+                 print >> sys.stderr, "sample interval found: {}-{}".format(df_subset['Daytime'][df_subset.index[0]],df_subset['Daytime'][df_subset.index[-1]])
 
             # calculate subset only if the internal pump was active
             df_subset = self.df[(self.df['Pump Status']==True) & (self.df['Valve Status']==False) & (self.df['Time'] >= start_runtime)
