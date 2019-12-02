@@ -20,9 +20,9 @@ $ sudo mkdir  ~/fatcat-files/ ~/fatcat-files/data ~/fatcat-files/data/summaries 
 ```bash
 $ pip install -r extras/requirements.txt
 ```
-6. Install PySide (for python3 use the `python3-pyside` meta package):
+6. Install PySide (for python3 use the `python3-pyside` meta package) and SciPy:
 ```bash
-$ sudo apt-get install python-pyside
+$ sudo apt-get install python-pyside python-scipy
 ```
 7. In some linux distributions, e.g. Ubuntu, install python-tk (already installed on the Raspberry Pi):
 ```bash
