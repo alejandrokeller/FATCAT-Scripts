@@ -192,9 +192,17 @@ def simple_day_plot(df, df_list, average_df, tc_column = 'tc', filename = "day_o
     ax_temp.set_title("Furnace Temp.")
 
     # The contourplot
-    y_contour_values = df_list[0]['elapsed-time']
+##    y_contour_values = df_list[0]['elapsed-time']
+    # create a list of all posible 'elapsed-time' values
+    y_contour_values = pd.DataFrame()
+    for i in df_list:
+        if y_contour_values.empty:
+            y_contour_values = i['elapsed-time']
+        else:
+            y_contour_values = pd.merge(y_contour_values, i['elapsed-time'],
+                                how='outer', on=['elapsed-time'])
     # rearange relevant columns of the dataframes into reduce_list so
-    # that all elements have the same 'elapsed time' values as element #0
+    # that all DataFrames use the same 'elapsed time' values
     reduced_list = []
     for i in df_list:
         temp_df = i[['elapsed-time', dtc_column]]
