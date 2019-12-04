@@ -132,8 +132,8 @@ def day_plot(df, df_list, tc_column = 'tc', filename = "day_overview", title = "
 
     return complete_overview
 
-def simple_day_plot(df, df_list, average_df, tc_column = 'tc', filename = "day_overview", title = "Day Overview", style='ggplot',
-             format='svg'):
+def simple_day_plot(df, df_list, average_df, tc_column = 'tc', filename = "day_overview",
+                    title = "Day Overview", style='ggplot', format='svg'):
     plt.style.use('ggplot')
 
     # definitions for the axes
@@ -147,7 +147,10 @@ def simple_day_plot(df, df_list, average_df, tc_column = 'tc', filename = "day_o
     x = pd.to_datetime(x, format='%Y-%m-%d %H:%M:%S')
 
     rect_tc = [left, bottom, width*.971, height]
-    rect_temp = [left + width + contour_spacing + spacing, bottom + height + contour_spacing, (1 - (2*left + width + 2*contour_spacing + spacing)), 0.85*(2*height + spacing)]
+    rect_temp = [left + width + contour_spacing + spacing,
+                 bottom + height + contour_spacing,
+                 (1 - (2*left + width + 2*contour_spacing + spacing)),
+                 0.85*(2*height + spacing)]
     rect_contour = [left, bottom + height + contour_spacing, width, 0.85*(2*height + spacing)]
 
     # start with a rectangular Figure
@@ -189,12 +192,20 @@ def simple_day_plot(df, df_list, average_df, tc_column = 'tc', filename = "day_o
     ax_temp.set_title("Furnace Temp.")
 
     # The contourplot
-    Xcontour, Ycontour = np.meshgrid(x, df_list[0]['elapsed-time'])
+    y_contour_values = df_list[0]['elapsed-time']
+    # rearange relevant columns of the dataframes into reduce_list so
+    # that all elements have the same 'elapsed time' values as element #0
+    reduced_list = []
+    for i in df_list:
+        temp_df = i[['elapsed-time', dtc_column]]
+        temp_df = pd.merge(y_contour_values, temp_df, how='left', on=['elapsed-time'])
+        reduced_list.append(temp_df)
+    Xcontour, Ycontour = np.meshgrid(x, y_contour_values)
     Zcontour = []
-    for i in list(x.index.values):
+    for i in reduced_list:
         row = []
-        for j in list(df_list[i]['elapsed-time'].index.values):
-            row.append(df_list[i][dtc_column][j])
+        for j in i[dtc_column]:
+            row.append(j)
         Zcontour.append(row)
     Zcontour = map(list, zip(*Zcontour))
     cf = ax_contour.contourf(Xcontour, Ycontour, Zcontour)
