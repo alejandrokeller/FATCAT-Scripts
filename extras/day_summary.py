@@ -248,7 +248,12 @@ def simple_day_plot(df, df_list, average_df, tc_column = 'tc', filename = "day_o
 
 def valid_date(s):
     try:
-        return datetime.datetime.strptime(s, "%Y-%m-%d")
+        if s.lower() == 'today':
+            return datetime.datetime.today()
+        elif s.lower() == 'yesterday':
+            return datetime.datetime.today() - datetime.timedelta(days=1)
+        else:
+            return datetime.datetime.strptime(s, "%Y-%m-%d")
     except ValueError:
         msg = "Not a valid date: '{0}'.".format(s)
         raise argparse.ArgumentTypeError(msg)
@@ -287,9 +292,9 @@ if __name__ == "__main__":
         print >>sys.stderr, 'Could not find the configuration file {0}'.format(config_file)
 
     parser = argparse.ArgumentParser(description='Generates a visual summary of a day or date interval')
-    parser.add_argument("-s", "--startdate", help="The Start Date - format YYYY-MM-DD",
+    parser.add_argument("-s", "--startdate", help="The Start Date - format YYYY-MM-DD (today or yesterday are also valid)",
                         dest='START', type=valid_date)
-    parser.add_argument("-e", "--enddate", help="The End Date - format YYYY-MM-DD",
+    parser.add_argument("-e", "--enddate", help="The End Date - format YYYY-MM-DD  (today or yesterday are also valid)",
                         dest='END', type=valid_date)
     parser.add_argument('--mute-graphs', help='Do not plot the data to screen', action='store_true')
     simple_parser = parser.add_mutually_exclusive_group(required=False)
