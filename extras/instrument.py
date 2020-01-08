@@ -25,8 +25,8 @@ class instrument(object):
             self.log_message("INSTRUMENT", "Could not find the configuration file: " + config_file)
             exit()
 
-        self.stop_str      = 'X0000!'
-        self.start_str     = 'X1000!'
+        self.stop_str      = 'X0!'
+        self.start_str     = 'X1!'
         self.zeroPID_str   = 'Z1100!'
         self.tube_off_str  = 'q0000!'
         self.tube_on_str   = 'q1000!'
