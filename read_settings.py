@@ -39,6 +39,8 @@ if __name__ == "__main__":
 
     device = instrument(config_file = config_file)
     device.open_port()
+    device.start_datastream()
+    time.sleep(1)
     device.stop_datastream()
     status_str = ""
 
