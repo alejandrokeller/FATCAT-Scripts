@@ -358,12 +358,12 @@ class Visualizer(object):
 ###### Future temperature control for the VOC bottle
 #        self.controlsLayout.addWidget(self.lblBath,      6, 0)
 #        self.controlsLayout.addWidget(self.lblBathT,     6, 1)
-        self.controlsLayout.addWidget(self.lblTube,      7, 0)
-        self.controlsLayout.addWidget(self.lblTubeT,     7, 1)
-        self.controlsLayout.addWidget(self.lblLamps,     8, 0)
-        self.controlsLayout.addWidget(self.lblLampsData, 8, 1)
-        self.controlsLayout.addWidget(self.lblInlet,     9, 0)
-        self.controlsLayout.addWidget(self.lblInletData, 9, 1)
+        #self.controlsLayout.addWidget(self.lblTube,      7, 0)
+        #self.controlsLayout.addWidget(self.lblTubeT,     7, 1)
+        #self.controlsLayout.addWidget(self.lblLamps,     8, 0)
+        #self.controlsLayout.addWidget(self.lblLampsData, 8, 1)
+        #self.controlsLayout.addWidget(self.lblInlet,     9, 0)
+        #self.controlsLayout.addWidget(self.lblInletData, 9, 1)
 
 ##        self.controlsLayout.addWidget(self.lblCD,    9, 0, 1, 2) # example of two spaces horizontal (one vertical)
 
@@ -390,6 +390,16 @@ class Visualizer(object):
 
         ## Create a QVBox layout to manage the plots
         self.plotLayout = QtGui.QVBoxLayout()
+
+        ## Create a QHBox for the text info
+        self.textLayout = QtGui.QHBoxLayout()
+#        self.textLayout.addWidget(self.lblTube)
+        self.textLayout.addWidget(self.lblTubeT)
+#        self.textLayout.addWidget(self.lblLamps)
+        self.textLayout.addWidget(self.lblLampsData)
+#        self.textLayout.addWidget(self.lblInlet)
+        self.textLayout.addWidget(self.lblInletData)
+        self.plotLayout.addLayout(self.textLayout)
 
         self.plotLayout.addWidget(self.PIDplot)
         self.plotLayout.addWidget(self.Fplot)
@@ -461,14 +471,14 @@ class Visualizer(object):
 
                 self.lblBathT.setText("".join((str(int(newData['tbath'])), "/",
                                                str(newData['stbath']), " degC")))
-                self.lblTubeT.setText("".join((str(int(newData['tvoc'])), "/",
+                self.lblTubeT.setText("".join(("VOC: ", str(int(newData['tvoc'])), "/",
                                                str(newData['stvoc']), " degC")))
-                self.lblLampsData.setText("".join((str(int(newData['tuv'])), " degC, ",
+                self.lblLampsData.setText("".join(("ORF: ",str(int(newData['tuv'])), " degC, ",
                                                    str(int(newData['iuv']*self.device.uv_constant/1000)), " uA" )))
+                self.lblInletData.setText("".join(("Inlet: ",str(int(newData['inT'])), " degC, ",
+                                                   str(int(newData['inrH'])), "% rH" )))
                 self.lblPump1.setText("".join(("Pump1 (", "{:.1f}".format(newData['flow1']), " slpm)")))
                 self.lblPump2.setText("".join(("Pump2 (", "{:.1f}".format(newData['flow2']), " slpm)")))
-                self.lblInletData.setText("".join((str(int(newData['inT'])), " degC, ",
-                                                   str(int(newData['inrH'])), "% rH" )))
                 self.lblVOC1.setText("".join(("VOC1: ",str(int(newData['voc1'])), "/",
                                                str(newData['svoc1']), " mV")))
                 self.lblVOC2.setText("".join(("VOC2: ",str(int(newData['voc2'])), " mV")))
