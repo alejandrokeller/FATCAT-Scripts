@@ -110,7 +110,7 @@ class Visualizer(object):
             "inT", # 20.9.2019 baseline VOC1
             "stvoc",
             "tvoc",
-            "stbath",
+            "sinrH",
             "tbath",
             "status",
             "lamps"
@@ -133,7 +133,7 @@ class Visualizer(object):
             float,  # inT
             int,     # stvoc
             float,   # tvoc
-            int,     # stbath
+            int,     # sinrH
             float,   # tbath
             hex2bin, # status
             hex2bin  # lamps
@@ -157,7 +157,7 @@ class Visualizer(object):
             'degC', # inT
             'degC', # stvoc
             'degC', # tvoc
-            'degC', # stbath
+            'degC', # sinrH
             'degC', # tbath
             '-',    # status
             '-'     # lamps
@@ -241,8 +241,8 @@ class Visualizer(object):
         ## Create infotext widgets to be placed inside
         self.lblLamp      = QtGui.QLabel("Lamps")
         self.lblVOCTctr   = QtGui.QLabel("VOC heater")
-        self.lblBath      = QtGui.QLabel("Bath:")
-        self.lblBathT     = QtGui.QLabel("")
+        self.lblBath      = QtGui.QLabel("rH:")
+        self.lblBathrH    = QtGui.QLabel("")
         self.lblTube      = QtGui.QLabel("VOC:")
         self.lblTubeT     = QtGui.QLabel("")
         self.lblVOC1      = QtGui.QLabel("VOC1 ()")
@@ -265,7 +265,7 @@ class Visualizer(object):
         self.btnVOCTctr   = QtGui.QPushButton("")            # Turn VOC heater on or off
         self.btnVOCTctr.setFixedHeight(button_size)
         self.btnVOCTctr.setFixedWidth(button_size)
-        self.btnBath      = QtGui.QPushButton("")            # Turn Bath Heating on/off
+        self.btnBath      = QtGui.QPushButton("")            # Turn rH control on/off
         self.btnBath.setFixedWidth(button_size)
         self.btnBath.setFixedHeight(button_size)
         self.btnTube      = QtGui.QPushButton("")             # Turn Tube Heating on/off
@@ -290,6 +290,7 @@ class Visualizer(object):
         self.btnVOC2.clicked.connect(self.toggleVOC2)
         self.btnPump1.clicked.connect(self.togglePump1)
         self.btnPump2.clicked.connect(self.togglePump2)
+        self.btnBath.clicked.connect(self.togglerH)
 
         ## Create widgets for controlling MFC2
         self.btnMFC2      = QtGui.QPushButton(">>")  # Sends new MFC2 flow
@@ -355,9 +356,8 @@ class Visualizer(object):
         self.controlsLayout.addWidget(self.lblVOC2,      3, 1)
         self.controlsLayout.addWidget(self.lblPump1,     4, 1)
         self.controlsLayout.addWidget(self.lblPump2,     5, 1)
-###### Future temperature control for the VOC bottle
-#        self.controlsLayout.addWidget(self.lblBath,      6, 0)
-#        self.controlsLayout.addWidget(self.lblBathT,     6, 1)
+        #self.controlsLayout.addWidget(self.lblBath,      6, 0)
+        self.controlsLayout.addWidget(self.lblBathrH,    6, 1)
         #self.controlsLayout.addWidget(self.lblTube,      7, 0)
         #self.controlsLayout.addWidget(self.lblTubeT,     7, 1)
         #self.controlsLayout.addWidget(self.lblLamps,     8, 0)
@@ -373,6 +373,7 @@ class Visualizer(object):
         self.controlsLayout.addWidget(self.btnVOC2,     3, 0)
         self.controlsLayout.addWidget(self.btnPump1,    4, 0)
         self.controlsLayout.addWidget(self.btnPump2,    5, 0)
+        self.controlsLayout.addWidget(self.btnBath,     6, 0)
 
         ## Add Widgets to the MFCLayout
         self.mfcLayout.addWidget(self.lblSVOC1,    0, 0)
@@ -469,8 +470,8 @@ class Visualizer(object):
                 
 ####################################################################
 
-                self.lblBathT.setText("".join((str(int(newData['tbath'])), "/",
-                                               str(newData['stbath']), " degC")))
+                self.lblBathrH.setText("".join((str(int(newData['inrH'])), "/",
+                                               str(newData['sinrH']), " %rH")))
                 self.lblTubeT.setText("".join(("VOC: ", str(int(newData['tvoc'])), "/",
                                                str(newData['stvoc']), " degC")))
                 self.lblLampsData.setText("".join(("ORF: ",str(int(newData['tuv'])), " degC, ",
@@ -607,6 +608,13 @@ class Visualizer(object):
             commands = [self.device.pump2_off_str]
         else:
             commands = [self.device.pump2_on_str]
+        self.device.send_commands(commands, open_port = True)
+        
+    def self.togglerH(self):
+        if self.statusDict['rH']:
+            commands = [self.device.rH_off_str]
+        else:
+            commands = [self.device.rH_on_str]
         self.device.send_commands(commands, open_port = True)
 
 
