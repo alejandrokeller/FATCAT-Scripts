@@ -318,6 +318,15 @@ class Visualizer(object):
         self.lblVOCT       = QtGui.QLabel("VOC (degC):")
         self.spVOCT        = QtGui.QSpinBox()
         self.spVOCT.setRange(0,80)
+        
+        ## Create widgets for controlling rH
+        self.btnRH         = QtGui.QPushButton(">>")  # Sends new MFC2 flow
+        self.btnRH.setFixedWidth(button_size)
+        self.btnRH.setFixedHeight(button_size)
+        self.btnRH.clicked.connect(self.setRH)
+        self.lblRH       = QtGui.QLabel("rH (%):")
+        self.spRH        = QtGui.QSpinBox()
+        self.spRH.setRange(0,95)
 
         ## Create widgets for serial commands
         self.btnSERIAL     = QtGui.QPushButton(">>")  # Sends new MFC2 flow
@@ -556,6 +565,9 @@ class Visualizer(object):
 
     def setVOCT(self):
         self.device.set_tubeT(self.spVOCT.value() ,open_port = True)
+        
+    def setRH(self):
+        self.device.set_rH(self.spRH.value() ,open_port = True)
             
     def toggleAllLamps(self):
         if self.lamps_status:
