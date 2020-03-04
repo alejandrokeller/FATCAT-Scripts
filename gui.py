@@ -394,9 +394,12 @@ class Visualizer(object):
         self.mfcLayout.addWidget(self.lblMFC2,     2, 0)
         self.mfcLayout.addWidget(self.spMFC2,      2, 1)
         self.mfcLayout.addWidget(self.btnMFC2,     2, 2)
-        self.mfcLayout.addWidget(self.lblSERIAL,   3, 0)
-        self.mfcLayout.addWidget(self.lineSERIAL,  3, 1)
-        self.mfcLayout.addWidget(self.btnSERIAL,   3, 2)
+        self.mfcLayout.addWidget(self.lblRH,       3, 0)
+        self.mfcLayout.addWidget(self.spRH,        3, 1)
+        self.mfcLayout.addWidget(self.btnRH,       3, 2)
+        self.mfcLayout.addWidget(self.lblSERIAL,   4, 0)
+        self.mfcLayout.addWidget(self.lineSERIAL,  4, 1)
+        self.mfcLayout.addWidget(self.btnSERIAL,   4, 2)
 
         ## Create a QVBox layout to manage the plots
         self.plotLayout = QtGui.QVBoxLayout()
