@@ -38,6 +38,8 @@ class instrument(object):
         self.pump1_on_str  = 'E1100!'
         self.pump2_off_str = 'E2000!'
         self.pump2_on_str  = 'E2100!'
+        self.rH_off_str    = 'r0000!'
+        self.rH_on_str     = 'r1000!'
         
         self.queries = [
             "a?", # Response: "p values: P1=x; P2=5; BATH:0; Set: px000 to px999" controls pump and humidification
