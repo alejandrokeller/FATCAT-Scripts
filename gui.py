@@ -503,6 +503,7 @@ class Visualizer(object):
                     self.spMFC2.setValue(int(newData['mfc2']))
                     self.spSVOC1.setValue(int(newData['svoc1']))
                     self.spVOCT.setValue(int(newData['stvoc']))
+                    self.spRH.setValue(int(newData['sinrH']))
                     
 
 ################# Example of color toggle
