@@ -549,6 +549,11 @@ class Visualizer(object):
                     self.lblPump2.setStyleSheet('color: green')
                 else:
                     self.lblPump2.setStyleSheet('color: red')
+
+                if self.statusDict['rH']:
+                    self.lblBathrH.setStyleSheet('color: green')
+                else:
+                    self.lblBathrH.setStyleSheet('color: red')
                                     
         except Exception as e:
             print >>sys.stderr, e
@@ -625,7 +630,7 @@ class Visualizer(object):
             commands = [self.device.pump2_on_str]
         self.device.send_commands(commands, open_port = True)
         
-    def self.togglerH(self):
+    def togglerH(self):
         if self.statusDict['rH']:
             commands = [self.device.rH_off_str]
         else:
