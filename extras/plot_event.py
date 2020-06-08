@@ -53,7 +53,7 @@ class Datafile(object):
             if self.volume > 0:
                 try:
                     self.sample_co2 = float(temp[1].split(' ')[1])
-                    if self.sample_co2 > 0:
+                    if self.sample_co2 >= 0:
                         #print >>sys.stderr, 'Using vol. weithed co2 data found in file: {:.0f} ppm'.format(self.co2)
                         skip_rows += 2
                         header    += 2
@@ -839,8 +839,8 @@ if __name__ == "__main__":
                 size.append(results.coeff_df['A{}'.format(i)]*1000)
             color = ['tab:blue', 'tab:orange', 'tab:green']
             filename = fit_full_path.replace('.','_') + '-FitCoeffPlot'
-            bubble_plot(xdata, ydata, axisnames = ["sigma", "xc"], units = ["s", "s"], title="Fittet parameters", size = size, color = color,
-                        label = ["hvoc", "lvoc", "ec"], xerror = xerror, yerror = yerror,
+            bubble_plot(xdata, ydata, axisnames = ["sigma", "xc"], units = ["s", "s"], title="Fitted parameters", size = size, color = color,
+                        label = ["peak1", "peak2", "peak3"], xerror = xerror, yerror = yerror,
                         filename = filename, format=plot_format,)
         
         filename = summary_path + summary_file.replace('.','_') + '-boxplot.' + plot_format
