@@ -196,6 +196,7 @@ class Datafile(object):
                     print >>sys.stderr, "error fitting the event"
                 else:
                     print >>sys.stderr, "fitted {}, r-squared = {}".format(self.datafile, round(self.r_squared, 4))
+                    #print >>sys.stderr, "---fitted coefficients: {}".format(self.fit_coeff)
 
     def create_plot(self, x='elapsed-time', y='dtc', y2='dtc-baseline', style='ggplot', format='svg', err=False, error_interval = 4, mute = False):
 
@@ -364,6 +365,12 @@ class ResultsList(object):
         newDict['r-squared'] = round(r_squared, 4)
         
         self.coeff_df = self.coeff_df.append(newDict, ignore_index = True)
+        coeff_string = "---fitted coefficients: "
+        for n in range(self.ncoeff):
+            coefficient_name = "A{}".format(n)
+            coeff_string += coefficient_name + "={} ".format(newDict[coefficient_name])
+        print >>sys.stderr, coeff_string
+        #print >>sys.stderr, "---fitted coefficients: {}".format(newDict)
 
         
     def append_event(self, datafile):
