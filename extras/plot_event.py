@@ -42,6 +42,7 @@ class Datafile(object):
         self.internname = datafile.readline().rstrip('\n') # first line contains the original filename
         self.rawdata    = datafile.readline().rstrip('\n') # second line points to raw data
         self.fit_coeff  = [] # variable to hold the fitting results
+        #self.ncoeff     = 3
 
         # for back compatibility, the next 4 lines will be tested to see if the event
         # includes also information about sampling volume and volume weigthed co2
@@ -195,8 +196,12 @@ class Datafile(object):
                 except:
                     print >>sys.stderr, "error fitting the event"
                 else:
-                    print >>sys.stderr, "fitted {}, r-squared = {}".format(self.datafile, round(self.r_squared, 4))
-                    #print >>sys.stderr, "---fitted coefficients: {}".format(self.fit_coeff)
+                    #print >>sys.stderr, "----fitted {}, r-squared = {}".format(self.datafile, round(self.r_squared, 4))
+                    coeff_string = "----fitted, r-squared = {}, ".format(round(self.r_squared, 4))
+                    for num, coeff_list in enumerate(self.fit_coeff):
+                        coefficient_name = "A{}".format(num)
+                        coeff_string += coefficient_name + "={} ".format(round(coeff_list['A'], 2))
+                    print >>sys.stderr, coeff_string
 
     def create_plot(self, x='elapsed-time', y='dtc', y2='dtc-baseline', style='ggplot', format='svg', err=False, error_interval = 4, mute = False):
 
@@ -365,13 +370,6 @@ class ResultsList(object):
         newDict['r-squared'] = round(r_squared, 4)
         
         self.coeff_df = self.coeff_df.append(newDict, ignore_index = True)
-        coeff_string = "---fitted coefficients: "
-        for n in range(self.ncoeff):
-            coefficient_name = "A{}".format(n)
-            coeff_string += coefficient_name + "={} ".format(newDict[coefficient_name])
-        print >>sys.stderr, coeff_string
-        #print >>sys.stderr, "---fitted coefficients: {}".format(newDict)
-
         
     def append_event(self, datafile):
         self.files.append(datafile.internname)
