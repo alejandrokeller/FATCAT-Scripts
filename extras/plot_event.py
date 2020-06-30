@@ -644,7 +644,7 @@ def create_baseline_file(files, baseline_path, baseline_file, summary_path, tmax
         f.close()
 
     print stats_df.head()
-    box_plot(x = results.summary['date'], y = results.summary['tc'], title = 'Baseline data', units = r'$\mu$g-C', filename = filename)
+    box_plot(x = results.summary['date']+' '+results.summary['time'], y = results.summary['tc'], title = 'Baseline data', units = r'$\mu$g-C', filename = filename)
         
     return filename
 
