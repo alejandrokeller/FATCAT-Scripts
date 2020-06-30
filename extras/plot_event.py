@@ -44,11 +44,13 @@ class Datafile(object):
         self.fit_coeff  = [] # variable to hold the fitting results
         #self.ncoeff     = 3
 
+        #print >>sys.stderr, "loading: {}".format(datafile.name)
+
         # for back compatibility, the next 4 lines will be tested to see if the event
         # includes also information about sampling volume and volume weigthed co2
         temp            = [] # for testing lines
         for i in range(4):
-            temp.append(datafile.readline().rstrip('\n'))
+            temp.append(datafile.readline().rstrip('\n\r'))
         try:
             self.volume = float(temp[0].split(' ')[1])
             if self.volume > 0:
@@ -71,6 +73,7 @@ class Datafile(object):
             self.units = temp[1].replace(" ","").split(',')
             self.volume = False
             self.sample_co2 = False
+        #print >>sys.stderr, "keys: {}".format(self.keys)
 
         # Use TeX notation :-)
         self.units = replace_in_list(self.units, 'ug-C', r'$\mu$g-C')
@@ -350,6 +353,17 @@ class ResultsList(object):
             'xcStDevErr': 2,
             'sigmaStDevErr': 2
             }
+        self.average_df_decimals = {
+            'elapsed-time': 1,
+            'toven': 1,
+            'pco2': 1,
+            'co2': 1,
+            'flow': 2,
+            'countdown': 1,
+            'co2-event': 3,
+            'dtc': 3
+            }
+        self.default_decimals = 3
         for n in range(self.ncoeff):
             for c in self.coeff:
                 self.fit_coeff_keys.append('{}{}'.format(c,n))
@@ -372,7 +386,8 @@ class ResultsList(object):
         self.coeff_df = self.coeff_df.append(newDict, ignore_index = True)
         
     def append_event(self, datafile):
-        self.files.append(datafile.internname)
+        self.files.append(datafile.internname.rstrip('\r'))
+        
         if self.summary.empty:
             # update columns if baseline corrected column exists
             if 'dtc-baseline' in datafile.df:
@@ -422,9 +437,13 @@ class ResultsList(object):
 
         df = pd.DataFrame(columns=self.all_keys)
         for k in df_means:
+            if k in self.average_df_decimals:
+                digits = self.average_df_decimals[k]
+            else:
+                digits = self.default_decimals
             sdkey = self.sd_keys[self.average_keys.index(k)] # get the relevant sd_key
-            df[k] = df_means[k]
-            df[sdkey] = df_stds[k]
+            df[k] = df_means[k].round(digits)
+            df[sdkey] = df_stds[k].round(digits)
 
         return df
 
