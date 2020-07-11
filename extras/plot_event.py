@@ -52,12 +52,18 @@ class Datafile(object):
         for i in range(4):
             temp.append(datafile.readline().rstrip('\n\r'))
         try:
+            # added 11.07.2020: checking for label instead of number to avoid errors when volume is zero
+            label = temp[0].split(' ')[0]
             self.volume = float(temp[0].split(' ')[1])
-            if self.volume > 0:
+            #if self.volume > 0:
+            if label == "volume:":
+                if self.volume <= 0:
+                    print >>sys.stderr, 'Warning: volume variable in event is {:.0f}, ignoring the volume value'.format(self.volume)
+                    self.volume = False
                 try:
                     self.sample_co2 = float(temp[1].split(' ')[1])
                     if self.sample_co2 >= 0:
-                        #print >>sys.stderr, 'Using vol. weithed co2 data found in file: {:.0f} ppm'.format(self.co2)
+                        #print >>sys.stderr, 'Using vol. weigthed co2 data found in file: {:.0f} ppm'.format(self.co2)
                         skip_rows += 2
                         header    += 2
                         self.keys  = temp[2].replace(" ","").split(',')
