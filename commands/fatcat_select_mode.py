@@ -26,6 +26,12 @@ if __name__ == "__main__":
     parser.add_argument('--inifile', required=False, dest='INI', default=config_file,
                     help='Path to configuration file ({} if omitted)'.format(config_file) )
     parser.set_defaults(bypass=False)
+    zero_parser = parser.add_mutually_exclusive_group(required=False)
+    zero_parser.add_argument('--analysis_inlet', dest='zero', action='store_true',
+                    help='use analysis air inlet for sample collection.')
+    zero_parser.add_argument('--sample_inlet', dest='zero', action='store_false',
+                    help='use sample inlet  for sample collection (default).')
+    parser.set_defaults(zero=False)
 
     args = parser.parse_args()
 
@@ -33,16 +39,33 @@ if __name__ == "__main__":
     device = instrument(config_file = config_file)
 
     if args.sample:
-        queries = [
-            "U0000", # Switch off internal pump
-            "V0000", # Switch off internal valve
-            "E1000",  # Switch on  external pump
-            "L0000" # Switch off external valve
-            ]
+        if args.zero:
+            if args.bypass:
+                queries = [
+                    "U0000", # Switch off internal pump
+                    "V1000", # Switch on internal valve
+                    "E1000",  # Switch on  external pump
+                    "L0000" # Switch off external valve
+                    ]
+            else:
+                queries = [
+                    "U0000", # Switch off internal pump
+                    "V1000", # Switch on internal valve
+                    "E0000",  # Switch off external pump
+                    "L0000" # Switch off external valve
+                    ]
+        else:
+            queries = [
+                "U0000", # Switch off internal pump
+                "V0000", # Switch off internal valve
+                "E1000",  # Switch on  external pump
+                "L0000" # Switch off external valve
+                ]
     else:
         if args.bypass:
             queries = [
                 "L1000", # Switch on  external valve
+                "E1000", # Switch on external pump
                 "V1000", # Switch on  internal valve
                 "U1000"  # Switch on  internal pump
                 ]
