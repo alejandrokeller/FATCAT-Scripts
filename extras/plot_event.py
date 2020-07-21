@@ -519,7 +519,8 @@ class ResultsList(object):
         plt.show()
 
 def box_plot(x, y, units, title, filename, style='ggplot', format='svg', date_format='%Y-%m-%d'):
-    plt.style.use('ggplot')
+    #plt.style.use('ggplot')
+    plt.style.use(style)
 
     # definitions for the axes
     left, width = 0.1, 0.7
@@ -738,6 +739,7 @@ if __name__ == "__main__":
     parser.add_argument('--individual-plots', help='Stop at individual event plots [slow]', action='store_true')
     parser.add_argument('--fit', dest='fit', help='Fit triple gaussian to data', action='store_true')
     parser.add_argument('--fix-co2', dest='fix', help='fix the co2-event in the event file', action='store_true')
+    parser.add_argument('--mute-graphs', help='Do not plot the data to screen', action='store_true')
     
     args = parser.parse_args()
     
@@ -813,7 +815,7 @@ if __name__ == "__main__":
 
     else:
         # if only one file, then show the diagram per default
-        if len(args.datafile) == 1:
+        if len(args.datafile) == 1 and not args.mute_graphs:
                args.individual_plots = True
         for f in args.datafile:
             mydata = Datafile(f, output_path = output_path, tmax = tmax)
@@ -882,7 +884,8 @@ if __name__ == "__main__":
         filename = summary_path + summary_file.replace('.','_') + '-boxplot.' + plot_format
         if results.n > 1:
             box_plot(results.summary['date']+' '+results.summary['time'], results.summary[box_y], r'$\mu$g-C', 'Total Carbon', filename, format=plot_format, date_format='%Y-%m-%d %H:%M:%S')
-            if args.fit:
-                results.animated_plot(y3='dtc-baseline', y2='fitted data')
-            else:
-                results.animated_plot()
+            if not args.mute_graphs:
+                if args.fit:
+                    results.animated_plot(y3='dtc-baseline', y2='fitted data')
+                else:
+                    results.animated_plot()
