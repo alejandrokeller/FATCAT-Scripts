@@ -589,7 +589,13 @@ def bubble_plot(xdata, ydata, axisnames, units, title=None, style='ggplot', size
     plt.grid(True)
     xlabel = '{} ({})'.format(axisnames[0], units[0])
     ylabel = '{} ({})'.format(axisnames[1], units[1])
-    #plt.xlim(self.df[x].min(), self.df[x].max())
+    ### set some axes values to avoid problems due to large error bars
+    # first flatten the list of dataframe vectors into a simple list
+    xvalues = pd.DataFrame.from_dict(map(dict,xdata)).values.flatten()
+    yvalues = pd.DataFrame.from_dict(map(dict,ydata)).values.flatten()
+    plt.xlim((min(xvalues)*4/5, max(xvalues)*6/5))
+    plt.ylim((min(yvalues)*4/5, max(yvalues)*6/5))
+    ###
     if title:
         plt.title(title)
     plt.xlabel(xlabel)
