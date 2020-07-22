@@ -14,8 +14,8 @@ def my_fit(xdata, ydata, p0 = (10., 18., 3., 8., 28., 7., 6., 53., 8. )):
     nparameters = 3
     
     fitResult, ier = curve_fit( my_triple_peak, xdata, ydata, p0=p0, 
-                                bounds=((0, 0, 0, 0, 20, 0, 0, 37, 0),
-                                        (np.inf, 20, np.inf, np.inf, 40, np.inf, np.inf, 60, 20)) )
+                                bounds=((0, 0, 0, 0, 20, 0, 0, 30, 0),
+                                        (np.inf, 20, np.inf, np.inf, 38, np.inf, np.inf, 60, 20)) )
     perr = np.sqrt(np.diag(ier))
     fit_coeff = []
     for n in range(nparameters):
