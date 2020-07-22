@@ -23,6 +23,8 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from plot_event import Datafile, ResultsList, generate_df_stats, my_date_formater, my_days_format_function
 from plot_event import box_plot
 
+from event_list import get_newest_events
+
 def day_plot(df, df_list, tc_column = 'tc', filename = "day_overview", title = "Day Overview", style='ggplot',
              format='svg'):
     plt.style.use('ggplot')
@@ -258,12 +260,6 @@ def valid_date(s):
         msg = "Not a valid date: '{0}'.".format(s)
         raise argparse.ArgumentTypeError(msg)
 
-def check_positive(value):
-    ivalue = int(value)
-    if ivalue <= 1:
-        raise argparse.ArgumentTypeError("%s is an invalid positive int value" % value)
-    return ivalue
-
 if __name__ == "__main__":
     
     
@@ -302,8 +298,8 @@ if __name__ == "__main__":
                         dest='START', type=valid_date)
     parser.add_argument("-e", "--enddate", help="The End Date - format YYYY-MM-DD  (today or yesterday are also valid)",
                         dest='END', type=valid_date)
-    parser.add_argument("-l", "--last", help="number of events to consider, must be larger than 1 (last N-events, overides '-s' parameter)",
-                        dest='LAST', type=check_positive)
+    parser.add_argument("-l", "--last", help="Latest events to consider, must be larger than 1 (e.g., 10files, 5days, 72hours)",
+                        dest='LAST', type=get_newest_events)
     parser.add_argument('--mute-graphs', help='Do not plot the data to screen', action='store_true')
     simple_parser = parser.add_mutually_exclusive_group(required=False)
     simple_parser.add_argument('--skip-simple', dest='simple', action='store_false',
@@ -336,15 +332,11 @@ if __name__ == "__main__":
         
 
     if args.LAST:
-        print >>sys.stderr, "Searching for the last {} files".format(args.LAST)
-        filemask = '????-??-??-????-eventdata.csv'
-        file_list = sorted(glob.glob(events_path + filemask))[-args.LAST:]
+        file_list = args.LAST
+        date_range = "latest"
         if len(file_list) == 0:
             print >>sys.stderr, "No events found."
             exit()
-        else:
-            print >>sys.stderr, "{} files found".format(len(file_list))
-            date_range = "latest"
     else:
         # create list of days to explore
         delta = args.END - args.START
