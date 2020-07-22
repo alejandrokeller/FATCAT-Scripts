@@ -34,39 +34,50 @@ if __name__ == "__main__":
     parser.add_argument("-s", "--startdate", help="The Start Date - format YYYY-MM-DD",
                         dest='START', type=valid_date)
     parser.add_argument("-e", "--enddate", help="The End Date - format YYYY-MM-DD",
-                        dest='END', type=valid_date)   
+                        dest='END', type=valid_date)
+    parser.add_argument("-l", "--last", help="Search for files named latest-* (overrides -s parameter)",
+                        dest='LAST', action='store_true')   
     
     args = parser.parse_args()
 
-    if not args.START:
-        args.START = datetime.datetime.today()
-    if not args.END:
-        args.END = args.START
-    if args.END < args.START:
-        raise parser.error("End date is prior to start date")
+    if args.LAST:
+        filemask = 'latest-*'
+        file_list = sorted(glob.glob(report_path + filemask))
+        if len(file_list) == 0:
+            print >>sys.stderr, "No file found"
+            exit()
+        else:
+            print "{} file(s) found.".format(len(file_list))
+    else:
+        if not args.START:
+            args.START = datetime.datetime.today()
+        if not args.END:
+            args.END = args.START
+        if args.END < args.START:
+            raise parser.error("End date is prior to start date")
 
-    # create list of days to explore
-    delta = args.END - args.START
-    filemask = '*'
-    file_list = []
-    days_to_show = 0
-    for i in range(delta.days + 1):
-        day = args.START + datetime.timedelta(days=i)
-        date_str = day.strftime('%Y-%m-%d')
-        day_list = sorted(glob.glob(report_path + date_str + filemask))
-        if day_list:
-            # set the first day of the overview
-            if not file_list:
-                start_date = date_str
-            end_date = date_str
-            file_list.extend(day_list)
-            days_to_show = days_to_show + 1
-    try:
-        date_range = (start_date if days_to_show == 1 else start_date + '-' + end_date)
-    except:
-        print >>sys.stderr, "No flies found in the desired range: {} to {}".format(args.START.strftime('%Y-%m-%d'), args.END.strftime('%Y-%m-%d'))
-        exit()
-    print str(len(file_list)) + " files found in the time range: " + date_range
+        # create list of days to explore
+        delta = args.END - args.START
+        filemask = '*'
+        file_list = []
+        days_to_show = 0
+        for i in range(delta.days + 1):
+            day = args.START + datetime.timedelta(days=i)
+            date_str = day.strftime('%Y-%m-%d')
+            day_list = sorted(glob.glob(report_path + date_str + filemask))
+            if day_list:
+                # set the first day of the overview
+                if not file_list:
+                    start_date = date_str
+                end_date = date_str
+                file_list.extend(day_list)
+                days_to_show = days_to_show + 1
+        try:
+            date_range = (start_date if days_to_show == 1 else start_date + '-' + end_date)
+        except:
+            print >>sys.stderr, "No flies found in the desired range: {} to {}".format(args.START.strftime('%Y-%m-%d'), args.END.strftime('%Y-%m-%d'))
+            exit()
+        print str(len(file_list)) + " files found in the time range: " + date_range
 
 ##    print "log to ftp server:" + ftp_server
 ##    print "using user: " + ftp_user + " and pass: " + ftp_pass

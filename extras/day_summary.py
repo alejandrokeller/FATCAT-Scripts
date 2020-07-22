@@ -258,6 +258,12 @@ def valid_date(s):
         msg = "Not a valid date: '{0}'.".format(s)
         raise argparse.ArgumentTypeError(msg)
 
+def check_positive(value):
+    ivalue = int(value)
+    if ivalue <= 1:
+        raise argparse.ArgumentTypeError("%s is an invalid positive int value" % value)
+    return ivalue
+
 if __name__ == "__main__":
     
     
@@ -296,6 +302,8 @@ if __name__ == "__main__":
                         dest='START', type=valid_date)
     parser.add_argument("-e", "--enddate", help="The End Date - format YYYY-MM-DD  (today or yesterday are also valid)",
                         dest='END', type=valid_date)
+    parser.add_argument("-l", "--last", help="number of events to consider, must be larger than 1 (last N-events, overides '-s' parameter)",
+                        dest='LAST', type=check_positive)
     parser.add_argument('--mute-graphs', help='Do not plot the data to screen', action='store_true')
     simple_parser = parser.add_mutually_exclusive_group(required=False)
     simple_parser.add_argument('--skip-simple', dest='simple', action='store_false',
@@ -325,29 +333,41 @@ if __name__ == "__main__":
         args.END = args.START
     if args.END < args.START:
         raise parser.error("End date is prior to start date")
+        
 
-    # create list of days to explore
-    delta = args.END - args.START
-    filemask = '-????-eventdata.csv'
-    file_list = []
-    days_to_show = 0
-    for i in range(delta.days + 1):
-        day = args.START + datetime.timedelta(days=i)
-        date_str = day.strftime('%Y-%m-%d')
-        day_list = sorted(glob.glob(events_path + date_str + filemask))
-        if day_list:
-            # set the first day of the overview
-            if not file_list:
-                start_date = date_str
-            end_date = date_str
-            file_list.extend(day_list)
-            days_to_show = days_to_show + 1
-    try:
-        date_range = (start_date if days_to_show == 1 else start_date + '-' + end_date)
-    except:
-        print >>sys.stderr, "No event flies found in the desired range: {} to {}".format(args.START.strftime('%Y-%m-%d'), args.END.strftime('%Y-%m-%d'))
-        exit()
-    print >>sys.stderr, str(len(file_list)) + " files found in the time range: " + date_range
+    if args.LAST:
+        print >>sys.stderr, "Searching for the last {} files".format(args.LAST)
+        filemask = '????-??-??-????-eventdata.csv'
+        file_list = sorted(glob.glob(events_path + filemask))[-args.LAST:]
+        if len(file_list) == 0:
+            print >>sys.stderr, "No events found."
+            exit()
+        else:
+            print >>sys.stderr, "{} files found".format(len(file_list))
+            date_range = "latest"
+    else:
+        # create list of days to explore
+        delta = args.END - args.START
+        filemask = '-????-eventdata.csv'
+        file_list = []
+        days_to_show = 0
+        for i in range(delta.days + 1):
+            day = args.START + datetime.timedelta(days=i)
+            date_str = day.strftime('%Y-%m-%d')
+            day_list = sorted(glob.glob(events_path + date_str + filemask))
+            if day_list:
+                # set the first day of the overview
+                if not file_list:
+                    start_date = date_str
+                end_date = date_str
+                file_list.extend(day_list)
+                days_to_show = days_to_show + 1
+        try:
+            date_range = (start_date if days_to_show == 1 else start_date + '-' + end_date)
+        except:
+            print >>sys.stderr, "No event flies found in the desired range: {} to {}".format(args.START.strftime('%Y-%m-%d'), args.END.strftime('%Y-%m-%d'))
+            exit()
+        print >>sys.stderr, str(len(file_list)) + " files found in the time range: " + date_range
 
     # open the baseline DataFrame if it exists
     filename = baseline_path + baseline_file
