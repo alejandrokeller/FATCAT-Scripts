@@ -525,7 +525,7 @@ def box_plot(x, y, units, title, filename, style='ggplot', format='svg', date_fo
     plt.style.use(style)
 
     # definitions for the axes
-    left, width = 0.1, 0.7
+    left, width = 0.05, 0.75
     bottom, height = 0.15, 0.75
     spacing = 0.005
     box_width = 1 - (1.5*left + width + spacing)
@@ -551,7 +551,8 @@ def box_plot(x, y, units, title, filename, style='ggplot', format='svg', date_fo
 ##    ax_hist.tick_params(direction='in', labelleft=False)
 
     # the scatter plot:
-    ax_scatter.scatter(x, y)
+    ax_scatter.scatter(x, y) #circles
+    ax_scatter.plot(x, y)    #lines
     ax_scatter.set(xlabel='date', ylabel=y.name + ' (' + units + ')', title=title)
     tdelta = x.max() - x.min()
     my_date_formater(ax_scatter, tdelta)
@@ -564,7 +565,8 @@ def box_plot(x, y, units, title, filename, style='ggplot', format='svg', date_fo
     tlim1 = x.max()
     extra_space = (lim1 - lim0)/10
     extra_t = (tlim1 - tlim0)/10
-    ax_scatter.set_xlim((tlim0-extra_t, tlim1+extra_t))
+    #ax_scatter.set_xlim((tlim0-extra_t, tlim1+extra_t))
+    ax_scatter.set_xlim((tlim0, tlim1))
     ax_scatter.set_ylim((lim0-extra_space, lim1+extra_space))
 
     meanpointprops = dict(marker='D')
