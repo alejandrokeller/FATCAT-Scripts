@@ -21,6 +21,7 @@ import matplotlib.animation as animation
 #print(plt.style.available)
 
 from fit import my_fit
+from event_list import get_newest_events
 
 def replace_in_list(a, old, new):
     for n, i in enumerate(a):
@@ -722,6 +723,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Graph generator for fatcat event files.')
     parser.add_argument('datafile', metavar='file', type=argparse.FileType('r'),
                         nargs='*', help='List of event files to be processed. Leave empty for newest file')
+    parser.add_argument("-l", "--last",
+                        help="Latest events to consider, must be larger than 1 (e.g., 10files, 5days, 72hours). Overrides 'datafile'.",
+                        dest='LAST', type=get_newest_events)
     parser.add_argument('--inifile', required=False, dest='INI', default=config_file,
                         help="Path to configuration file ({} if omitted)".format(config_file))
     zero_parser = parser.add_mutually_exclusive_group(required=False)
@@ -781,6 +785,13 @@ if __name__ == "__main__":
         baseline = Datafile(f).df
     else:
         baseline = pd.DataFrame()
+
+    if args.LAST:
+        file_list = args.LAST
+        if len(file_list) == 0:
+            print >>sys.stderr, "No events found."
+            exit()
+        args.datafile = map(lambda x: open(x, 'r'), file_list)
 
     # Get the last event if none is given
     if not args.datafile:
