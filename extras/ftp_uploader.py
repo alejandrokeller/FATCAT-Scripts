@@ -7,15 +7,9 @@ from dateutil.parser import parser
 import time, datetime, os, glob, sys
 import ftplib
 
-def valid_date(s):
-    try:
-        return datetime.datetime.strptime(s, "%Y-%m-%d")
-    except ValueError:
-        msg = "Not a valid date: '{0}'.".format(s)
-        raise argparse.ArgumentTypeError(msg)
+from day_summary import valid_date
 
 if __name__ == "__main__":
-    
     
     config_file = os.path.abspath(os.path.dirname(sys.argv[0]) + '/../config.ini')
     if os.path.exists(config_file):
@@ -77,23 +71,17 @@ if __name__ == "__main__":
         except:
             print >>sys.stderr, "No flies found in the desired range: {} to {}".format(args.START.strftime('%Y-%m-%d'), args.END.strftime('%Y-%m-%d'))
             exit()
-        print str(len(file_list)) + " files found in the time range: " + date_range
+        print >>sys.stderr, str(len(file_list)) + " files found in the time range: " + date_range
 
-##    print "log to ftp server:" + ftp_server
-##    print "using user: " + ftp_user + " and pass: " + ftp_pass
-##    print "remote dir: " + ftp_home 
-    session = ftplib.FTP(ftp_server,ftp_user,ftp_pass)
-    for e in file_list:
-        print e
-        file = open(e,'rb')                             # file to send
-        remote_name = 'STOR ' + ftp_home + os.path.basename(file.name)
-        session.storbinary(remote_name, file)     # send the file
-        file.close()                                    # close file and FTP
-    session.quit()
-##        with open(e, 'r') as f:
-##            mydata = Datafile(f, output_path = output_path, tmax = tmax)
-##            f.close()
-##            if tc_column == 'tc-baseline':
-##                mydata.add_baseline(baseline = baseline)
-##            results.append_event(mydata)
+    try:
+        session = ftplib.FTP(ftp_server,ftp_user,ftp_pass)  # open FTP
+        for e in file_list:
+            print e
+            file = open(e,'rb')                             # file to send
+            remote_name = 'STOR ' + ftp_home + os.path.basename(file.name)
+            session.storbinary(remote_name, file)           # send the file
+            file.close()                                    # close file
+        session.quit()                                      # close FTP
+    except Exception, e:
+        print >>sys.stderr, str(e)
 
