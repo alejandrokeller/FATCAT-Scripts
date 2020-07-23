@@ -233,7 +233,7 @@ class Datafile(object):
         plt.title(self.internname)
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
-        filename = self.outputDir + self.internname.replace('.','_') + '_' + y + '.' + format
+        filename = (self.outputDir + self.internname.replace('.','_') + '_' + y + '.' + format).replace(' ','_')
         plt.savefig(filename)
         if not mute:
             plt.show()
@@ -293,7 +293,7 @@ class Datafile(object):
                 ax2.plot(self.df[x], self.df[y3])
                 ax2.legend((y2, y3), loc='upper right')
 
-        filename = self.outputDir + self.internname.replace('.','_') + '_' + y1 + '_' + y2 + '.' + format
+        filename = (self.outputDir + self.internname.replace('.','_') + '_' + y1 + '_' + y2 + '.' + format).replace(' ','_')
         plt.savefig(filename)
         if not mute:
             plt.show()
@@ -580,8 +580,7 @@ def box_plot(x, y, units, title, filename, style='ggplot', format='svg', date_fo
 ##    ax_hist.hist(y, orientation='horizontal')
 ##    ax_hist.set_ylim(ax_scatter.get_ylim())
 
-    filename = filename.replace('.','_') + '_' + y.name + '-boxplot.' + format
-    filename = filename.replace(' ','_')
+    filename = (filename.replace('.','_') + '_' + y.name + '-boxplot.' + format).replace(' ','_')
     plt.savefig(filename)
 
     return box
@@ -611,8 +610,7 @@ def bubble_plot(xdata, ydata, axisnames, units, title=None, style='ggplot', size
         plt.title(title)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
-    filename = filename.replace('.','_') + '.' + format
-    filename = filename.replace(' ','_')
+    filename = (filename.replace('.','_') + '.' + format).replace(' ','_')
     plt.savefig(filename)
 
     return plot
