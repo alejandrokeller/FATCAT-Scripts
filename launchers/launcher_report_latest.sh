@@ -4,6 +4,6 @@
 cd /FATCAT-scripts/launchers
 . ./config
 cd ../extras
-./day_summary.py --skip-simple --plot-concentration -l $last
+./day_summary.py --skip-simple --plot-concentration --mute-graphs -l $last
 ./ftp_uploader.py -l
 cd /

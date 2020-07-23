@@ -417,7 +417,6 @@ if __name__ == "__main__":
         report_plot = box_plot(x = report_df['date'] + ' ' + report_df['time'], y = report_df[new_column],
                               title = 'Total Carbon Concentration: ' + date_range, units = new_units,
                               filename = report_graph)
-        # plt.show()
 
     print stats_df.head()
     print results.summary.tail(20)
@@ -434,7 +433,7 @@ if __name__ == "__main__":
                      format=plot_format, average_df = results.build_average_df())
             if args.mute_graphs:
                 plt.close(simple_overview)
-        if args.allplots or args.simple:
+        if not args.mute_graphs:
             plt.show()
     else:
         print >>sys.stderr, "Only one event on that range. Generating simple plot..."
