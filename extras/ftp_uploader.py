@@ -8,8 +8,11 @@ import time, datetime, os, glob, sys
 import ftplib
 
 from day_summary import valid_date
+from log import log_message
 
 if __name__ == "__main__":
+
+    module = os.path.basename(__file__)
     
     config_file = os.path.abspath(os.path.dirname(sys.argv[0]) + '/../config.ini')
     if os.path.exists(config_file):
@@ -21,7 +24,7 @@ if __name__ == "__main__":
         ftp_pass = eval(config['FTP']['PASS'])
         ftp_home = eval(config['FTP']['HOME']) + '/'
     else:
-        print >>sys.stderr, 'Could not find the configuration file {0}'.format(config_file)
+        log_message(module, 'Could not find the configuration file {0} (ftp_uploader)'.format(config_file))
         exit()
 
     parser = argparse.ArgumentParser(description='Uploads report files to an ftp server defined in config.ini')
@@ -38,10 +41,10 @@ if __name__ == "__main__":
         filemask = 'latest-*'
         file_list = sorted(glob.glob(report_path + filemask))
         if len(file_list) == 0:
-            print >>sys.stderr, "No file found"
+            log_message(module, "No file found for FTP upload")
             exit()
         else:
-            print "{} file(s) found.".format(len(file_list))
+            log_message(module, "{} file(s) ready for FTP upload.".format(len(file_list)))
     else:
         if not args.START:
             args.START = datetime.datetime.today()
@@ -69,19 +72,21 @@ if __name__ == "__main__":
         try:
             date_range = (start_date if days_to_show == 1 else start_date + '-' + end_date)
         except:
-            print >>sys.stderr, "No flies found in the desired range: {} to {}".format(args.START.strftime('%Y-%m-%d'), args.END.strftime('%Y-%m-%d'))
+            log_message(module, "No flies found for FTP upload ({} to {})".format(args.START.strftime('%Y-%m-%d'), args.END.strftime('%Y-%m-%d')))
             exit()
-        print >>sys.stderr, str(len(file_list)) + " files found in the time range: " + date_range
+        log_message(module, "{} files found for FTP upload ({})".format(len(file_list), date_range))
 
     try:
-        session = ftplib.FTP(ftp_server,ftp_user,ftp_pass)  # open FTP
+        session = ftplib.FTP(ftp_server,ftp_user,ftp_pass, timeout=100)  # open FTP
         for e in file_list:
-            print e
             file = open(e,'rb')                             # file to send
+            log_message(module, "uploading {}".format(os.path.basename(file.name)))
             remote_name = 'STOR ' + ftp_home + os.path.basename(file.name)
             session.storbinary(remote_name, file)           # send the file
             file.close()                                    # close file
         session.quit()                                      # close FTP
     except Exception, e:
-        print >>sys.stderr, str(e)
+        log_message(module, str(e))
+
+    log_message(module, "Finished FTP Upload")
 
