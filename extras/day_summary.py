@@ -22,8 +22,8 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from plot_event import Datafile, ResultsList, generate_df_stats, my_date_formater, my_days_format_function
 from plot_event import box_plot
-
 from event_list import get_newest_events
+from log import log_message
 
 def day_plot(df, df_list, tc_column = 'tc', filename = "day_overview", title = "Day Overview", style='ggplot',
              format='svg'):
@@ -291,7 +291,7 @@ if __name__ == "__main__":
         summary_file = 'summary_output.csv'
         tmax = 0
         error_interval = 4
-        print >>sys.stderr, 'Could not find the configuration file {0}'.format(config_file)
+        log_message('Could not find the configuration file {0}'.format(config_file))
 
     parser = argparse.ArgumentParser(description='Generates a visual summary of a day or date interval')
     parser.add_argument("-s", "--startdate", help="The Start Date - format YYYY-MM-DD (today or yesterday are also valid)",
@@ -335,7 +335,7 @@ if __name__ == "__main__":
         file_list = args.LAST
         date_range = "latest"
         if len(file_list) == 0:
-            print >>sys.stderr, "No events found."
+            log_message("No events found.")
             exit()
     else:
         # create list of days to explore
@@ -357,9 +357,9 @@ if __name__ == "__main__":
         try:
             date_range = (start_date if days_to_show == 1 else start_date + '-' + end_date)
         except:
-            print >>sys.stderr, "No event flies found in the desired range: {} to {}".format(args.START.strftime('%Y-%m-%d'), args.END.strftime('%Y-%m-%d'))
+            log_message("No event flies found (range {} to {})".format(args.START.strftime('%Y-%m-%d'), args.END.strftime('%Y-%m-%d')))
             exit()
-        print >>sys.stderr, str(len(file_list)) + " files found in the time range: " + date_range
+        log_message("{} files found (range {})".format(len(file_list), date_range))
 
     # open the baseline DataFrame if it exists
     filename = baseline_path + baseline_file
@@ -436,5 +436,5 @@ if __name__ == "__main__":
         if not args.mute_graphs:
             plt.show()
     else:
-        print >>sys.stderr, "Only one event on that range. Generating simple plot..."
+        log_message("Only one event on that range. Generating simple plot...")
         mydata.create_dualplot(style=plot_style, format=plot_format, mute = args.mute_graphs)

@@ -9,6 +9,7 @@ import sys, time, os, glob
 import numpy as np
 import pandas as pd
 from pandas.plotting import register_matplotlib_converters
+from log import log_message
 
 import itertools
 
@@ -59,7 +60,7 @@ class Datafile(object):
             #if self.volume > 0:
             if label == "volume:":
                 if self.volume <= 0:
-                    print >>sys.stderr, 'Warning: volume variable in event is {:.0f}, ignoring the volume value'.format(self.volume)
+                    log_message('Warning: volume variable in event is {:.0f}, ignoring the volume value'.format(self.volume))
                     self.volume = False
                 try:
                     self.sample_co2 = float(temp[1].split(' ')[1])
@@ -131,7 +132,7 @@ class Datafile(object):
         # Create the results DataSeries, integrating dtc and, if available, dtc-baseline
         if 'dtc-baseline' in self.df:
             tc_corrected = round(np.trapz(self.tc_df['dtc-baseline'], x=self.tc_df['elapsed-time'])/60, 3)
-            print >>sys.stderr, "tc_corrected = {}, volume = {}".format(tc_corrected, self.volume)
+            print "tc_corrected = {}, volume = {}".format(tc_corrected, self.volume)
             if self.volume:
                 concentration = round(tc_corrected/self.volume, 2)
             else:
@@ -198,20 +199,20 @@ class Datafile(object):
 
             # fit the data
             if fit:
-                print >>sys.stderr, "fitting event {}".format(self.datafile)
+                print "fitting event {}".format(self.datafile)
                 try:
                     self.keys.append('fitted data') # add a new column with the baseline values
                     self.units.append('ug/min')
                     self.df['fitted data'], self.fit_coeff, self.r_squared = my_fit(self.df['elapsed-time'], self.df['dtc-baseline'])
                 except:
-                    print >>sys.stderr, "error fitting the event"
+                    log_message("error fitting the event")
                 else:
                     #print >>sys.stderr, "----fitted {}, r-squared = {}".format(self.datafile, round(self.r_squared, 4))
                     coeff_string = "----fitted, r-squared = {}, ".format(round(self.r_squared, 4))
                     for num, coeff_list in enumerate(self.fit_coeff):
                         coefficient_name = "A{}".format(num)
                         coeff_string += coefficient_name + "={} ".format(round(coeff_list['A'], 2))
-                    print >>sys.stderr, coeff_string
+                    print coeff_string
 
     def create_plot(self, x='elapsed-time', y='dtc', y2='dtc-baseline', style='ggplot', format='svg', err=False, error_interval = 4, mute = False):
 
@@ -773,7 +774,7 @@ if __name__ == "__main__":
         summary_file = 'summary_output.csv'
         tmax = 0
         error_interval = 4
-        print >>sys.stderr, 'Could not find the configuration file {0}'.format(config_file)
+        log_message('Could not find the configuration file {0}'.format(config_file))
 
     summary_full_path = summary_path + summary_file
     fit_full_path = summary_path + fit_file
@@ -789,7 +790,7 @@ if __name__ == "__main__":
     if args.LAST:
         file_list = args.LAST
         if len(file_list) == 0:
-            print >>sys.stderr, "No events found."
+            log_message("No events found.")
             exit()
         args.datafile = map(lambda x: open(x, 'r'), file_list)
 

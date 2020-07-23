@@ -18,6 +18,7 @@ from fatcat_uploader import Uploader # httpsend command for uploading data
 from fatcat_uploader import FileUploader # httpsend command for uploading data
 from plot_event import Datafile
 from gui import hex2bin
+from log import log_message
 
 ppmtoug = 12.01/22.4 # factor to convert C in ppm to ug/lt at 0 degC and 1atm
 
@@ -222,7 +223,7 @@ class Rawfile(object):
             self.skiprows = 3
             self.header = 1
         except:
-            print >>sys.stderr, "no date at the beginning of the file"
+            log_message("No date at the beginning of the file")
             self.csvfile.seek(0, 0)
             self.skiprows = 2
             self.header = 0
@@ -242,8 +243,8 @@ class Rawfile(object):
             columns = pd.read_csv(self.csvfile, header=self.header, nrows = 1, sep='\t',
                                   parse_dates=True).columns
         except Exception as e:
-            print >>sys.stderr, "Could not read the file header"
-            print >>sys.stderr, e
+            log_message("Could not read the file header")
+            log_message(e)
             raise
         try:
             self.csvfile.seek(0, 0)
@@ -254,7 +255,7 @@ class Rawfile(object):
                                   )
             self.numSamples = len(self.df.index)
         except Exception as e:
-            print >>sys.stderr, "Error loading file with the standard pandas dtypes, using converter for slow import instead"
+            log_message("Error loading file with the standard pandas dtypes, using converter for slow import instead")
             self.csvfile.seek(0, 0)
             newDict = {}
             for key in self.dtypeDict:
@@ -274,7 +275,7 @@ class Rawfile(object):
         # exclude errors
         self.df = self.df[~mask]
         if len(errors):
-            print >>sys.stderr, "{} line(s) with 'Status Byte' errors removed at times: {}".format(len(errors), errors)
+            log_message("{} line(s) with 'Status Byte' errors removed at times: {}".format(len(errors), errors))
         # extract oven status
         self.df['Oven Status'] = [bool(int(hex2bin(x)[self.statusKeys.index("oven")])) for x in self.df['Status Byte']]
         self.df['Valve Status'] = [bool(int(hex2bin(x)[self.statusKeys.index("valve")])) for x in self.df['Status Byte']]
@@ -289,7 +290,7 @@ class Rawfile(object):
            try:
                raise EventError(2)
            except EventError as e:
-               print >>sys.stderr, "Event out of range"
+               log_message("Event out of range")
         else:
             event_runtime = int(self.resultsDf['runtime'][eventIndex])
             if eventIndex > 0:
@@ -322,7 +323,7 @@ class Rawfile(object):
            try:
                raise EventError(2)
            except EventError as e:
-               print >>sys.stderr, "Event out of range"
+               log_message("Event out of range (calculateEventBaseline)")
         else:
             i0 = int(self.resultsDf['index'][eventIndex])
             runtime = self.resultsDf['runtime'][eventIndex]
@@ -330,7 +331,7 @@ class Rawfile(object):
             try:
                 elapsedTime = runtime - self.df['Time'].loc[i1]
             except:
-                print >>sys.stderr, "error at index=" + str(i1)
+                log_message("error at index={}".format(i1))
                 raise
             while (elapsedTime <= self.baselinelength and i1 >= 0):
                 i1 = i1 - 1
@@ -355,7 +356,7 @@ class Rawfile(object):
            try:
                raise EventError(1)
            except EventError as e:
-               print >>sys.stderr, "Event", eventIndex , "out of range"
+               log_message("Event {} out of range (integrateEvent)".format(eventIndex))
            return
 
        i0 = int(self.resultsDf['index'][eventIndex])
@@ -371,7 +372,7 @@ class Rawfile(object):
                j += 1
        else:
            if elapsedTime <= self.datalength and i1 == self.numSamples - 1:
-               print >>sys.stderr, 'End of file reachead while integrating last event ({0})!'.format(self.resultsDf['daytime'][eventIndex])
+               log_message('End of file reachead while integrating last event ({0})!'.format(self.resultsDf['daytime'][eventIndex]))
            i1 -= 1
 
        # for back compatibility reasons to have always the same number of lines
@@ -616,7 +617,7 @@ if __name__ == "__main__":
                              integral_length = integral_length, data_length = data_length,
                              baseline_length = baseline_length, all_events = args.all, baseline = baseline)
         except:
-            print >>sys.stderr, "Oops! could not load the file {}. Check if it is a valid FATCAT FILE".format(file.name)
+            log_message("Oops! could not load the file {}. Check if it is a valid FATCAT FILE".format(file.name))
             #raise
         else:
             try:
@@ -624,7 +625,7 @@ if __name__ == "__main__":
                 mydata.integrateAll()
                 mydata.printResults(header = args.head, all_events = args.all)
             except:
-                print >>sys.stderr, "Oops!  could not calculate tc table.  Try again..."
+                log_message("Oops!  could not calculate tc table.  Try again...")
                 raise
 
             if args.upload:

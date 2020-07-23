@@ -6,7 +6,8 @@ import configparser, argparse # for argument parsing
 from dateutil.parser import parser
 import time, datetime, os, glob, sys
 
-from re import findall 
+from re import findall
+from log import log_message
 
 def get_newest_events(value):
     file_list = []
@@ -20,7 +21,7 @@ def get_newest_events(value):
         raise argparse.ArgumentTypeError("%s is an invalid positive int value" % number)
     if not (text in time_units):
         raise argparse.ArgumentTypeError("{} is not a valid time unit (use {})".format(text,time_units))
-    print "search the last {} {}".format(number, text)
+    log_message("search the last {} {}".format(number, text))
 
     ### get the relevant path
     config_file = os.path.abspath(os.path.dirname(sys.argv[0]) + '/../config.ini')
@@ -30,7 +31,7 @@ def get_newest_events(value):
         events_path   = eval(config['GENERAL_SETTINGS']['EVENTS_PATH']) + '/'
     else:
         events_path   = '~/fatcat-files/data/events/'  # if ini file cannot be found
-        print >>sys.stderr, 'Could not find the configuration file {0}'.format(config_file)
+        log_message('Could not find the configuration file {0}'.format(config_file))
 
     # get the newest n files
     filemask = '????-??-??-????-eventdata.csv'
