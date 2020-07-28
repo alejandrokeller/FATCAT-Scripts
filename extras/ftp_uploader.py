@@ -75,16 +75,31 @@ if __name__ == "__main__":
         log_message("{} files found for FTP upload ({})".format(len(file_list), date_range))
 
     try:
-        session = ftplib.FTP(ftp_server,ftp_user,ftp_pass, timeout=100)  # open FTP
-        for e in file_list:
-            file = open(e,'rb')                             # file to send
-            log_message("uploading {}".format(os.path.basename(file.name)))
-            remote_name = 'STOR ' + ftp_home + os.path.basename(file.name)
-            session.storbinary(remote_name, file)           # send the file
-            file.close()                                    # close file
-        session.quit()                                      # close FTP
+        session = ftplib.FTP(ftp_server,ftp_user,ftp_pass, timeout=20)  # open FTP
+##        for e in file_list:
+##            file = open(e,'rb')                             # file to send
+##            log_message("uploading {}".format(os.path.basename(file.name)))
+##            remote_name = 'STOR ' + ftp_home + os.path.basename(file.name)
+##            session.storbinary(remote_name, file)           # send the file
+##            file.close()                                    # close file
+##        session.quit()                                      # close FTP
     except Exception, e:
         log_message(str(e))
+    else:
+        for e in file_list:
+            i = 0
+            while i < 5:
+                i+=1
+                try:
+                    file = open(e,'rb')                             # file to send
+                    log_message("uploading {}".format(os.path.basename(file.name)))
+                    remote_name = 'STOR ' + ftp_home + os.path.basename(file.name)
+                    session.storbinary(remote_name, file)           # send the file
+                    file.close()                                    # close file
+                except Exception, e:
+                    log_message(str(e))
+                else:
+                    break
 
     log_message("Finished FTP Upload")
 
