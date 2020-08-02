@@ -103,6 +103,7 @@ if __name__ == "__main__":
             except Exception, e:
                 log_message("{}, attempt {}/{}".format(e,i,max_iterations))
                 session = False
+                file.seek(0)
             else:
                 break
         file.close()                                    # close file
