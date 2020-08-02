@@ -100,9 +100,11 @@ if __name__ == "__main__":
                 file.close()                                    # close file
             except Exception, e:
                 log_message(str(e))
+                session = False
             else:
                 break
-    session.quit()
+    if session:
+        session.quit()
 
     log_message("Finished FTP Upload")
 
