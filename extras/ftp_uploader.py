@@ -85,26 +85,29 @@ if __name__ == "__main__":
 ##        session.quit()                                      # close FTP
 ##    except Exception, e:
 ##        log_message(str(e))
+    
+    max_iterations = 5
+
     session = False
     for e in file_list:
         i = 0
-        while i < 5:
+        file = open(e,'rb')                             # file to send
+        log_message("uploading {}".format(os.path.basename(file.name)))
+        remote_name = 'STOR ' + ftp_home + os.path.basename(file.name)
+        while i < max_iterations:
             i+=1
             try:
                 if not session:
                     session = ftplib.FTP(ftp_server,ftp_user,ftp_pass, timeout=20)  # open FTP
-                file = open(e,'rb')                             # file to send
-                log_message("uploading {}".format(os.path.basename(file.name)))
-                remote_name = 'STOR ' + ftp_home + os.path.basename(file.name)
                 session.storbinary(remote_name, file)           # send the file
-                file.close()                                    # close file
             except Exception, e:
-                log_message(str(e))
+                log_message("{}, attempt {}/{}".format(e,i,max_iterations))
                 session = False
             else:
                 break
+        file.close()                                    # close file
     if session:
         session.quit()
-
-    log_message("Finished FTP Upload")
+        
+    log_message("Exiting FTP Upload")
 
