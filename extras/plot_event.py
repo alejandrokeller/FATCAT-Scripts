@@ -586,14 +586,16 @@ def box_plot(x, y, units, title, filename, style='ggplot', format='svg', date_fo
     return box
 
 def bubble_plot(xdata, ydata, axisnames, units, title=None, style='ggplot', size = None, color = None, label = None,
-                xerror = None, yerror = None, filename="fitted_coefficients_plot", format='svg'):
+                xerror = None, yerror = None, filename="fitted_coefficients_plot", format='svg',
+                show_error = False):
     plt.style.use(style)
 
     plot = plt.figure("scatter plot")
     for x, y, s, c, l, xerr, yerr in itertools.izip_longest(xdata, ydata, size, color, label, xerror, yerror, fillvalue=None):
         plt.scatter(x, y, s=s, color=c, alpha=0.3, edgecolors='none', label=l)
         lerr = r'$\sigma_\operatorname{' + l + r'}$'
-        plt.errorbar(x, y, xerr=xerr, yerr=yerr, fmt='none', label=lerr)
+        if show_error:
+            plt.errorbar(x, y, xerr=xerr, yerr=yerr, fmt='none', label=lerr)
     if label:
         plt.legend(loc='lower right')
     plt.grid(True)
@@ -743,6 +745,7 @@ if __name__ == "__main__":
     parser.set_defaults(tplot=True)
     parser.add_argument('--individual-plots', help='Stop at individual event plots [slow]', action='store_true')
     parser.add_argument('--fit', dest='fit', help='Fit triple gaussian to data', action='store_true')
+    parser.add_argument('--show-fit-error', dest='ferror', help='Show fit error on bubble graph', action='store_true')
     parser.add_argument('--fix-co2', dest='fix', help='fix the co2-event in the event file', action='store_true')
     parser.add_argument('--mute-graphs', help='Do not plot the data to screen', action='store_true')
     
@@ -891,7 +894,7 @@ if __name__ == "__main__":
             filename = fit_full_path.replace('.','_') + '-FitCoeffPlot'
             bubble_plot(xdata, ydata, axisnames = ["sigma", "xc"], units = ["s", "s"], title="Fitted parameters", size = size, color = color,
                         label = ["peak1", "peak2", "peak3"], xerror = xerror, yerror = yerror,
-                        filename = filename, format=plot_format,)
+                        filename = filename, format=plot_format, show_error = args.ferror)
         
         filename = summary_path + summary_file.replace('.','_') + '-boxplot.' + plot_format
         if results.n > 1:
