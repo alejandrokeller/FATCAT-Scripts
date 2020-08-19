@@ -21,7 +21,7 @@ from matplotlib.ticker import FuncFormatter
 import matplotlib.animation as animation
 #print(plt.style.available)
 
-from fit import my_fit
+from fit import my_fit2, my_fit
 from event_list import get_newest_events
 
 def replace_in_list(a, old, new):
@@ -44,7 +44,7 @@ class Datafile(object):
         self.internname = datafile.readline().rstrip('\n') # first line contains the original filename
         self.rawdata    = datafile.readline().rstrip('\n') # second line points to raw data
         self.fit_coeff  = [] # variable to hold the fitting results
-        #self.ncoeff     = 3
+        self.ncoeff     = 4 # number of fitted gausian curves (must identical in Results object)
 
         #print >>sys.stderr, "loading: {}".format(datafile.name)
 
@@ -203,9 +203,12 @@ class Datafile(object):
                 try:
                     self.keys.append('fitted data') # add a new column with the baseline values
                     self.units.append('ug/min')
-                    self.df['fitted data'], self.fit_coeff, self.r_squared = my_fit(self.df['elapsed-time'], self.df['dtc-baseline'])
-                except:
-                    log_message("error fitting the event")
+                    if self.ncoeff == 4:
+                        self.df['fitted data'], self.fit_coeff, self.r_squared = my_fit2(self.df['elapsed-time'], self.df['dtc-baseline'])
+                    elif self.ncoeff == 3:
+                        self.df['fitted data'], self.fit_coeff, self.r_squared = my_fit(self.df['elapsed-time'], self.df['dtc-baseline'])
+                except Exception as err:
+                    log_message("error fitting the event: {}".format(err))
                 else:
                     #print >>sys.stderr, "----fitted {}, r-squared = {}".format(self.datafile, round(self.r_squared, 4))
                     coeff_string = "----fitted, r-squared = {}, ".format(round(self.r_squared, 4))
@@ -307,7 +310,7 @@ class ResultsList(object):
         self.summary_units = []
         self.files = []
         self.n = 0
-        self.ncoeff = 3 # number of fitted gausian curves
+        self.ncoeff = 4 # number of fitted gausian curves
 
         # CREATE a DataFrame to Hold the mean value.
         self.average_keys = [
@@ -591,7 +594,9 @@ def bubble_plot(xdata, ydata, axisnames, units, title=None, style='ggplot', size
     plt.style.use(style)
 
     plot = plt.figure("scatter plot")
-    for x, y, s, c, l, xerr, yerr in itertools.izip_longest(xdata, ydata, size, color, label, xerror, yerror, fillvalue=None):
+    for n, (x, y, s, c, l, xerr, yerr) in enumerate(itertools.izip_longest(xdata, ydata, size, color, label, xerror, yerror, fillvalue=None)):
+        if not l:
+            l = "group{}".format(n)
         plt.scatter(x, y, s=s, color=c, alpha=0.3, edgecolors='none', label=l)
         lerr = r'$\sigma_\operatorname{' + l + r'}$'
         if show_error:
@@ -884,16 +889,18 @@ if __name__ == "__main__":
             size = []
             xerror = []
             yerror = []
-            for i in range(3):
+            label = []
+            for i in range(results.ncoeff):
                 xdata.append(results.coeff_df['sigma{}'.format(i)])
                 xerror.append(results.coeff_df['sigmaStDevErr{}'.format(i)])
                 ydata.append(results.coeff_df['xc{}'.format(i)])
                 yerror.append(results.coeff_df['xcStDevErr{}'.format(i)])
                 size.append(results.coeff_df['A{}'.format(i)]*1000)
+                label.append("peak{}".format(i))
             color = ['tab:blue', 'tab:orange', 'tab:green']
             filename = fit_full_path.replace('.','_') + '-FitCoeffPlot'
             bubble_plot(xdata, ydata, axisnames = ["sigma", "xc"], units = ["s", "s"], title="Fitted parameters", size = size, color = color,
-                        label = ["peak1", "peak2", "peak3"], xerror = xerror, yerror = yerror,
+                        label = label, xerror = xerror, yerror = yerror,
                         filename = filename, format=plot_format, show_error = args.ferror)
         
         filename = summary_path + summary_file.replace('.','_') + '-boxplot.' + plot_format
