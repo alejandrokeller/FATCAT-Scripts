@@ -635,13 +635,13 @@ def bubble_plot(xdata, ydata, axisnames, units, title=None, style='ggplot', size
 ##    except ValueError:
 ##        return False
 
-def create_baseline_file(files, baseline_path, baseline_file, summary_path, tmax=0):
+def create_baseline_file(files, baseline_path, baseline_file, summary_path, tmax=0, npeak = 5):
 
     # create a ResultsList object to hold the event key data
     results = ResultsList()
 
     for f in files:
-        mydata = Datafile(f, tmax=tmax) # output path is not needed because data will not be plotted
+        mydata = Datafile(f, tmax=tmax, npeak = npeak) # output path is not needed because data will not be plotted
         results.append_event(mydata)
 
     header = baseline_file + "\nAverage datafile: " + str(len(results.files)) + " entries:" + " ".join(results.files) + "\n"
@@ -769,7 +769,8 @@ if __name__ == "__main__":
         summary_path   = eval(config['DATA_ANALYSIS']['SUMMARY_PATH']) + '/'
         summary_file   = eval(config['DATA_ANALYSIS']['SUMMARY_FILE'])
         fit_file       = eval(config['DATA_ANALYSIS']['FIT_FILE'])
-        tmax = eval(config['DATA_ANALYSIS']['INTEGRAL_LENGTH'])
+        npeak          = eval(config['DATA_ANALYSIS']['NPEAK'])
+        tmax           = eval(config['DATA_ANALYSIS']['INTEGRAL_LENGTH'])
     else:
         events_path   = '~/fatcat-files/data/events/'  # if ini file cannot be found
         output_path   = events_path + 'graph/'
@@ -782,6 +783,7 @@ if __name__ == "__main__":
         tmax = 0
         error_interval = 4
         log_message('Could not find the configuration file {0}'.format(config_file))
+        npeak = 5
 
     summary_full_path = summary_path + summary_file
     fit_full_path = summary_path + fit_file
@@ -808,7 +810,7 @@ if __name__ == "__main__":
         args.datafile = [open(latest_event, 'r')]
 
     # create a ResultsList object to hold the event key data
-    results = ResultsList()
+    results = ResultsList(npeak = npeak)
 
     if args.fix:
         for f in args.datafile:
@@ -840,7 +842,7 @@ if __name__ == "__main__":
         p0 = False
         
         for f in args.datafile:
-            mydata = Datafile(f, output_path = output_path, tmax = tmax)
+            mydata = Datafile(f, output_path = output_path, tmax = tmax, npeak = npeak)
             if 'dtc' in baseline:
                 mydata.add_baseline(baseline = baseline, fit = args.fit, p0=p0)
                 box_y = 'tc-baseline'

@@ -37,6 +37,7 @@ SUMMARY_FILE:  'summary_output.csv'
 FIT_FILE:      'fit_output.csv'
 INTEGRAL_LENGTH: 65
 EVENT_LENGTH: 120
+NPEAK: 3
 
 [FTP]
 SERVER: 'ftp.meteoswiss.ch'
