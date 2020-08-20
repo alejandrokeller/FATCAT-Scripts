@@ -208,6 +208,19 @@ class Datafile(object):
                                                                                     p0 = p0, npeaks = self.npeak)
                 except Exception as err:
                     log_message("error fitting the event: {}".format(err))
+                    self.df['fitted data'] = np.nan
+                    self.r_squared = np.nan
+                    self.fit_coeff = []
+                    coeffDict = {
+                        "A": np.nan,
+                        "xc" : np.nan,
+                        "sigma" : np.nan,
+                        "AStDevErr": np.nan,
+                        "xcStDevErr" : np.nan,
+                        "sigmaStDevErr" : np.nan
+                        }
+                    for n in range(self.npeak):
+                        self.fit_coeff.append(coeffDict)
                 else:
                     #print >>sys.stderr, "----fitted {}, r-squared = {}".format(self.datafile, round(self.r_squared, 4))
                     coeff_string = "----fitted, r-squared = {}, ".format(round(self.r_squared, 4))
@@ -263,7 +276,15 @@ class Datafile(object):
         extra_space1 = (limY1max - limY1min)/10
         extra_space2 = (limY2max - limY2min)/10
         ax1.set_ylim(limY1min - extra_space1, limY1max + extra_space1)
-        ax2.set_ylim(limY2min - extra_space2, limY2max + extra_space2)
+        try:
+            ax2.set_ylim(limY2min - extra_space2, limY2max + extra_space2)
+        except:
+            # catch error if, e.g., fit procedure failed
+            log_message('failed to set limit values for {} curve'.format(y2))
+##            if y3 in self.df:
+##                limY2min = self.df[y3].min()
+##                limY2max = self.df[y3].max()
+##                ax2.set_ylim(limY2min - extra_space2, limY2max + extra_space2)
         for ax in [ax1, ax2]:
             ax.set_xlim(self.df[x].min(), self.df[x].max())
 
@@ -479,8 +500,10 @@ class ResultsList(object):
         # now determine nice limits by hand:
         limY1min = self.df_concat[y1].min()
         limY1max = self.df_concat[y1].max()
-        limY2min = self.df_concat[y2].min()
-        limY2max = self.df_concat[y2].max()
+        limY2min = np.nanmin(self.df_concat[y2])
+        limY2max = np.nanmax(self.df_concat[y2])
+##        limY2min = self.df_concat[y2].min()
+##        limY2max = self.df_concat[y2].max()
         extra_space1 = (limY1max - limY1min)/10
         extra_space2 = (limY2max - limY2min)/10
         ax1.set_ylim(limY1min - extra_space1, limY1max + extra_space1)
@@ -609,8 +632,10 @@ def bubble_plot(xdata, ydata, axisnames, units, title=None, style='ggplot', size
     # first flatten the list of dataframe vectors into a simple list
     xvalues = pd.DataFrame.from_dict(map(dict,xdata)).values.flatten()
     yvalues = pd.DataFrame.from_dict(map(dict,ydata)).values.flatten()
-    plt.xlim((min(xvalues)*4/5, max(xvalues)*6/5))
-    plt.ylim((min(yvalues)*4/5, max(yvalues)*6/5))
+    plt.xlim((np.nanmin(xvalues)*4/5, np.nanmax(xvalues)*6/5))
+    plt.ylim((np.nanmin(yvalues)*4/5, np.nanmax(yvalues)*6/5))
+##    plt.xlim((min(xvalues)*4/5, max(xvalues)*6/5))
+##    plt.ylim((min(yvalues)*4/5, max(yvalues)*6/5))
     ###
     if title:
         plt.title(title)
@@ -844,8 +869,8 @@ if __name__ == "__main__":
         for f in args.datafile:
             mydata = Datafile(f, output_path = output_path, tmax = tmax, npeak = npeak)
             if 'dtc' in baseline:
-                mydata.add_baseline(baseline = baseline, fit = args.fit, p0=p0)
                 box_y = 'tc-baseline'
+                mydata.add_baseline(baseline = baseline, fit = args.fit, p0=p0)
                 # Use current result as starting guess for next fitting iteration
                 if args.fit and False:
                     p0 = []
