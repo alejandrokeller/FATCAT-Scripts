@@ -21,7 +21,7 @@ from matplotlib.ticker import FuncFormatter
 import matplotlib.animation as animation
 #print(plt.style.available)
 
-from fit import my_fit2, my_fit
+from fit import my_fit
 from event_list import get_newest_events
 
 def replace_in_list(a, old, new):
@@ -31,7 +31,7 @@ def replace_in_list(a, old, new):
     return a
 
 class Datafile(object):
-    def __init__(self, datafile, output_path = 'data/events/graph/', recalculate_co2 = False, tmax=0): # datafile is a valid filepointer
+    def __init__(self, datafile, output_path = 'data/events/graph/', recalculate_co2 = False, tmax=0, npeak = 5): # datafile is a valid filepointer
         
         #init data structure
         self.datastring = ""
@@ -44,7 +44,7 @@ class Datafile(object):
         self.internname = datafile.readline().rstrip('\n') # first line contains the original filename
         self.rawdata    = datafile.readline().rstrip('\n') # second line points to raw data
         self.fit_coeff  = [] # variable to hold the fitting results
-        self.ncoeff     = 4 # number of fitted gausian curves (must identical in Results object)
+        self.npeak      = npeak # number of fitted gausian curves (must identical in Results object)
 
         #print >>sys.stderr, "loading: {}".format(datafile.name)
 
@@ -175,7 +175,7 @@ class Datafile(object):
         except ValueError:
             return '-'
 
-    def add_baseline(self, baseline, fit = False):
+    def add_baseline(self, baseline, fit = False, p0=False):
         if 'dtc' in baseline:
             self.keys.append('baseline') # add a new column with the baseline values
             self.units.append('ug/min')
@@ -203,10 +203,9 @@ class Datafile(object):
                 try:
                     self.keys.append('fitted data') # add a new column with the baseline values
                     self.units.append('ug/min')
-                    if self.ncoeff == 4:
-                        self.df['fitted data'], self.fit_coeff, self.r_squared = my_fit2(self.df['elapsed-time'], self.df['dtc-baseline'])
-                    elif self.ncoeff == 3:
-                        self.df['fitted data'], self.fit_coeff, self.r_squared = my_fit(self.df['elapsed-time'], self.df['dtc-baseline'])
+                    self.df['fitted data'], self.fit_coeff, self.r_squared = my_fit(self.df['elapsed-time'],
+                                                                                    self.df['dtc-baseline'],
+                                                                                    p0 = p0, npeaks = self.npeak)
                 except Exception as err:
                     log_message("error fitting the event: {}".format(err))
                 else:
@@ -303,14 +302,14 @@ class Datafile(object):
         plt.close(dualplot)
 
 class ResultsList(object):
-    def __init__(self):
+    def __init__(self, npeak = 5):
         # create a dataframe to hold results and a list for the units
         self.summary = pd.DataFrame()
         self.summary_keys = []
         self.summary_units = []
         self.files = []
         self.n = 0
-        self.ncoeff = 4 # number of fitted gausian curves
+        self.npeak = npeak # number of fitted gausian curves
 
         # CREATE a DataFrame to Hold the mean value.
         self.average_keys = [
@@ -375,7 +374,7 @@ class ResultsList(object):
             'dtc': 3
             }
         self.default_decimals = 3
-        for n in range(self.ncoeff):
+        for n in range(self.npeak):
             for c in self.coeff:
                 self.fit_coeff_keys.append('{}{}'.format(c,n))
                 self.fit_coeff_units.append(self.coef_units_dict[c])
@@ -389,7 +388,7 @@ class ResultsList(object):
             'time':   self.summary["time"].iloc[-1],
             'sample': self.summary["sample"].iloc[-1]
             }
-        for n in range(self.ncoeff):
+        for n in range(self.npeak):
             for c in self.coeff:
                 newDict['{}{}'.format(c,n)] = round(coeff_dict[n][c], self.coef_units_decimals[c])
         newDict['r-squared'] = round(r_squared, 4)
@@ -837,11 +836,21 @@ if __name__ == "__main__":
         # if only one file, then show the diagram per default
         if len(args.datafile) == 1 and not args.mute_graphs:
                args.individual_plots = True
+        # Uses the default first guess for fitting
+        p0 = False
+        
         for f in args.datafile:
             mydata = Datafile(f, output_path = output_path, tmax = tmax)
             if 'dtc' in baseline:
-                mydata.add_baseline(baseline = baseline, fit = args.fit)
+                mydata.add_baseline(baseline = baseline, fit = args.fit, p0=p0)
                 box_y = 'tc-baseline'
+                # Use current result as starting guess for next fitting iteration
+                if args.fit:
+                    p0 = []
+                    for num, coeff_list in enumerate(mydata.fit_coeff):
+                        p0.append(coeff_list['A'])
+                        p0.append(coeff_list['xc'])
+                        p0.append(coeff_list['sigma'])
             else:
                 box_y = 'tc'
                 args.fit = False
@@ -890,7 +899,7 @@ if __name__ == "__main__":
             xerror = []
             yerror = []
             label = []
-            for i in range(results.ncoeff):
+            for i in range(results.npeak):
                 xdata.append(results.coeff_df['sigma{}'.format(i)])
                 xerror.append(results.coeff_df['sigmaStDevErr{}'.format(i)])
                 ydata.append(results.coeff_df['xc{}'.format(i)])
