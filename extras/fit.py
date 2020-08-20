@@ -7,20 +7,40 @@ from scipy.optimize import minimize,leastsq, curve_fit
 def gauss(x):
     return np.exp( -0.5 * x**2)/np.sqrt( 2 * np.pi )
 
-def my_triple_peak(x, A0, x0, s0, A1, x1, s1, A2, x2, s2):
-    return A0 / s0 * gauss( ( x - x0 ) / s0 ) + A1 / s1 * gauss( ( x - x1 ) / s1 ) + A2 / s2 * gauss( ( x - x2 ) / s2 )
+def _1gauss(x, A0, x0, s0):
+    return A0 / s0 * gauss( ( x - x0 ) / s0 )
 
-def my_4peak(x, A0, x0, s0, A1, x1, s1, A2, x2, s2, A3, x3, s3):
-    return my_triple_peak(x, A0, x0, s0, A1, x1, s1, A2, x2, s2) + A3 / s3 * gauss( ( x - x3 ) / s3 )
+def _2gauss(x, A0, x0, s0, A1, x1, s1):
+    return _1gauss(x, A0, x0, s0) + A1 / s1 * gauss( ( x - x1 ) / s1 )
 
-def my_5peak(x, A0, x0, s0, A1, x1, s1, A2, x2, s2, A3, x3, s3, A4, x4, s4):
-    return my_4peak(x, A0, x0, s0, A1, x1, s1, A2, x2, s2, A3, x3, s3) + A4 / s4 * gauss( ( x - x4 ) / s4 )
+def _3gauss(x, A0, x0, s0, A1, x1, s1, A2, x2, s2):
+    return _2gauss(x, A0, x0, s0, A1, x1, s1) + A2 / s2 * gauss( ( x - x2 ) / s2 )
+
+def _4gauss(x, A0, x0, s0, A1, x1, s1, A2, x2, s2, A3, x3, s3):
+    return _3gauss(x, A0, x0, s0, A1, x1, s1, A2, x2, s2) + A3 / s3 * gauss( ( x - x3 ) / s3 )
+
+def _5gauss(x, A0, x0, s0, A1, x1, s1, A2, x2, s2, A3, x3, s3, A4, x4, s4):
+    return _4gauss(x, A0, x0, s0, A1, x1, s1, A2, x2, s2, A3, x3, s3) + A4 / s4 * gauss( ( x - x4 ) / s4 )
 
 def my_fit(xdata, ydata, p0 = False, npeaks = 5):
                                 
     nparameters = 3
-    
-    if npeaks == 3:
+
+    if npeaks == 1:
+        if not p0:
+            p0 = (10., 18., 3.)
+            #      A0,  x0, s0
+        bounds=((0, 0, 0),
+                (np.inf, np.inf, np.inf))
+        peak_function = _1gauss
+    elif npeaks == 2:
+        if not p0:
+            p0 = (10., 18., 3., 8., 28., 7.)
+            #      A0,  x0, s0, A1,  x1, s1
+        bounds=((0, 0, 0, 0, 0, 0),
+                (np.inf, np.inf, 20, np.inf, np.inf, 20))
+        peak_function = _2gauss
+    elif npeaks == 3:
         if not p0:
             p0 = (10., 18., 3., 8., 28., 7., 6., 53., 8. )
             #      A0,  x0, s0, A1,  x1, s1, A2,  x2, s2
@@ -28,7 +48,7 @@ def my_fit(xdata, ydata, p0 = False, npeaks = 5):
 ##                (np.inf, 20, np.inf, np.inf, 38, np.inf, np.inf, 60, 20))
         bounds=((0, 0, 0, 0, 20, 0, 0, 40, 0),
                 (np.inf, 20, 5, np.inf, 40, 15, np.inf, 60, 20))
-        peak_function = my_triple_peak
+        peak_function = _3gauss
     elif npeaks == 4:
         if not p0:
             p0 = (100., 17., 6., 22., 23., 6., 80., 33., 8., 30., 51., 8. )
@@ -37,14 +57,16 @@ def my_fit(xdata, ydata, p0 = False, npeaks = 5):
 ##                (np.inf, 20, 20, np.inf, 27.5, 20, np.inf, 40, 20, np.inf, 60, 20))
         bounds=((0, 15, 0, 0, 20, 0, 0, 31, 0, 0, 48, 0),
                 (np.inf, 19, 20, np.inf, 24, 20, np.inf, 35, 20, np.inf, 52, 56))
-        peak_function = my_4peak
+        peak_function = _4gauss
     elif npeaks == 5:
         if not p0:
             p0 = (100., 17., 6., 22., 23., 10., 22., 23., 6., 80., 33., 8., 30., 51., 8. )
             #       A0,  x0, s0,  A1,  x1,  s1,  A2,  x2, s2,  A3,  x3, s3,  A4,  x4, s4
         bounds=((0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
                 (np.inf, 60, 20, np.inf, 60, 20, np.inf, 60, 20, np.inf, 60, 20, np.inf, 60, 20))
-        peak_function = my_5peak
+        peak_function = _5gauss
+    else:
+        print >>sys.stderr, "number of peaks not defined in fitting function: {}".format(npeaks)
 
     fitResult, ier = curve_fit( peak_function, xdata, ydata, p0=p0, bounds = bounds )
         

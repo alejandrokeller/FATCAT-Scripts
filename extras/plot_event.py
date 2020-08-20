@@ -908,7 +908,8 @@ if __name__ == "__main__":
                 yerror.append(results.coeff_df['xcStDevErr{}'.format(i)])
                 size.append(results.coeff_df['A{}'.format(i)]*1000)
                 label.append("peak{}".format(i))
-            color = ['tab:blue', 'tab:orange', 'tab:green']
+            color = ['tab:blue', 'tab:orange', 'tab:green', 'tab:grey', 'tab:olive' ]
+            color = color[0 : results.npeak]
             filename = fit_full_path.replace('.','_') + '-FitCoeffPlot'
             bubble_plot(xdata, ydata, axisnames = ["sigma", "xc"], units = ["s", "s"], title="Fitted parameters", size = size, color = color,
                         label = label, xerror = xerror, yerror = yerror,
