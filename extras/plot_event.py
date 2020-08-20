@@ -847,7 +847,7 @@ if __name__ == "__main__":
                 mydata.add_baseline(baseline = baseline, fit = args.fit, p0=p0)
                 box_y = 'tc-baseline'
                 # Use current result as starting guess for next fitting iteration
-                if args.fit:
+                if args.fit and False:
                     p0 = []
                     for num, coeff_list in enumerate(mydata.fit_coeff):
                         p0.append(coeff_list['A'])
