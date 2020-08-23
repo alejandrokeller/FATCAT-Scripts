@@ -255,9 +255,19 @@ class Datafile(object):
         plt.close(plot)
 
     def create_dualplot(self, x='elapsed-time', y1='toven', y2='dtc', y3='dtc-baseline',
-                        style='ggplot', format='svg', y1err=False, y2err=False, error_interval = 4, mute = False):
+                        style='ggplot', format='svg', y1err=False, y2err=False, error_interval = 4, mute = False, legend={}):
 
         plt.style.use('ggplot')
+
+        # introduces a different name for the plotted curves
+        if 'l2' in legend:
+            l2 = legend['l2']
+        else:
+            l2 = y2
+        if 'l3' in legend:
+            l3 = legend['l3']
+        else:
+            l3 = y3
 
         # definitions for the axes
         spacing = 0.01
@@ -314,7 +324,7 @@ class Datafile(object):
                 ax2.plot(self.df[x], self.df[y2])
             if y3 in self.df:
                 ax2.plot(self.df[x], self.df[y3])
-                ax2.legend((y2, y3), loc='upper right')
+                ax2.legend((l2, l3), loc='upper right')
 
         filename = (self.outputDir + self.internname.replace('.','_') + '_' + y1 + '_' + y2 + '.' + format).replace(' ','_')
         plt.savefig(filename)
@@ -886,7 +896,8 @@ if __name__ == "__main__":
 
             if args.tplot:
                 if args.fit:
-                    mydata.create_dualplot(y3='dtc-baseline', y2='fitted data',
+                    legend = {'l2' : "{}-mode fit".format(npeak), 'l3' : 'Signal'}
+                    mydata.create_dualplot(y3='dtc-baseline', y2='fitted data', legend = legend,
                                            style=plot_style, format=plot_format, mute = not args.individual_plots)
                 else:
                     mydata.create_dualplot(style=plot_style, format=plot_format, mute = not args.individual_plots)
