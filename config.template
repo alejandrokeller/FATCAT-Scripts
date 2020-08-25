@@ -27,6 +27,7 @@ SN: True
 PLOT_STYLE: 'ggplot'
 FILE_FORMAT: 'svg'
 ERROR_EVERY: 4
+XMAX: FALSE
 
 [DATA_ANALYSIS]
 BASELINE_PATH: '/home/pi/fatcat-files/data/baseline'
