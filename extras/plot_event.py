@@ -21,7 +21,7 @@ from matplotlib.ticker import FuncFormatter
 import matplotlib.animation as animation
 #print(plt.style.available)
 
-from fit import my_fit
+from fit import my_fit, _1gauss
 from event_list import get_newest_events
 
 def replace_in_list(a, old, new):
@@ -202,7 +202,7 @@ class Datafile(object):
                 print "fitting event {}".format(self.datafile)
                 try:
                     self.keys.append('fitted data') # add a new column with the baseline values
-                    self.units.append('ug/min')
+                    self.units.append(r'$\mu$g-C/min')
                     self.df['fitted data'], self.fit_coeff, self.r_squared = my_fit(self.df['elapsed-time'],
                                                                                     self.df['dtc-baseline'],
                                                                                     p0 = p0, npeaks = self.npeak)
@@ -229,9 +229,21 @@ class Datafile(object):
                         coeff_string += coefficient_name + "={} ".format(round(coeff_list['A'], 2))
                     print coeff_string
 
-    def create_plot(self, x='elapsed-time', y='dtc', y2='dtc-baseline', style='ggplot', format='svg', err=False, error_interval = 4, mute = False):
+    def create_plot(self, x='elapsed-time', y='dtc', y2='dtc-baseline', style='ggplot', format='svg',
+                    err=False, error_interval = 4, mute = False, axeslabel={}, legend={},
+                    fitComponents = []):
 
         plt.style.use('ggplot')
+
+        # introduces a different name for the plotted curves
+        if 'y' in legend:
+            yname = legend['y']
+        else:
+            yname = y
+        if 'y2' in legend:
+            y2name = legend['y2']
+        else:
+            y2name = y2
 
         plot = plt.figure()
         if err:
@@ -241,9 +253,24 @@ class Datafile(object):
             plt.plot(self.df[x], self.df[y])
             if y2 in self.df:
                 plt.plot(self.df[x], self.df[y2])
-                plt.legend((y, y2), loc='upper right')
-        xlabel = x + ' (' + self.units[self.keys.index(x)] + ')'
-        ylabel = y + ' (' + self.units[self.keys.index(y)] + ')'
+                plt.legend((yname, y2name), loc='upper right')
+
+        # add individual fitted components
+        for c in fitComponents:
+            #plt.plot(self.df[x], c)
+            plt.fill_between(self.df[x], c, alpha = 0.5)
+
+        # set ayis labels
+        if 'x' in axeslabel:
+            xlabel = axeslabel['x'] + ' (' + self.units[self.keys.index(x)] + ')'
+        else:
+            xlabel = x + ' (' + self.units[self.keys.index(x)] + ')'
+        if 'y' in axeslabel:
+            ylabel = axeslabel['y'] + ' (' + self.units[self.keys.index(y)] + ')'
+        else:
+            ylabel = y + ' (' + self.units[self.keys.index(y)] + ')'
+
+        # set nicer limits
         plt.xlim(self.df[x].min(), self.df[x].max())
         plt.title(self.internname)
         plt.xlabel(xlabel)
@@ -255,19 +282,39 @@ class Datafile(object):
         plt.close(plot)
 
     def create_dualplot(self, x='elapsed-time', y1='toven', y2='dtc', y3='dtc-baseline',
-                        style='ggplot', format='svg', y1err=False, y2err=False, error_interval = 4, mute = False, legend={}):
+                        style='ggplot', format='svg', y1err=False, y2err=False, error_interval = 4, mute = False,
+                        legend={}, axeslabel={}, fitComponents = []):
 
         plt.style.use('ggplot')
 
         # introduces a different name for the plotted curves
-        if 'l2' in legend:
-            l2 = legend['l2']
+        if 'y2' in legend:
+            y2name = legend['y2']
         else:
-            l2 = y2
-        if 'l3' in legend:
-            l3 = legend['l3']
+            y2name = y2
+        if 'y3' in legend:
+            y3name = legend['y3']
         else:
-            l3 = y3
+            y3name = y3
+
+        # get units for axis
+        unity1 = self.units[self.keys.index(y1)]
+        unity2 = self.units[self.keys.index(y2)]
+        unitx = self.units[self.keys.index(x)]
+
+        if 'x' in axeslabel:
+            xlabel = axeslabel['x'] + ' (' + unitx + ')'
+        else:
+            xlabel = x + ' (' + unitx + ')'
+        if 'y1' in axeslabel:
+            ylabel1 = axeslabel['y1'] + ' (' + unity1 + ')'
+        else:
+            ylabel1 = y1 + ' (' + unity1 + ')'
+        if 'y2' in axeslabel:
+            ylabel2 = axeslabel['y2'] + ' (' + unity2 + ')'
+        else:
+            ylabel2 = y2 + ' (' + unity2 + ')'
+        
 
         # definitions for the axes
         spacing = 0.01
@@ -299,12 +346,6 @@ class Datafile(object):
             ax.set_xlim(self.df[x].min(), self.df[x].max())
 
         # some formating
-        unity1 = self.units[self.keys.index(y1)]
-        unity2 = self.units[self.keys.index(y2)]
-        unitx = self.units[self.keys.index(x)]
-        ylabel1 = y1 + ' (' + unity1 + ')'
-        ylabel2 = y2 + ' (' + unity2 + ')'
-        xlabel = x + ' (' + unitx + ')'
         ax1.set_ylabel(ylabel1)
         ax2.set_ylabel(ylabel2)
         ax2.set_xlabel(xlabel)
@@ -324,7 +365,12 @@ class Datafile(object):
                 ax2.plot(self.df[x], self.df[y2])
             if y3 in self.df:
                 ax2.plot(self.df[x], self.df[y3])
-                ax2.legend((l2, l3), loc='upper right')
+                ax2.legend((y2name, y3name), loc='upper right')
+
+        # add individual fitted components
+        for c in fitComponents:
+            #ax2.plot(self.df[x], c)
+            ax2.fill_between(self.df[x], c, alpha = 0.5)
 
         filename = (self.outputDir + self.internname.replace('.','_') + '_' + y1 + '_' + y2 + '.' + format).replace(' ','_')
         plt.savefig(filename)
@@ -786,7 +832,8 @@ if __name__ == "__main__":
     parser.add_argument('--fit', dest='fit', help='Fit triple gaussian to data', action='store_true')
     parser.add_argument('--show-fit-error', dest='ferror', help='Show fit error on bubble graph', action='store_true')
     parser.add_argument('--fix-co2', dest='fix', help='fix the co2-event in the event file', action='store_true')
-    parser.add_argument('--mute-graphs', help='Do not plot the data to screen', action='store_true')
+    parser.add_argument('--mute-graphs', dest='mute', help='Do not plot the data to screen', action='store_true')
+    parser.add_argument('--fit-components', dest='fitComponents', help='Show individual fitted curves', action='store_true')
     
     args = parser.parse_args()
     
@@ -865,19 +912,25 @@ if __name__ == "__main__":
         f = open(filename, 'r')
         mydata = Datafile(f, output_path = baseline_path)
         if args.tplot:
-            mydata.create_dualplot(style=plot_style, format=plot_format, y1err=True, y2err=True, error_interval = error_interval)
+            axeslabel = {'y2' : r'$\Delta$TC'}
+            mydata.create_dualplot(style=plot_style, format=plot_format, y1err=True, y2err=True,
+                                   error_interval = error_interval, axeslabel = axeslabel)
         else:
-            mydata.create_plot(style=plot_style, format=plot_format, err=True, error_interval = error_interval)
+            axeslabel = {'y' : r'$\Delta$TC'}
+            mydata.create_plot(style=plot_style, format=plot_format, err=True,
+                               error_interval = error_interval, axeslabel = axeslabel)
 
     else:
         # if only one file, then show the diagram per default
-        if len(args.datafile) == 1 and not args.mute_graphs:
+        if len(args.datafile) == 1 and not args.mute:
                args.individual_plots = True
         # Uses the default first guess for fitting
         p0 = False
         
         for f in args.datafile:
             mydata = Datafile(f, output_path = output_path, tmax = tmax, npeak = npeak)
+            # empty holder for individual fitted curves
+            components = []
             if 'dtc' in baseline:
                 box_y = 'tc-baseline'
                 mydata.add_baseline(baseline = baseline, fit = args.fit, p0=p0)
@@ -888,6 +941,12 @@ if __name__ == "__main__":
                         p0.append(coeff_list['A'])
                         p0.append(coeff_list['xc'])
                         p0.append(coeff_list['sigma'])
+                if args.fitComponents and args.fit:
+                # generate the fit components curves
+                    for num, coeff_list in enumerate(mydata.fit_coeff):
+                        # extract data. Need to correct A from ug/sec to ug/min
+                        coeff = {'A' : coeff_list['A']*60, 'xc' : coeff_list['xc'], 'sigma' : coeff_list['sigma']}
+                        components.append(mydata.df['elapsed-time'].apply(lambda x: _1gauss(x=x, **coeff)))
             else:
                 box_y = 'tc'
                 args.fit = False
@@ -895,18 +954,27 @@ if __name__ == "__main__":
             results.append_event(mydata)
 
             if args.tplot:
+                axeslabel = {'y2' : r'$\Delta$TC'}
                 if args.fit:
-                    legend = {'l2' : "{}-mode fit".format(npeak), 'l3' : 'Signal'}
-                    mydata.create_dualplot(y3='dtc-baseline', y2='fitted data', legend = legend,
-                                           style=plot_style, format=plot_format, mute = not args.individual_plots)
+                    legend = {'y2' : "{}-mode fit".format(npeak), 'y3' : 'Signal'}
+                    mydata.create_dualplot(y3='dtc-baseline', y2='fitted data', legend = legend, axeslabel = axeslabel,
+                                           style=plot_style, format=plot_format, mute = not args.individual_plots,
+                                           fitComponents = components)
                 else:
-                    mydata.create_dualplot(style=plot_style, format=plot_format, mute = not args.individual_plots)
+                    legend = {'y2' : "raw".format(npeak), 'y3' : 'baseline corrected'}
+                    mydata.create_dualplot(style=plot_style, format=plot_format, mute = not args.individual_plots,
+                                           legend = legend, axeslabel = axeslabel)
             else:
+                axeslabel = {'y' : r'$\Delta$TC'}
                 if args.fit:
+                    legend = {'y' : "{}-mode fit".format(npeak), 'y2' : 'Signal'}
                     mydata.create_plot(y2='dtc-baseline', y='fitted data',
-                                       style=plot_style, format=plot_format, mute = not args.individual_plots)
+                                       style=plot_style, format=plot_format, mute = not args.individual_plots,
+                                       axeslabel = axeslabel, legend = legend, fitComponents = components)
                 else:
-                    mydata.create_plot(style=plot_style, format=plot_format, mute = not args.individual_plots)
+                    legend = {'y' : "raw".format(npeak), 'y2' : 'baseline corrected'}
+                    mydata.create_plot(style=plot_style, format=plot_format, mute = not args.individual_plots,
+                                       axeslabel = axeslabel, legend = legend)
 
         # write the results table to the summary file and include the stats in file header
         stats_df = generate_df_stats(results.summary)
@@ -954,7 +1022,7 @@ if __name__ == "__main__":
         filename = summary_path + summary_file.replace('.','_') + '-boxplot.' + plot_format
         if results.n > 1:
             box_plot(results.summary['date']+' '+results.summary['time'], results.summary[box_y], r'$\mu$g-C', 'Total Carbon', filename, format=plot_format, date_format='%Y-%m-%d %H:%M:%S')
-            if not args.mute_graphs:
+            if not args.mute:
                 if args.fit:
                     results.animated_plot(y3='dtc-baseline', y2='fitted data')
                 else:
