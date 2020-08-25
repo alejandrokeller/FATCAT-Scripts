@@ -7,8 +7,8 @@ from scipy.optimize import minimize,leastsq, curve_fit
 def gauss(x):
     return np.exp( -0.5 * x**2)/np.sqrt( 2 * np.pi )
 
-def _1gauss(x, A0, x0, s0):
-    return A0 / s0 * gauss( ( x - x0 ) / s0 )
+def _1gauss(x, A, xc, sigma):
+    return A / sigma * gauss( ( x - xc ) / sigma )
 
 def _2gauss(x, A0, x0, s0, A1, x1, s1):
     return _1gauss(x, A0, x0, s0) + A1 / s1 * gauss( ( x - x1 ) / s1 )
