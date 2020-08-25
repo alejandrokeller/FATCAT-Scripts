@@ -22,6 +22,9 @@ def _4gauss(x, A0, x0, s0, A1, x1, s1, A2, x2, s2, A3, x3, s3):
 def _5gauss(x, A0, x0, s0, A1, x1, s1, A2, x2, s2, A3, x3, s3, A4, x4, s4):
     return _4gauss(x, A0, x0, s0, A1, x1, s1, A2, x2, s2, A3, x3, s3) + A4 / s4 * gauss( ( x - x4 ) / s4 )
 
+def _6gauss(x, A0, x0, s0, A1, x1, s1, A2, x2, s2, A3, x3, s3, A4, x4, s4, A5, x5, s5):
+    return _5gauss(x, A0, x0, s0, A1, x1, s1, A2, x2, s2, A3, x3, s3, A4, x4, s4) + A5 / s5 * gauss( ( x - x5 ) / s5 )
+
 def my_fit(xdata, ydata, p0 = False, npeaks = 5):
                                 
     nparameters = 3
@@ -60,11 +63,18 @@ def my_fit(xdata, ydata, p0 = False, npeaks = 5):
         peak_function = _4gauss
     elif npeaks == 5:
         if not p0:
-            p0 = (100., 17., 6., 22., 23., 10., 22., 28., 6., 80., 40., 8., 30., 51., 8. )
-            #       A0,  x0, s0,  A1,  x1,  s1,  A2,  x2, s2,  A3,  x3, s3,  A4,  x4, s4
-        bounds=((0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-                (np.inf, 60, 20, np.inf, 60, 20, np.inf, 60, 20, np.inf, 60, 20, np.inf, 60, 20))
+            p0 = ( 100., 15., 3.,  22., 22., 5., 22., 35., 5.,  80., 43., 5.,   30., 51., 5. )
+            #        A0, x0, s0,   A1,  x1,  s1,  A2, x2, s2,   A3,  x3, s3,     A4, x4, s4
+        bounds=((     0,  0, 0,      0, 19, 0,      0, 30, 0,      0, 40,  0,      0, 48,  0),
+                (np.inf, 19, 8, np.inf, 30, 8, np.inf, 40, 8, np.inf, 50, 10, np.inf, 60, 10))
         peak_function = _5gauss
+    elif npeaks == 6:
+        if not p0:
+            p0 = (100., 17., 3., 22., 22., 5., 10., 27., 5., 22., 34., 6., 80., 46., 8., 30., 54., 8. )
+            #       A0,  x0, s0,  A1,  x1, s1,  A2,  x2, s2,  A3,  x3, s3,  A4,  x4, s4,  A5,  x5, s5
+        bounds=((     0,  0,  0,      0, 19, 0,      0, 24, 0,      0, 30,  0,      0, 40,  0,      0, 48, 0),
+                (np.inf, 19,  6, np.inf, 26, 7, np.inf, 32, 8, np.inf, 40, 10, np.inf, 50, 10, np.inf, 60, 10))
+        peak_function = _6gauss
     else:
         print >>sys.stderr, "number of peaks not defined in fitting function: {}".format(npeaks)
 
