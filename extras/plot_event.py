@@ -820,6 +820,8 @@ if __name__ == "__main__":
                         dest='LAST', type=get_newest_events)
     parser.add_argument('--inifile', required=False, dest='INI', default=config_file,
                         help="Path to configuration file ({} if omitted)".format(config_file))
+    parser.add_argument('--alt-baseline', required=False, dest='altbaseline',
+                        help="Points to an alternative path storing the baseline file.")
     zero_parser = parser.add_mutually_exclusive_group(required=False)
     zero_parser.add_argument('--baseline', dest='zero', action='store_true',
                             help='calculate and store baseline from event list')
@@ -877,7 +879,18 @@ if __name__ == "__main__":
     fit_full_path = summary_path + fit_file
 
     # open the baseline DataFrame if it exists
-    filename = baseline_path + baseline_file
+    filename = False
+    if args.altbaseline:
+        if not args.altbaseline.endswith('/'):
+            args.altbaseline = args.altbaseline + '/'
+        filename = args.altbaseline + baseline_file
+        if os.path.isfile(filename):
+            log_message("using alternative baseline file: {}".format(filename))
+        else:
+            log_message("no alternative baseline found under: {}".format(filename))
+            filename = False
+    if not filename:
+        filename = baseline_path + baseline_file
     if os.path.isfile(filename):
         f = open(filename, 'r')
         baseline = Datafile(f).df

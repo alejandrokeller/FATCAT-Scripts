@@ -318,6 +318,8 @@ if __name__ == "__main__":
                             help='do not generate the concentration plot(default)')
     concentration_parser.add_argument('--plot-concentration', dest='concentration_plot', action='store_true',
                             help='generate concentration plot based on sampling volume on .ini file')
+    parser.add_argument('--alt-baseline', required=False, dest='altbaseline',
+                        help="Points to an alternative path storing the baseline file.")
     parser.set_defaults(concentration_plot=False)
     
     
@@ -362,7 +364,18 @@ if __name__ == "__main__":
         log_message("{} files found (range {})".format(len(file_list), date_range))
 
     # open the baseline DataFrame if it exists
-    filename = baseline_path + baseline_file
+    filename = False
+    if args.altbaseline:
+        if not args.altbaseline.endswith('/'):
+            args.altbaseline = args.altbaseline + '/'
+        filename = args.altbaseline + baseline_file
+        if os.path.isfile(filename):
+            log_message("using alternative baseline file: {}".format(filename))
+        else:
+            log_message("no alternative baseline found under: {}".format(filename))
+            filename = False
+    if not filename:
+        filename = baseline_path + baseline_file
     if os.path.isfile(filename):
         f = open(filename, 'r')
         baseline = Datafile(f).df
