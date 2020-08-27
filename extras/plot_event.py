@@ -277,7 +277,14 @@ class Datafile(object):
         plt.title(self.internname)
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
-        filename = (self.outputDir + self.internname.replace('.','_') + '_' + y + '.' + format).replace(' ','_')
+        if len(fitComponents) > 0:
+           type_of_plot = "_{}components".format(len(fitComponents))
+        else:
+            type_of_plot = ""
+        #filename = (self.outputDir + self.internname.replace('.','_') + '_' + y + type_of_plot + '.' + format).replace(' ','_')
+        filename = ("{}_{}{}.{}".format(self.internname.replace('.','_'), y, type_of_plot, format)).replace(' ','_')
+        plot.canvas.set_window_title(filename)
+        filename = self.outputDir + filename
         plt.savefig(filename)
         if not mute:
             plt.show()
@@ -376,7 +383,15 @@ class Datafile(object):
             #ax2.plot(self.df[x], c)
             ax2.fill_between(self.df[x], c, alpha = 0.5)
 
-        filename = (self.outputDir + self.internname.replace('.','_') + '_' + y1 + '_' + y2 + '.' + format).replace(' ','_')
+        if len(fitComponents) > 0:
+           type_of_plot = "_{}components".format(len(fitComponents))
+        else:
+            type_of_plot = ""
+
+        filename = ("{}_{}_{}{}.{}".format(self.internname.replace('.','_'), y1, y2, type_of_plot, format)).replace(' ','_')
+        dualplot.canvas.set_window_title(filename)
+        #filename = (self.outputDir + self.internname.replace('.','_') + '_' + y1 + '_' + y2 + type_of_plot + '.' + format).replace(' ','_')
+        filename = self.outputDir + filename
         plt.savefig(filename)
         if not mute:
             plt.show()
