@@ -39,6 +39,9 @@ FIT_FILE:      'fit_output.csv'
 INTEGRAL_LENGTH: 65
 EVENT_LENGTH: 120
 NPEAK: 3
+#obsolete
+FLOW_RATE: 6
+SAMPLING_TIME: 110
 
 [FTP]
 SERVER: 'ftp.meteoswiss.ch'
