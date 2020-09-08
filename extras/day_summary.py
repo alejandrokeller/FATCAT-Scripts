@@ -21,7 +21,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 #print(plt.style.available)
 
 from plot_event import Datafile, ResultsList, generate_df_stats, my_date_formater, my_days_format_function
-from plot_event import box_plot
+from plot_event import box_plot, read_baseline_dictionary
 from event_list import get_newest_events
 from log import log_message
 
@@ -321,6 +321,12 @@ if __name__ == "__main__":
     parser.add_argument('--alt-baseline', required=False, dest='altbaseline',
                         help="Points to an alternative path storing the baseline file.")
     parser.set_defaults(concentration_plot=False)
+    dict_parser = parser.add_mutually_exclusive_group(required=False)
+    dict_parser.add_argument('--baseline-dictionary', dest='basedict', action='store_true',
+                            help='Use a baseline dictionary for files from different instruments')
+    dict_parser.add_argument('--default-baseline', dest='basedict', action='store_false',
+                            help='Use the baseline for all files (default)')
+    parser.set_defaults(basedict=False)
     
     
     args = parser.parse_args()
@@ -363,8 +369,12 @@ if __name__ == "__main__":
             exit()
         log_message("{} files found (range {})".format(len(file_list), date_range))
 
-    # open the baseline DataFrame if it exists
+    # open the default baseline DataFrame and assigns a baseline dictionary
+    # baseline dictionary is used for time series that involve more than one
+    # instrument. Dictionary is based on instrument serial number.
+    # args.altbaseline is used if the user points to a specific file
     filename = False
+    baseline_dictionary = {}
     if args.altbaseline:
         if not args.altbaseline.endswith('/'):
             args.altbaseline = args.altbaseline + '/'
@@ -376,12 +386,14 @@ if __name__ == "__main__":
             filename = False
     if not filename:
         filename = baseline_path + baseline_file
+        if args.basedict:
+            baseline_dictionary = read_baseline_dictionary(baseline_path, baseline_file)
     if os.path.isfile(filename):
         f = open(filename, 'r')
-        baseline = Datafile(f).df
+        default_baseline = Datafile(f).df
         tc_column = 'tc-baseline'
     else:
-        baseline = pd.DataFrame()
+        default_baseline = pd.DataFrame()
         tc_column = 'tc'
 
     # create a ResultsList object to hold the event key data
@@ -391,8 +403,12 @@ if __name__ == "__main__":
         with open(e, 'r') as f:
             mydata = Datafile(f, output_path = output_path, tmax = tmax)
             f.close()
+            if mydata.sn in baseline_dictionary:
+                baseline_df = baseline_dictionary[mydata.sn]
+            else:
+                baseline_df = default_baseline
             if tc_column == 'tc-baseline':
-                mydata.add_baseline(baseline = baseline)
+                mydata.add_baseline(baseline = baseline_df)
             results.append_event(mydata)
 
     summary_full_path = summary_path + date_range + "-" + summary_file

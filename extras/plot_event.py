@@ -11,6 +11,8 @@ import pandas as pd
 from pandas.plotting import register_matplotlib_converters
 from log import log_message
 
+import re # for string parsing
+
 import itertools
 
 import matplotlib
@@ -47,6 +49,11 @@ class Datafile(object):
         self.npeak      = npeak # number of fitted gausian curves (must identical in Results object)
 
         #print >>sys.stderr, "loading: {}".format(datafile.name)
+
+        # search for the serial number
+        self.sn = re.findall(r'(SN\d+.)', self.rawdata)
+        if self.sn:
+            self.sn = self.sn[-1][:-1]
 
         # for back compatibility, the next 4 lines will be tested to see if the event
         # includes also information about sampling volume and volume weigthed co2
@@ -823,6 +830,16 @@ def my_days_format_function(x, pos=None):
      label = x.strftime(fmt)
      return label
 
+def read_baseline_dictionary(baseline_path, baseline_filename):
+    baseline_dictionary = {}
+    baselines = glob.glob(baseline_path + 'SN*/' + baseline_filename)
+    keys = map(lambda x: re.findall(r'(/SN\d+/)', x), baselines)
+    for k, p in zip(keys, baselines):
+        if k:
+            f = open(p, 'r')
+            baseline_dictionary[k[0][1:-1]] = Datafile(f).df
+    return baseline_dictionary
+
 if __name__ == "__main__":
 
     config_file = os.path.abspath(os.path.abspath(os.path.dirname(sys.argv[0])) + "/../config.ini")
@@ -855,6 +872,12 @@ if __name__ == "__main__":
     parser.add_argument('--fix-co2', dest='fix', help='fix the co2-event in the event file', action='store_true')
     parser.add_argument('--mute-graphs', dest='mute', help='Do not plot the data to screen', action='store_true')
     parser.add_argument('--fit-components', dest='fitComponents', help='Show individual fitted curves', action='store_true')
+    dict_parser = parser.add_mutually_exclusive_group(required=False)
+    dict_parser.add_argument('--baseline-dictionary', dest='basedict', action='store_true',
+                            help='Use a baseline dictionary for files from different instruments')
+    dict_parser.add_argument('--default-baseline', dest='basedict', action='store_false',
+                            help='Use the baseline for all files (default)')
+    parser.set_defaults(basedict=False)
     
     args = parser.parse_args()
     
@@ -893,8 +916,12 @@ if __name__ == "__main__":
     summary_full_path = summary_path + summary_file
     fit_full_path = summary_path + fit_file
 
-    # open the baseline DataFrame if it exists
+    # open the default baseline DataFrame and assigns a baseline dictionary
+    # baseline dictionary is used for time series that involve more than one
+    # instrument. Dictionary is based on instrument serial number
+    # args.altbaseline is used if the user points to a specific file
     filename = False
+    baseline_dictionary = {}
     if args.altbaseline:
         if not args.altbaseline.endswith('/'):
             args.altbaseline = args.altbaseline + '/'
@@ -906,11 +933,13 @@ if __name__ == "__main__":
             filename = False
     if not filename:
         filename = baseline_path + baseline_file
+        if args.basedict:
+            baseline_dictionary = read_baseline_dictionary(baseline_path, baseline_file)
     if os.path.isfile(filename):
         f = open(filename, 'r')
-        baseline = Datafile(f).df
+        default_baseline = Datafile(f).df
     else:
-        baseline = pd.DataFrame()
+        default_baseline = pd.DataFrame()
 
     if args.LAST:
         file_list = args.LAST
@@ -965,9 +994,13 @@ if __name__ == "__main__":
             mydata = Datafile(f, output_path = output_path, tmax = tmax, npeak = npeak)
             # empty holder for individual fitted curves
             components = []
-            if 'dtc' in baseline:
+            if mydata.sn in baseline_dictionary:
+                baseline_df = baseline_dictionary[mydata.sn]
+            else:
+                baseline_df = default_baseline
+            if 'dtc' in baseline_df:
                 box_y = 'tc-baseline'
-                mydata.add_baseline(baseline = baseline, fit = args.fit, p0=p0)
+                mydata.add_baseline(baseline = baseline_df, fit = args.fit, p0=p0)
                 # Use current result as starting guess for next fitting iteration
                 if args.fit and False:
                     p0 = []
