@@ -1002,7 +1002,7 @@ if __name__ == "__main__":
             mydata = Datafile(f, output_path = output_path, tmax = tmax, npeak = npeak)
             # empty holder for individual fitted curves
             components = []
-            print "using serial number: {}".format(mydata.sn)
+            #print "using serial number: {}".format(mydata.sn)
             if mydata.sn in baseline_dictionary:
                 baseline_df = baseline_dictionary[mydata.sn]
             else:
