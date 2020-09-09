@@ -269,6 +269,7 @@ class Visualizer(object):
         self.lblZeroAir   = QtGui.QLabel("Zero Air")
         self.lblESample   = QtGui.QLabel("Sample (int. pump on)")
         self.lblEAnalysis = QtGui.QLabel("Zero Air +bypass")
+        self.lblStandby   = QtGui.QLabel("Standby")
         
         self.lblCD        = QtGui.QLabel("0")
 
@@ -298,6 +299,8 @@ class Visualizer(object):
         self.btnESample.setFixedWidth(self.button_size)
         self.btnEAnalysis = QtGui.QPushButton("")            # prepare for emissions analisys
         self.btnEAnalysis.setFixedWidth(self.button_size)
+        self.btnStandby = QtGui.QPushButton("")              # Enter Standby mode
+        self.btnStandby.setFixedWidth(self.button_size)
 
         self.btnPump.clicked.connect(self.togglePump)
         self.btnBand.clicked.connect(self.toggleBand)
@@ -309,6 +312,7 @@ class Visualizer(object):
         self.btnZeroAir.clicked.connect(self.startZeroAir)
         self.btnESample.clicked.connect(self.SampleEmissions)
         self.btnEAnalysis.clicked.connect(self.AnalizeEmissions)
+        self.btnStandby.clicked.connect(self.standby)
 
         ## Create widgets for controlling Internal MFC
         self.btnMFC1      = QtGui.QPushButton(">>")  # Sends new MFC2 flow
@@ -349,6 +353,7 @@ class Visualizer(object):
         self.controlsLayout.addWidget(self.lblZeroAir,   10, 1)
         self.controlsLayout.addWidget(self.lblESample,   13, 1)
         self.controlsLayout.addWidget(self.lblEAnalysis, 14, 1)
+        self.controlsLayout.addWidget(self.lblStandby,   15, 1)
 
         self.controlsLayout.addWidget(self.lblCD,        8, 0, 1, 2)
 
@@ -366,6 +371,7 @@ class Visualizer(object):
         self.controlsLayout.addWidget(self.btnZeroAir,   10, 0)
         self.controlsLayout.addWidget(self.btnESample,   13, 0)
         self.controlsLayout.addWidget(self.btnEAnalysis, 14, 0)
+        self.controlsLayout.addWidget(self.btnStandby,   15, 0)
 
          ## Add Widgets to the MFCLayout
         self.mfcLayout.addWidget(self.lblMFC1,     0, 0)
@@ -555,6 +561,12 @@ class Visualizer(object):
                     self.lblEAnalysis.setStyleSheet('color: green')
                 else:
                     self.lblEAnalysis.setStyleSheet('color: red')
+
+                if (not self.statusDict['pump'] and self.statusDict['valve'] and
+                    not self.statusDict['res2'] and not self.statusDict['licor']):
+                    self.lblStandby.setStyleSheet('color: green')
+                else:
+                    self.lblStandby.setStyleSheet('color: red')
                 
         except Exception as e:
             print >>sys.stderr, e
@@ -620,6 +632,15 @@ class Visualizer(object):
                     'E0000',
                     'V1000',
                     'U1000']
+        self.device.send_commands(commands, open_port = True)
+
+    def standby(self):
+        commands = [
+            "U0000", # Switch off internal pump
+            "V1000", # Switch on internal valve
+            "E0000",  # Switch off external pump
+            "L0000" # Switch off external valve
+            ]
         self.device.send_commands(commands, open_port = True)
 
     def SampleEmissions(self):
