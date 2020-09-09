@@ -51,7 +51,10 @@ class Datafile(object):
         #print >>sys.stderr, "loading: {}".format(datafile.name)
 
         # search for the serial number
-        self.sn = re.findall(r'(SN\d+.)', self.rawdata)
+        # first test if data was taken at JFJ 
+        self.sn = re.findall(r'(JFJ-SN\d+.)', self.rawdata)
+        if not self.sn:
+            self.sn = re.findall(r'(SN\d+.)', self.rawdata)
         if self.sn:
             self.sn = self.sn[-1][:-1]
 
@@ -834,6 +837,11 @@ def read_baseline_dictionary(baseline_path, baseline_filename):
     baseline_dictionary = {}
     baselines = glob.glob(baseline_path + 'SN*/' + baseline_filename)
     keys = map(lambda x: re.findall(r'(/SN\d+/)', x), baselines)
+    # add elements from JFJ
+    baselines_jfj = glob.glob(baseline_path + 'JFJ-SN*/' + baseline_filename)
+    baselines += baselines_jfj
+    keys += map(lambda x: re.findall(r'(/JFJ-SN\d+/)', x), baselines_jfj)
+    # construct the dictionary
     for k, p in zip(keys, baselines):
         if k:
             f = open(p, 'r')
@@ -994,6 +1002,7 @@ if __name__ == "__main__":
             mydata = Datafile(f, output_path = output_path, tmax = tmax, npeak = npeak)
             # empty holder for individual fitted curves
             components = []
+            print "using serial number: {}".format(mydata.sn)
             if mydata.sn in baseline_dictionary:
                 baseline_df = baseline_dictionary[mydata.sn]
             else:
