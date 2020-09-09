@@ -322,11 +322,11 @@ if __name__ == "__main__":
                         help="Points to an alternative path storing the baseline file.")
     parser.set_defaults(concentration_plot=False)
     dict_parser = parser.add_mutually_exclusive_group(required=False)
-    dict_parser.add_argument('--baseline-dictionary', dest='basedict', action='store_true',
-                            help='Use a baseline dictionary for files from different instruments')
+    dict_parser.add_argument('--baseline-dict', dest='basedict', action='store_true',
+                            help='Use a baseline dictionary for files from different instruments (default)')
     dict_parser.add_argument('--default-baseline', dest='basedict', action='store_false',
-                            help='Use the baseline for all files (default)')
-    parser.set_defaults(basedict=False)
+                            help='Use the baseline for all files')
+    parser.set_defaults(basedict=True)
     
     
     args = parser.parse_args()
@@ -399,10 +399,14 @@ if __name__ == "__main__":
     # create a ResultsList object to hold the event key data
     results = ResultsList()
 
+    sn = False
     for e in file_list:
         with open(e, 'r') as f:
             mydata = Datafile(f, output_path = output_path, tmax = tmax)
             f.close()
+            if not sn == mydata.sn:
+                sn = mydata.sn
+                log_message("Found {} (starting @ {})".format(sn, mydata.datafile))
             if mydata.sn in baseline_dictionary:
                 baseline_df = baseline_dictionary[mydata.sn]
             else:

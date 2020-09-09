@@ -175,6 +175,24 @@ class Datafile(object):
             "sample": r'm$^3$',
             "sample co2": 'ppm'
             }
+        
+    def __repr__(self):
+        return "{}({})".format(self.__class__.__name__, self.datafile)
+
+    def __str__(self):
+        tc_concentration = self.results["tc concentration"]
+        tc_corrected = self.results["tc-baseline"]
+        if tc_corrected == "-":
+            tc_str = "TC={:.2f} {}".format(self.results["tc"], self.result_units["tc"])
+        else:
+            tc_str = "TC-Baseline={:.2f} {}".format(tc_corrected, self.result_units["tc-baseline"])
+        if tc_concentration == "-":
+            tc_concentration_str = ""
+        else:
+            tc_concentration_str = " ({} {})".format(tc_concentration, self.result_units["tc concentration"])
+        return "FATCAT {} ({} {}): {}{}".format(self.sn, self.results["date"], self.results["time"],
+                                                   tc_str, tc_concentration_str)
+                                                                    
 
     def extract_date(self):
         date = self.internname[:10]
@@ -881,11 +899,11 @@ if __name__ == "__main__":
     parser.add_argument('--mute-graphs', dest='mute', help='Do not plot the data to screen', action='store_true')
     parser.add_argument('--fit-components', dest='fitComponents', help='Show individual fitted curves', action='store_true')
     dict_parser = parser.add_mutually_exclusive_group(required=False)
-    dict_parser.add_argument('--baseline-dictionary', dest='basedict', action='store_true',
-                            help='Use a baseline dictionary for files from different instruments')
+    dict_parser.add_argument('--baseline-dict', dest='basedict', action='store_true',
+                            help='Use a baseline dictionary for files from different instruments (default)')
     dict_parser.add_argument('--default-baseline', dest='basedict', action='store_false',
-                            help='Use the baseline for all files (default)')
-    parser.set_defaults(basedict=False)
+                            help='Use the baseline for all files')
+    parser.set_defaults(basedict=True)
     
     args = parser.parse_args()
     
@@ -997,12 +1015,15 @@ if __name__ == "__main__":
                args.individual_plots = True
         # Uses the default first guess for fitting
         p0 = False
-        
+
+        sn = False
         for f in args.datafile:
             mydata = Datafile(f, output_path = output_path, tmax = tmax, npeak = npeak)
+            if not sn == mydata.sn:
+                sn = mydata.sn
+                log_message("Found {} (starting @ {})".format(sn, mydata.datafile))
             # empty holder for individual fitted curves
             components = []
-            #print "using serial number: {}".format(mydata.sn)
             if mydata.sn in baseline_dictionary:
                 baseline_df = baseline_dictionary[mydata.sn]
             else:
