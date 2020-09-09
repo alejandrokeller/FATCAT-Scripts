@@ -26,7 +26,7 @@ from event_list import get_newest_events
 from log import log_message
 
 def day_plot(df, df_list, tc_column = 'tc', filename = "day_overview", title = "Day Overview", style='ggplot',
-             format='svg'):
+             format='svg', tmax = False):
     plt.style.use('ggplot')
 
     # definitions for the axes
@@ -127,6 +127,8 @@ def day_plot(df, df_list, tc_column = 'tc', filename = "day_overview", title = "
     ax_co2.set_ylim((colim0-extra_space_co2, colim1+extra_space_co2))
     ax_co2.set_xlim(ax_tc.get_xlim())
     ax_box.set_ylim(ax_tc.get_ylim())
+    if tmax:
+        ax_contour.set_ylim((0, tmax))
             
 
     filename = filename.replace('.','_') + '_' + df[tc_column].name + '-day_overview.' + format
@@ -135,7 +137,7 @@ def day_plot(df, df_list, tc_column = 'tc', filename = "day_overview", title = "
     return complete_overview
 
 def simple_day_plot(df, df_list, average_df, tc_column = 'tc', filename = "day_overview",
-                    title = "Day Overview", style='ggplot', format='svg'):
+                    title = "Day Overview", style='ggplot', format='svg', tmax = False):
     plt.style.use('ggplot')
 
     # definitions for the axes
@@ -239,6 +241,8 @@ def simple_day_plot(df, df_list, average_df, tc_column = 'tc', filename = "day_o
     extra_time = datetime.timedelta(minutes=30)
     ax_tc.set_ylim((lim0-extra_space_tc, lim1+extra_space_tc))
     ax_tc.set_xlim((tlim0, tlim1))
+    if tmax:
+        ax_contour.set_ylim((0, tmax))
     ax_temp.set_ylim(ax_contour.get_ylim())
     ax_temp.set_xlim((20, 810))
             
@@ -272,6 +276,7 @@ if __name__ == "__main__":
         plot_style    = eval(config['GRAPH_SETTINGS']['PLOT_STYLE'])
         plot_format   = eval(config['GRAPH_SETTINGS']['FILE_FORMAT'])
         error_interval = eval(config['GRAPH_SETTINGS']['ERROR_EVERY'])
+        graphmax      = eval(config['GRAPH_SETTINGS']['XMAX'])
         baseline_path = eval(config['DATA_ANALYSIS']['BASELINE_PATH']) + '/'
         baseline_file = eval(config['DATA_ANALYSIS']['BASELINE_FILE'])
         summary_path = eval(config['DATA_ANALYSIS']['SUMMARY_PATH']) + '/'
@@ -458,12 +463,12 @@ if __name__ == "__main__":
         # send summary path, figure will append appropriate data
         if args.allplots:
             overview = day_plot(results.summary, results.df_list, tc_column = tc_column, title = date_range, filename = summary_full_path,
-                     format=plot_format)
+                     format=plot_format, tmax = graphmax)
             if args.mute_graphs:
                 plt.close(overview)
         if args.simple:
             simple_overview = simple_day_plot(results.summary, results.df_list, tc_column = tc_column, title = 'Overview ' + date_range, filename = summary_full_path,
-                     format=plot_format, average_df = results.build_average_df())
+                     format=plot_format, average_df = results.build_average_df(), tmax = graphmax)
             if args.mute_graphs:
                 plt.close(simple_overview)
         if not args.mute_graphs:
