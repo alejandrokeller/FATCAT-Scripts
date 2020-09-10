@@ -331,11 +331,15 @@ class Rawfile(object):
             try:
                 elapsedTime = runtime - self.df['Time'].loc[i1]
             except:
-                log_message("error at index={}".format(i1))
+                log_message("error calculating baseline for event {}".format(eventIndex))
                 raise
             while (elapsedTime <= self.baselinelength and i1 >= 0):
                 i1 = i1 - 1
-                elapsedTime = runtime - self.df['Time'].loc[i1]
+                try:
+                    elapsedTime = runtime - self.df['Time'].loc[i1]
+                except:
+                    log_message("error calculating baseline for event {}".format(eventIndex))
+                    raise
             else:
                 i1 += 1
             # "i0-1" excludes the starting point of the event
