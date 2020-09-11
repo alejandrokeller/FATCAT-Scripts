@@ -49,8 +49,12 @@ def my_fit(xdata, ydata, p0 = False, npeaks = 5):
             #      A0,  x0, s0, A1,  x1, s1, A2,  x2, s2
 ##        bounds=((0, 0, 0, 0, 20, 0, 0, 30, 0),
 ##                (np.inf, 20, np.inf, np.inf, 38, np.inf, np.inf, 60, 20))
+## Before Aerotox--- used for Schimmelstrasse in ZH
         bounds=(     (0,  0, 1.5,      0, 28,  1.5,      0, 40,  1.5),
                 (np.inf, 20, 5, np.inf, 40, 10, np.inf, 60, 10))
+## Very constrained peaks
+##        bounds=(     (0,  0, 1.5,      0, 33,  1.5,      0, 40,  1.5),
+##                (np.inf, 30, 5, np.inf, 40, 10, np.inf, 60, 10))
         peak_function = _3gauss
     elif npeaks == 4:
         if not p0:
