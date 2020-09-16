@@ -276,6 +276,8 @@ class Visualizer(object):
         self.lblLicorT    = QtGui.QLabel("CO2: ")
         self.lblLicorH2O  = QtGui.QLabel("H2O: ")
 
+        ## Create bypass checkbox
+        self.cbBypass = QtGui.QCheckBox("Use &bypass")
 
         ## Create button widgets for actions
         self.button_size = 30
@@ -351,14 +353,15 @@ class Visualizer(object):
         self.controlsLayout.addWidget(self.lblRes,        7, 1)
         self.controlsLayout.addWidget(self.lblSample,     9, 1)
         self.controlsLayout.addWidget(self.lblZeroAir,   10, 1)
-        self.controlsLayout.addWidget(self.lblESample,   13, 1)
-        self.controlsLayout.addWidget(self.lblEAnalysis, 14, 1)
-        self.controlsLayout.addWidget(self.lblStandby,   15, 1)
+        self.controlsLayout.addWidget(self.lblEAnalysis, 11, 1)
+        self.controlsLayout.addWidget(self.lblStandby,   12, 1)
+        self.controlsLayout.addWidget(self.lblESample,   16, 1)                        
 
         self.controlsLayout.addWidget(self.lblCD,        8, 0, 1, 2)
 
-        self.controlsLayout.addWidget(self.lblLicorT,   11, 0, 1, 2)
-        self.controlsLayout.addWidget(self.lblLicorH2O, 12, 0, 1, 2)
+        self.controlsLayout.addWidget(self.cbBypass,    13, 0, 1, 2)
+        self.controlsLayout.addWidget(self.lblLicorT,   14, 0, 1, 2)
+        self.controlsLayout.addWidget(self.lblLicorH2O, 15, 0, 1, 2)
 
         self.controlsLayout.addWidget(self.btnPump,       0, 0)
         self.controlsLayout.addWidget(self.btnBand,       1, 0)
@@ -369,9 +372,9 @@ class Visualizer(object):
         #self.controlsLayout.addWidget(self.btnOven,  7, 0, 1, 2)
         self.controlsLayout.addWidget(self.btnSample,     9, 0)
         self.controlsLayout.addWidget(self.btnZeroAir,   10, 0)
-        self.controlsLayout.addWidget(self.btnESample,   13, 0)
-        self.controlsLayout.addWidget(self.btnEAnalysis, 14, 0)
-        self.controlsLayout.addWidget(self.btnStandby,   15, 0)
+        self.controlsLayout.addWidget(self.btnStandby,   12, 0)
+        self.controlsLayout.addWidget(self.btnESample,   16, 0)
+##        self.controlsLayout.addWidget(self.btnEAnalysis, 17, 0)
 
          ## Add Widgets to the MFCLayout
         self.mfcLayout.addWidget(self.lblMFC1,     0, 0)
@@ -628,8 +631,12 @@ class Visualizer(object):
         self.device.send_commands(commands, open_port = True)
 
     def startZeroAir(self):
+        if self.cbBypass.checkState():
+            strEpump = 'E1000'
+        else:
+            strEpump = 'E0000'
         commands = ['L1000',
-                    'E0000',
+                    strEpump,
                     'V1000',
                     'U1000']
         self.device.send_commands(commands, open_port = True)
@@ -646,7 +653,7 @@ class Visualizer(object):
     def SampleEmissions(self):
         c = 'C{0:04d}!'.format(self.spMFC2.value())
         commands = ['U1000', # internal pump on
-                    c,       # set external flow rate 
+#                    c,       # set external flow rate 
                     'V0000', # sample goes through bypass
                     'E1000', # external pump on
                     'L0000'] # external valve off
@@ -656,7 +663,7 @@ class Visualizer(object):
         c = 'C{0:04d}!'.format(self.spMFC2.value()+self.spMFC1.value())
         commands = ['L1000', # external valve on
                     'E1000', # external pump on
-                    c,       # increment external flow rate
+#                    c,       # increment external flow rate
                     'V1000', # sample goes to instrument filter
                     'U1000'] # internal pump on
         self.device.send_commands(commands, open_port = True)
