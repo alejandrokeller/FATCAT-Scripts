@@ -259,7 +259,9 @@ class Rawfile(object):
             log_message("Error loading file with the standard pandas dtypes, using converter for slow import instead")
             self.csvfile.seek(0, 0)
             newDict = {}
-            for key in self.dtypeDict:
+            dtypeDictCopy = self.dtypeDict.copy()
+            dtypeDictCopy.pop('Status Byte', None)
+            for key in dtypeDictCopy:
                 newDict[key]=conv
             self.df = pd.read_csv(self.csvfile, skiprows = self.skiprows, sep='\t',
                                   parse_dates=True, header = None, names=columns,
