@@ -120,7 +120,8 @@ class Rawfile(object):
             "CO2":              'float64',
             "Flowrate":         'float64',
             "Ind. Current":     'float64',
-            "Cycle Countdown":  'float64'}
+            "Cycle Countdown":  'float64',
+            "Status Byte":      'object'}
 
         #### For compatibility with prior version #####
         self.keyDict = {
