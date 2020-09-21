@@ -897,7 +897,7 @@ if __name__ == "__main__":
     parser.add_argument('--show-fit-error', dest='ferror', help='Show fit error on bubble graph', action='store_true')
     parser.add_argument('--fix-co2', dest='fix', help='fix the co2-event in the event file', action='store_true')
     parser.add_argument('--mute-graphs', dest='mute', help='Do not plot the data to screen', action='store_true')
-    parser.add_argument('--fit-components', dest='fitComponents', help='Show individual fitted curves', action='store_true')
+    parser.add_argument('--fit-components', dest='fitComponents', help='Fit and display individual fitted curves on graph', action='store_true')
     dict_parser = parser.add_mutually_exclusive_group(required=False)
     dict_parser.add_argument('--baseline-dict', dest='basedict', action='store_true',
                             help='Use a baseline dictionary for files from different instruments (default)')
@@ -906,6 +906,10 @@ if __name__ == "__main__":
     parser.set_defaults(basedict=True)
     
     args = parser.parse_args()
+
+    # activated --fit rutines if --fit-components was selectes 
+    if args.fitComponents:
+        args.fit = True
     
     config_file = args.INI
     if os.path.exists(config_file):
@@ -1038,7 +1042,7 @@ if __name__ == "__main__":
                         p0.append(coeff_list['A'])
                         p0.append(coeff_list['xc'])
                         p0.append(coeff_list['sigma'])
-                if args.fitComponents and args.fit:
+                if args.fitComponents:
                 # generate the fit components curves
                     for num, coeff_list in enumerate(mydata.fit_coeff):
                         # extract data. Need to correct A from ug/sec to ug/min
