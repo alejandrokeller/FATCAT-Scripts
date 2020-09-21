@@ -878,8 +878,6 @@ if __name__ == "__main__":
                         dest='LAST', type=get_newest_events)
     parser.add_argument('--inifile', required=False, dest='INI', default=config_file,
                         help="Path to configuration file ({} if omitted)".format(config_file))
-    parser.add_argument('--alt-baseline', required=False, dest='altbaseline',
-                        help="Points to an alternative path storing the baseline file.")
     zero_parser = parser.add_mutually_exclusive_group(required=False)
     zero_parser.add_argument('--baseline', dest='zero', action='store_true',
                             help='calculate and store baseline from event list')
@@ -893,7 +891,7 @@ if __name__ == "__main__":
                             help='only plot delta-TC')
     parser.set_defaults(tplot=True)
     parser.add_argument('--individual-plots', help='Stop at individual event plots [slow]', action='store_true')
-    parser.add_argument('--fit', dest='fit', help='Fit triple gaussian to data', action='store_true')
+    parser.add_argument('--fit', dest='fit', help='Fit gaussian functions to data', action='store_true')
     parser.add_argument('--show-fit-error', dest='ferror', help='Show fit error on bubble graph', action='store_true')
     parser.add_argument('--fix-co2', dest='fix', help='fix the co2-event in the event file', action='store_true')
     parser.add_argument('--mute-graphs', dest='mute', help='Do not plot the data to screen', action='store_true')
@@ -903,6 +901,8 @@ if __name__ == "__main__":
                             help='Use a baseline dictionary for files from different instruments (default)')
     dict_parser.add_argument('--default-baseline', dest='basedict', action='store_false',
                             help='Use the baseline for all files')
+    parser.add_argument('--alt-baseline', required=False, dest='altbaseline',
+                        help="Points to an alternative path storing the baseline file.")
     parser.set_defaults(basedict=True)
     
     args = parser.parse_args()
