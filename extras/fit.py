@@ -47,8 +47,8 @@ def my_fit(xdata, ydata, p0 = False, npeaks = 5):
         if not p0:
             p0 = (10., 15., 3., 8., 33., 7., 6., 53., 8. )
             #      A0,  x0, s0, A1,  x1, s1, A2,  x2, s2
-##        bounds=((0, 0, 0, 0, 20, 0, 0, 30, 0),
-##                (np.inf, 20, np.inf, np.inf, 38, np.inf, np.inf, 60, 20))
+#        bounds=((0, 0, 0, 0, 0, 0, 0, 0, 0),
+#                (np.inf, 80, np.inf, np.inf, 80, np.inf, np.inf, 80, 20))
 ## Before Aerotox--- used for Schimmelstrasse in ZH
         bounds=(     (0,  0, 1.5,      0, 28,  1.5,      0, 40,  1.5),
                 (np.inf, 20, 5, np.inf, 40, 10, np.inf, 60, 10))
