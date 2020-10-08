@@ -302,9 +302,10 @@ class Datafile(object):
         if not xmax:
             xmax = self.df[x].max()
         plt.xlim(self.df[x].min(), xmax)
-        if not ymax:
-            ymax = self.df[y].max()
-        plt.ylim(self.df[y].min(), ymax)
+        if ymax:
+            #ymax = self.df[y].max()
+            plt.ylim(self.df[y].min(), ymax)
+            plt.ylim(0, ymax)
         plt.title(self.internname)
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
@@ -323,7 +324,7 @@ class Datafile(object):
 
     def create_dualplot(self, x='elapsed-time', y1='toven', y2='dtc', y3='dtc-baseline',
                         style='ggplot', format='svg', y1err=False, y2err=False, error_interval = 4, mute = False,
-                        legend={}, axeslabel={}, fitComponents = [], xmax = False, ymax = False):
+                        legend={}, axeslabel={}, fitComponents = [], xmax = False, y1max = False, y2max = False):
 
         plt.style.use('ggplot')
 
@@ -372,10 +373,13 @@ class Datafile(object):
         limY2max = self.df[y2].max()
         extra_space1 = (limY1max - limY1min)/10
         extra_space2 = (limY2max - limY2min)/10
-        ax1.set_ylim(limY1min - extra_space1, limY1max + extra_space1)
+        if y1max:
+            ax1.set_ylim(limY1min - extra_space1, y1max)
+        else:
+            ax1.set_ylim(limY1min - extra_space1, limY1max + extra_space1)
         try:
-            if ymax:
-                ax2.set_ylim(limY2min - extra_space2, ymax)
+            if y2max:
+                ax2.set_ylim(limY2min - extra_space2, y2max)
             else:
                 ax2.set_ylim(limY2min - extra_space2, limY2max + extra_space2)
         except:
@@ -928,6 +932,7 @@ if __name__ == "__main__":
         error_interval = eval(config['GRAPH_SETTINGS']['ERROR_EVERY'])
         xmax           = eval(config['GRAPH_SETTINGS']['XMAX'])
         ymax           = eval(config['GRAPH_SETTINGS']['YMAX'])
+        tempmax        = 810
         baseline_path  = eval(config['DATA_ANALYSIS']['BASELINE_PATH']) + '/'
         baseline_file  = eval(config['DATA_ANALYSIS']['BASELINE_FILE'])
         summary_path   = eval(config['DATA_ANALYSIS']['SUMMARY_PATH']) + '/'
@@ -948,6 +953,7 @@ if __name__ == "__main__":
         error_interval = 4
         xmax = False
         ymax = False
+        tempmax = False
         log_message('Could not find the configuration file {0}'.format(config_file))
         npeak = 5
 
@@ -1068,11 +1074,11 @@ if __name__ == "__main__":
                     legend = {'y2' : "{}-mode fit".format(npeak), 'y3' : 'Signal'}
                     mydata.create_dualplot(y3='dtc-baseline', y2='fitted data', legend = legend, axeslabel = axeslabel,
                                            style=plot_style, format=plot_format, mute = not args.individual_plots,
-                                           fitComponents = components, xmax = xmax, ymax = ymax)
+                                           fitComponents = components, xmax = xmax, y2max = ymax, y1max = tempmax)
                 else:
                     legend = {'y2' : "raw".format(npeak), 'y3' : 'baseline corrected'}
                     mydata.create_dualplot(style=plot_style, format=plot_format, mute = not args.individual_plots,
-                                           legend = legend, axeslabel = axeslabel, xmax = xmax, ymax = ymax)
+                                           legend = legend, axeslabel = axeslabel, xmax = xmax, y2max = ymax, y1max = tempmax)
             else:
                 axeslabel = {'y' : r'$\Delta$TC'}
                 if args.fit:
