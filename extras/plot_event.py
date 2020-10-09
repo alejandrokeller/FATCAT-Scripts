@@ -658,7 +658,7 @@ class ResultsList(object):
 
         plt.show()
 
-def box_plot(x, y, units, title, filename, style='ggplot', format='svg', date_format='%Y-%m-%d'):
+def box_plot(x, y, units, title, filename, style='ggplot', format='svg', date_format='%Y-%m-%d', xlabel='date'):
     #plt.style.use('ggplot')
     plt.style.use(style)
 
@@ -691,7 +691,7 @@ def box_plot(x, y, units, title, filename, style='ggplot', format='svg', date_fo
     # the scatter plot:
     ax_scatter.scatter(x, y) #circles
     ax_scatter.plot(x, y)    #lines
-    ax_scatter.set(xlabel='date', ylabel=y.name + ' (' + units + ')', title=title)
+    ax_scatter.set(xlabel=xlabel, ylabel=y.name + ' (' + units + ')', title=title)
     tdelta = x.max() - x.min()
     my_date_formater(ax_scatter, tdelta)
 

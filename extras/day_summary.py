@@ -277,6 +277,8 @@ if __name__ == "__main__":
         plot_format   = eval(config['GRAPH_SETTINGS']['FILE_FORMAT'])
         error_interval = eval(config['GRAPH_SETTINGS']['ERROR_EVERY'])
         graphmax      = eval(config['GRAPH_SETTINGS']['XMAX'])
+        report_name   = eval(config['GRAPH_SETTINGS']['LATEST_NAME'])
+        time_axis     = eval(config['GRAPH_SETTINGS']['DATE_AXIS'])
         baseline_path = eval(config['DATA_ANALYSIS']['BASELINE_PATH']) + '/'
         baseline_file = eval(config['DATA_ANALYSIS']['BASELINE_FILE'])
         summary_path = eval(config['DATA_ANALYSIS']['SUMMARY_PATH']) + '/'
@@ -331,6 +333,10 @@ if __name__ == "__main__":
                             help='Use a baseline dictionary for files from different instruments (default)')
     dict_parser.add_argument('--default-baseline', dest='basedict', action='store_false',
                             help='Use the baseline for all files')
+    parser.add_argument('--graph-title', required=False, dest='title',
+                        help="Override the default concentration graph title.")
+    parser.add_argument('--date-title', required=False, dest='datename',
+                        help="Override the default name for the date axis.")
     parser.set_defaults(basedict=True)
     
     
@@ -342,7 +348,12 @@ if __name__ == "__main__":
         args.END = args.START
     if args.END < args.START:
         raise parser.error("End date is prior to start date")
-        
+
+    if args.title:
+        report_name = args.title
+
+    if args.datename:
+        time_axis = args.datename 
 
     if args.LAST:
         file_list = args.LAST
@@ -453,8 +464,9 @@ if __name__ == "__main__":
             f.close()
         report_graph = report_full_path
         report_plot = box_plot(x = report_df['date'] + ' ' + report_df['time'], y = report_df[new_column],
-                              title = 'Total Carbon Concentration: ' + date_range, units = new_units,
-                              filename = report_graph)
+                               #title = 'Total Carbon Concentration: ' + date_range,
+                               title = report_name, xlabel = time_axis,
+                               units = new_units, filename = report_graph)
 
     print stats_df.head()
     print results.summary.tail(20)
