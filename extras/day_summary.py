@@ -463,8 +463,9 @@ if __name__ == "__main__":
             report_df.to_csv(f, index=False, header=False)
             f.close()
         report_graph = report_full_path
+        if not report_name:
+            report_name = 'Total Carbon Concentration: ' + date_range
         report_plot = box_plot(x = report_df['date'] + ' ' + report_df['time'], y = report_df[new_column],
-                               #title = 'Total Carbon Concentration: ' + date_range,
                                title = report_name, xlabel = time_axis,
                                units = new_units, filename = report_graph)
 

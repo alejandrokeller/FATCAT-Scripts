@@ -30,7 +30,7 @@ ERROR_EVERY: 4
 XMAX: False
 YMAX: False
 LATEST_NAME: False
-DATE_AXIS: False
+DATE_AXIS: 'Date'
 
 [DATA_ANALYSIS]
 BASELINE_PATH: '/home/pi/fatcat-files/data/baseline'
