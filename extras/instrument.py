@@ -47,7 +47,7 @@ class instrument(object):
             "C?", # Response: "PID1=[value in mv], PID2=[value in mv], to Control PIDx: <ON> = Cx100 or <OFF> = Cx000"
             "E?", # Response: "Status PUMP1=__, PUMP2=__, to Control PUMPx: <ON> = Ex100 or <OFF> = Ex000"
             "F?", # Response: "SetPoint PUMP1=__ PUMP2=__ [%]"
-            "L?", # Response: "Control LAMPS 1 to 5: Lx000 (x= uint8 bitwise 0x00054321)"
+            "l?", # Response: "Control LAMPS 1 to 5: Lx000 (x= uint8 bitwise 0x00054321)"
             "M?", # Response: "SET MassFlowController 2 = __ [ml], Set:M0000 to M0100"
             "N?", # Response: "Serial Number=____"
             "p?", # Response: "p val of VOC1 control loop = __ ; Set with: p0000 to p0999"
@@ -56,7 +56,7 @@ class instrument(object):
             "Q?", # Response: "Tubeheater SETPOINT=__[C]; Set temp with: Q0001 to Q080"
             "R?", # Response: "RH SETPOINT=___%; Set percentage with: R0000 to R0100"
 #            "T?", # Response: "time and date"; // TODO! Not ready yet because of missing battery;
-            "X?" # Response:"Control DATASTREAM: <ON> = X1000 or <OFF> = X0000 \r\n"
+#            "X?" # Response:"Control DATASTREAM: <ON> = X1000 or <OFF> = X0000 \r\n"
             ]
 
     def serial_ports(self):

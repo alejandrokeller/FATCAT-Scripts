@@ -335,7 +335,7 @@ class Visualizer(object):
         self.btnSERIAL.clicked.connect(self.sendSerialCMD)
         self.lblSERIAL     = QtGui.QLabel("Command:")
         self.lineSERIAL    = QtGui.QLineEdit()
-        validator = QtGui.QRegExpValidator(QtCore.QRegExp("[abFpirRXZ][0-9]{4}"))
+        validator = QtGui.QRegExpValidator(QtCore.QRegExp("[abFpirRXzZ][0-9]{4}"))
         self.lineSERIAL.setValidator(validator)
 
         ## Create a grid layout to manage the controls size and position
