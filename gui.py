@@ -96,18 +96,18 @@ class Visualizer(object):
             "runtime",
             "svoc1",
             "voc1",
-            "base1", # 20.9.2019 baseline VOC1
+            "base1",
             "svoc2",
             "voc2",
-            "base2", # 20.9.2019 baseline VOC1
+            "base2",
             "mfc1",
             "mfc2",
             "flow1",
             "flow2",
             "tuv",
             "iuv",
-            "inrH", # 20.9.2019 baseline VOC1
-            "inT", # 20.9.2019 baseline VOC1
+            "inrH",
+            "inT",
             "stvoc",
             "tuva",
             "sinrH",
@@ -225,9 +225,10 @@ class Visualizer(object):
         self.Tplot.showGrid(False, True)
         self.Tcurves[0] = self.Tplot.plot(self.t, self.df['tuva'],  pen=pg.mkPen('y', width=1), name='UVA T')
         self.Tcurves[1] = self.Tplot.plot(self.t, self.df['tuv'],   pen=pg.mkPen('r', width=1), name='UVC T')
-        self.Tcurves[2] = self.Tplot.plot(self.t, self.df['inT'],   pen=pg.mkPen('w', width=1), name='Inlet T')
-        self.Tcurves[3] = self.Tplot.plot(self.t, self.df['inrH'],  pen=pg.mkPen('c', width=1), name='Inlet rH')
-        self.Tcurves[4] = self.Tplot.plot(self.t, self.df['sinrH'], pen=pg.mkPen('c', width=1, style=QtCore.Qt.DashLine))
+        self.Tcurves[2] = self.Tplot.plot(self.t, self.df['tbath'], pen=pg.mkPen('m', width=1), name='Bath T')
+        self.Tcurves[3] = self.Tplot.plot(self.t, self.df['inT'],   pen=pg.mkPen('w', width=1), name='Inlet T')
+        self.Tcurves[4] = self.Tplot.plot(self.t, self.df['inrH'],  pen=pg.mkPen('c', width=1), name='Inlet rH')
+        self.Tcurves[5] = self.Tplot.plot(self.t, self.df['sinrH'], pen=pg.mkPen('c', width=1, style=QtCore.Qt.DashLine))
 
 #####################################################################
 
@@ -387,24 +388,26 @@ class Visualizer(object):
                 # Data is received in mlpm. Dividing through 1000 to use pyqugraph autolabeling
                 self.Tcurves[0].setData(self.t, self.df['tuva'])
                 self.Tcurves[1].setData(self.t, self.df['tuv'])
-                self.Tcurves[2].setData(self.t, self.df['inT'])
-                self.Tcurves[3].setData(self.t, self.df['inrH'])
+                self.Tcurves[2].setData(self.t, self.df['tbath'])
+                self.Tcurves[3].setData(self.t, self.df['inT'])
+                self.Tcurves[4].setData(self.t, self.df['inrH'])
 ##                self.Tcurves[4].setData(self.t, self.df['sinrH'])
                 if self.statusDict['rH']:
-                    self.Tcurves[4].setData(self.t, self.df['sinrH'])
+                    self.Tcurves[5].setData(self.t, self.df['sinrH'])
                 else:
-                    self.Tcurves[4].clear()
+                    self.Tcurves[5].clear()
 
                 
 ####################################################################
 
-                self.lblBathrH.setText("".join((str(int(newData['inrH'])), "/",
-                                               str(newData['sinrH']), " %rH")))
+                self.lblBathrH.setText("".join(("rH (Bath: ",
+                                                str(int(newData['tbath'])), " degC)")))
                 self.lblUVAT.setText("".join(("UVA: ", str(int(newData['tuva'])), " degC")))
                 self.lblLampsData.setText("".join(("UVC: ",str(int(newData['tuv'])), " degC, ",
                                                    str(int(newData['iuv']*self.device.uv_constant/1000)), " uA" )))
                 self.lblInletData.setText("".join(("Inlet: ",str(int(newData['inT'])), " degC, ",
-                                                   str(int(newData['inrH'])), "% rH" )))
+                                                   str(int(newData['inrH'])), "/",
+                                                   str(newData['sinrH']), "% rH" )))
 
                 # Initialize some indicators
                 if self.firstLoop:
