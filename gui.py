@@ -109,7 +109,7 @@ class Visualizer(object):
             "inrH", # 20.9.2019 baseline VOC1
             "inT", # 20.9.2019 baseline VOC1
             "stvoc",
-            "tvoc",
+            "tuva",
             "sinrH",
             "tbath",
             "status",
@@ -132,7 +132,7 @@ class Visualizer(object):
             float,  # inrH
             float,  # inT
             int,     # stvoc
-            float,   # tvoc
+            float,   # tuva
             int,     # sinrH
             float,   # tbath
             hex2bin, # status
@@ -156,7 +156,7 @@ class Visualizer(object):
             '%',    # inrH
             'degC', # inT
             'degC', # stvoc
-            'degC', # tvoc
+            'degC', # tuva
             'degC', # sinrH
             'degC', # tbath
             '-',    # status
@@ -174,7 +174,7 @@ class Visualizer(object):
             "res4",
             "res3",
             "rH",
-            "tube_heat",
+            "uva",
             "voc2",
             "voc1",
             "pump2",
@@ -205,53 +205,46 @@ class Visualizer(object):
         self.pen = pg.mkPen('y', width=1)
         self.t = np.linspace(-self.graphLength, 0, self.numSamples)
 
-        self.PIDcurves = dict()
+        self.UVCcurves = dict()
 
-        self.PIDplot = pg.PlotWidget()
-        self.PIDplot.addLegend()
-        #self.PIDplot.setRange(yRange=[0, 900])
-        self.PIDplot.setLabel('left', "PID voltage", units='mV')
-        self.PIDplot.setLabel('bottom', "t", units='s')
-        self.PIDplot.showGrid(False, True)
-        self.PIDcurves[0] = self.PIDplot.plot(self.t, self.df['svoc1'], pen=pg.mkPen('y', width=1, style=QtCore.Qt.DashLine))
-        self.PIDcurves[1] = self.PIDplot.plot(self.t, self.df['voc1'], pen=pg.mkPen('y', width=1), name='PID1')
-        self.PIDcurves[2] = self.PIDplot.plot(self.t, self.df['svoc2'], pen=pg.mkPen('r', width=1, style=QtCore.Qt.DashLine))
-        self.PIDcurves[3] = self.PIDplot.plot(self.t, self.df['voc2'], pen=pg.mkPen('r', width=1), name='PID2')
+        self.UVCplot = pg.PlotWidget()
+        self.UVCplot.addLegend()
+        #self.UVCplot.setRange(yRange=[0, 900])
+        self.UVCplot.setLabel('left', "UVC intensity", units='A')
+        self.UVCplot.setLabel('bottom', "t", units='s')
+        self.UVCplot.showGrid(False, True)
+        self.UVCcurves[0] = self.UVCplot.plot(self.t, self.df['iuv'], pen=pg.mkPen('y', width=1))
         
-        self.Fcurves = dict()
+        self.Tcurves = dict()
 
-        self.Fplot = pg.PlotWidget()
-        self.Fplot.addLegend()
-        self.Fplot.setRange(yRange=[-0.005, 0.105])
-        self.Fplot.setLabel('left', "VOC Flow", units='lpm')
-        self.Fplot.setLabel('bottom', "t", units='s')
-        self.Fplot.showGrid(False, True)
-        self.Fcurves[0] = self.Fplot.plot(self.t, self.df['mfc1'], pen=pg.mkPen('y', width=1), name='MFC1')
-        self.Fcurves[1] = self.Fplot.plot(self.t, self.df['mfc2'], pen=pg.mkPen('r', width=1), name='MFC2')
-        # currently the set variable does not exists
-        #self.Fcurves[3] = self.Fplot.plot(self.t, self.df['smfc2'], pen=pg.mkPen('r', width=1, style=QtCore.Qt.DashLine))
+        self.Tplot = pg.PlotWidget()
+        self.Tplot.addLegend()
+        self.Tplot.setRange(yRange=[-5.0, 105.0])
+        self.Tplot.setLabel('left', "Temp./Hum.", units='degC/rH')
+        self.Tplot.setLabel('bottom', "t", units='s')
+        self.Tplot.showGrid(False, True)
+        self.Tcurves[0] = self.Tplot.plot(self.t, self.df['tuva'],  pen=pg.mkPen('y', width=1), name='UVA T')
+        self.Tcurves[1] = self.Tplot.plot(self.t, self.df['tuv'],   pen=pg.mkPen('r', width=1), name='UVC T')
+        self.Tcurves[2] = self.Tplot.plot(self.t, self.df['inT'],   pen=pg.mkPen('w', width=1), name='Inlet T')
+        self.Tcurves[3] = self.Tplot.plot(self.t, self.df['inrH'],  pen=pg.mkPen('c', width=1), name='Inlet rH')
+        self.Tcurves[4] = self.Tplot.plot(self.t, self.df['sinrH'], pen=pg.mkPen('c', width=1, style=QtCore.Qt.DashLine))
 
 #####################################################################
 
         ## Define a top level widget to hold the controls
         self.widgets = QtGui.QWidget()
-        self.widgets.setWindowTitle("OCU: Organics Coating Unit")
+        self.widgets.setWindowTitle("MSC: Micro Smog Chamber")
         self.widgets.showFullScreen()
 
         ## Create infotext widgets to be placed inside
-        self.lblLamp      = QtGui.QLabel("Lamps")
-        self.lblVOCTctr   = QtGui.QLabel("VOC heater")
+        self.lblLamp      = QtGui.QLabel("UVC")
+        self.lblUVActr    = QtGui.QLabel("UVA")
         self.lblBath      = QtGui.QLabel("rH:")
         self.lblBathrH    = QtGui.QLabel("")
-        self.lblTube      = QtGui.QLabel("VOC:")
-        self.lblTubeT     = QtGui.QLabel("")
-        self.lblVOC1      = QtGui.QLabel("VOC1 ()")
-        self.lblVOC2      = QtGui.QLabel("VOC2 ()")
-        self.lblPump1     = QtGui.QLabel("Pump1")
-        self.lblPump2     = QtGui.QLabel("Pump2")
+##        self.lblUVA      = QtGui.QLabel("UVA:")
+        self.lblUVAT     = QtGui.QLabel("")
         self.lblLamps     = QtGui.QLabel("OFR:")
         self.lblLampsData = QtGui.QLabel("")
-        # added 20.9.2019
         self.lblInlet     = QtGui.QLabel("Inlet:")
         self.lblInletData = QtGui.QLabel("")
         
@@ -262,63 +255,17 @@ class Visualizer(object):
         self.btnLamp      = QtGui.QPushButton("")            # Turn lamps on or off
         self.btnLamp.setFixedWidth(button_size)
         self.btnLamp.setFixedHeight(button_size)
-        self.btnVOCTctr   = QtGui.QPushButton("")            # Turn VOC heater on or off
-        self.btnVOCTctr.setFixedHeight(button_size)
-        self.btnVOCTctr.setFixedWidth(button_size)
+        self.btnUVActr   = QtGui.QPushButton("")            # Turn UVA on or off
+        self.btnUVActr.setFixedHeight(button_size)
+        self.btnUVActr.setFixedWidth(button_size)
         self.btnBath      = QtGui.QPushButton("")            # Turn rH control on/off
         self.btnBath.setFixedWidth(button_size)
         self.btnBath.setFixedHeight(button_size)
-        self.btnTube      = QtGui.QPushButton("")             # Turn Tube Heating on/off
-        self.btnTube.setFixedWidth(button_size)
-        self.btnTube.setFixedHeight(button_size)
-        self.btnVOC1      = QtGui.QPushButton("")             # TURN VOC1 control on/off
-        self.btnVOC1.setFixedWidth(button_size)
-        self.btnVOC1.setFixedHeight(button_size)
-        self.btnVOC2      = QtGui.QPushButton("")            # TURN VOC2 control on/off
-        self.btnVOC2.setFixedWidth(button_size)
-        self.btnVOC2.setFixedHeight(button_size)
-        self.btnPump1     = QtGui.QPushButton("")            # Turn pump 1 on/off
-        self.btnPump1.setFixedWidth(button_size)
-        self.btnPump1.setFixedHeight(button_size)
-        self.btnPump2     = QtGui.QPushButton("")            # Turn pump 2 on/off
-        self.btnPump2.setFixedWidth(button_size)
-        self.btnPump2.setFixedHeight(button_size)
 
         self.btnLamp.clicked.connect(self.toggleAllLamps)
-        self.btnVOCTctr.clicked.connect(self.toggleVOCHeater)
-        self.btnVOC1.clicked.connect(self.toggleVOC1)
-        self.btnVOC2.clicked.connect(self.toggleVOC2)
-        self.btnPump1.clicked.connect(self.togglePump1)
-        self.btnPump2.clicked.connect(self.togglePump2)
+        self.btnUVActr.clicked.connect(self.toggleUVA)
         self.btnBath.clicked.connect(self.togglerH)
 
-        ## Create widgets for controlling MFC2
-        self.btnMFC2      = QtGui.QPushButton(">>")  # Sends new MFC2 flow
-        self.btnMFC2.setFixedWidth(button_size)
-        self.btnMFC2.setFixedHeight(button_size)
-        self.btnMFC2.clicked.connect(self.setMFC2)
-        self.lblMFC2      = QtGui.QLabel("MFC2 (mlpm):")
-        self.spMFC2       = QtGui.QSpinBox()
-        self.spMFC2.setRange(0,100)
-
-        ## Create widgets for controlling VOC1
-        self.btnSVOC1      = QtGui.QPushButton(">>")  # Sends new MFC2 flow
-        self.btnSVOC1.setFixedWidth(button_size)
-        self.btnSVOC1.setFixedHeight(button_size)
-        self.btnSVOC1.clicked.connect(self.setSVOC1)
-        self.lblSVOC1      = QtGui.QLabel("VOC1 (mV):")
-        self.spSVOC1       = QtGui.QSpinBox()
-        self.spSVOC1.setRange(0,2500)
-
-        ## Create widgets for controlling VOC Heater
-        self.btnVOCT       = QtGui.QPushButton(">>")  # Sends new MFC2 flow
-        self.btnVOCT.setFixedWidth(button_size)
-        self.btnVOCT.setFixedHeight(button_size)
-        self.btnVOCT.clicked.connect(self.setVOCT)
-        self.lblVOCT       = QtGui.QLabel("VOC (degC):")
-        self.spVOCT        = QtGui.QSpinBox()
-        self.spVOCT.setRange(0,80)
-        
         ## Create widgets for controlling rH
         self.btnRH         = QtGui.QPushButton(">>")  # Sends new MFC2 flow
         self.btnRH.setFixedWidth(button_size)
@@ -335,7 +282,7 @@ class Visualizer(object):
         self.btnSERIAL.clicked.connect(self.sendSerialCMD)
         self.lblSERIAL     = QtGui.QLabel("Command:")
         self.lineSERIAL    = QtGui.QLineEdit()
-        validator = QtGui.QRegExpValidator(QtCore.QRegExp("[abFpirRXzZ][0-9]{4}"))
+        validator = QtGui.QRegExpValidator(QtCore.QRegExp("[abFpqirRXzZ][0-9]{4}"))
         self.lineSERIAL.setValidator(validator)
 
         ## Create a grid layout to manage the controls size and position
@@ -359,41 +306,15 @@ class Visualizer(object):
             self.lampsButtonsLayout.addWidget(self.lamps[i])
 
         ## Add widgets to the layout in their proper positions
-        self.controlsLayout.addWidget(self.lblLamp,      0, 1)
-        self.controlsLayout.addWidget(self.lblVOCTctr,   1, 1)
-        self.controlsLayout.addWidget(self.lblVOC1,      2, 1)
-        self.controlsLayout.addWidget(self.lblVOC2,      3, 1)
-        self.controlsLayout.addWidget(self.lblPump1,     4, 1)
-        self.controlsLayout.addWidget(self.lblPump2,     5, 1)
-        #self.controlsLayout.addWidget(self.lblBath,      6, 0)
-        self.controlsLayout.addWidget(self.lblBathrH,    6, 1)
-        #self.controlsLayout.addWidget(self.lblTube,      7, 0)
-        #self.controlsLayout.addWidget(self.lblTubeT,     7, 1)
-        #self.controlsLayout.addWidget(self.lblLamps,     8, 0)
-        #self.controlsLayout.addWidget(self.lblLampsData, 8, 1)
-        #self.controlsLayout.addWidget(self.lblInlet,     9, 0)
-        #self.controlsLayout.addWidget(self.lblInletData, 9, 1)
+        self.controlsLayout.addWidget(self.lblLamp,      2, 1)
+        self.controlsLayout.addWidget(self.lblUVActr,    1, 1)
+        self.controlsLayout.addWidget(self.lblBathrH,    0, 1)
 
-##        self.controlsLayout.addWidget(self.lblCD,    9, 0, 1, 2) # example of two spaces horizontal (one vertical)
-
-        self.controlsLayout.addWidget(self.btnLamp,     0, 0)
-        self.controlsLayout.addWidget(self.btnVOCTctr,  1, 0)
-        self.controlsLayout.addWidget(self.btnVOC1,     2, 0)
-        self.controlsLayout.addWidget(self.btnVOC2,     3, 0)
-        self.controlsLayout.addWidget(self.btnPump1,    4, 0)
-        self.controlsLayout.addWidget(self.btnPump2,    5, 0)
-        self.controlsLayout.addWidget(self.btnBath,     6, 0)
+        self.controlsLayout.addWidget(self.btnLamp,     2, 0)
+        self.controlsLayout.addWidget(self.btnUVActr,   1, 0)
+        self.controlsLayout.addWidget(self.btnBath,     0, 0)
 
         ## Add Widgets to the MFCLayout
-        self.mfcLayout.addWidget(self.lblSVOC1,    0, 0)
-        self.mfcLayout.addWidget(self.spSVOC1,     0, 1)
-        self.mfcLayout.addWidget(self.btnSVOC1,    0, 2)
-        self.mfcLayout.addWidget(self.lblVOCT,     1, 0)
-        self.mfcLayout.addWidget(self.spVOCT,      1, 1)
-        self.mfcLayout.addWidget(self.btnVOCT,     1, 2)
-        self.mfcLayout.addWidget(self.lblMFC2,     2, 0)
-        self.mfcLayout.addWidget(self.spMFC2,      2, 1)
-        self.mfcLayout.addWidget(self.btnMFC2,     2, 2)
         self.mfcLayout.addWidget(self.lblRH,       3, 0)
         self.mfcLayout.addWidget(self.spRH,        3, 1)
         self.mfcLayout.addWidget(self.btnRH,       3, 2)
@@ -407,15 +328,15 @@ class Visualizer(object):
         ## Create a QHBox for the text info
         self.textLayout = QtGui.QHBoxLayout()
 #        self.textLayout.addWidget(self.lblTube)
-        self.textLayout.addWidget(self.lblTubeT)
+        self.textLayout.addWidget(self.lblUVAT)
 #        self.textLayout.addWidget(self.lblLamps)
         self.textLayout.addWidget(self.lblLampsData)
 #        self.textLayout.addWidget(self.lblInlet)
         self.textLayout.addWidget(self.lblInletData)
         self.plotLayout.addLayout(self.textLayout)
 
-        self.plotLayout.addWidget(self.PIDplot)
-        self.plotLayout.addWidget(self.Fplot)
+        self.plotLayout.addWidget(self.UVCplot)
+        self.plotLayout.addWidget(self.Tplot)
 
         ## Create a QHBox layout to manage the plots
         self.centralLayout = QtGui.QHBoxLayout()
@@ -461,48 +382,33 @@ class Visualizer(object):
                         ## LampString has the most significant bit to the left
                         self.lampString = self.lampString + statusbyte[j]
 
-                if self.statusDict['voc1']:
-                    self.PIDcurves[0].setData(self.t, self.df['svoc1'])
-                    self.PIDcurves[1].setData(self.t, self.df['voc1'])
-                else:
-                    self.PIDcurves[0].clear()
-                    self.PIDcurves[1].clear()
-
-                if self.statusDict['voc2']:
-                    self.PIDcurves[2].clear()
-                    #self.PIDcurves[2].setData(self.t, self.df['svoc2'])
-                    self.PIDcurves[3].setData(self.t, self.df['voc2'])
-                else:
-                    self.PIDcurves[2].clear()
-                    self.PIDcurves[3].clear()
+                self.UVCcurves[0].setData(self.t, self.df['iuv']*self.device.uv_constant/1000/1000000)
 
                 # Data is received in mlpm. Dividing through 1000 to use pyqugraph autolabeling
-                self.Fcurves[0].setData(self.t, self.df['mfc1']/1000)
-                self.Fcurves[1].setData(self.t, self.df['mfc2']/1000)
+                self.Tcurves[0].setData(self.t, self.df['tuva'])
+                self.Tcurves[1].setData(self.t, self.df['tuv'])
+                self.Tcurves[2].setData(self.t, self.df['inT'])
+                self.Tcurves[3].setData(self.t, self.df['inrH'])
+##                self.Tcurves[4].setData(self.t, self.df['sinrH'])
+                if self.statusDict['rH']:
+                    self.Tcurves[4].setData(self.t, self.df['sinrH'])
+                else:
+                    self.Tcurves[4].clear()
+
                 
 ####################################################################
 
                 self.lblBathrH.setText("".join((str(int(newData['inrH'])), "/",
                                                str(newData['sinrH']), " %rH")))
-                self.lblTubeT.setText("".join(("VOC: ", str(int(newData['tvoc'])), "/",
-                                               str(newData['stvoc']), " degC")))
-                self.lblLampsData.setText("".join(("ORF: ",str(int(newData['tuv'])), " degC, ",
+                self.lblUVAT.setText("".join(("UVA: ", str(int(newData['tuva'])), " degC")))
+                self.lblLampsData.setText("".join(("UVC: ",str(int(newData['tuv'])), " degC, ",
                                                    str(int(newData['iuv']*self.device.uv_constant/1000)), " uA" )))
                 self.lblInletData.setText("".join(("Inlet: ",str(int(newData['inT'])), " degC, ",
                                                    str(int(newData['inrH'])), "% rH" )))
-                self.lblPump1.setText("".join(("Pump1 (", "{:.1f}".format(newData['flow1']), " slpm)")))
-                self.lblPump2.setText("".join(("Pump2 (", "{:.1f}".format(newData['flow2']), " slpm)")))
-                self.lblVOC1.setText("".join(("VOC1: ",str(int(newData['voc1'])), "/",
-                                               str(newData['svoc1']), " mV")))
-                self.lblVOC2.setText("".join(("VOC2: ",str(int(newData['voc2'])), " mV")))
-                #self.lblMFC2.setText("".join(("MFC2: ",str(int(newData['mfc2'])), " mlpm")))
 
                 # Initialize some indicators
                 if self.firstLoop:
                     self.firstLoop = False
-                    self.spMFC2.setValue(int(newData['mfc2']))
-                    self.spSVOC1.setValue(int(newData['svoc1']))
-                    self.spVOCT.setValue(int(newData['stvoc']))
                     self.spRH.setValue(int(newData['sinrH']))
                     
 
@@ -526,30 +432,10 @@ class Visualizer(object):
                     else:
                         btn.setStyleSheet("background-color: red")
 
-                if self.statusDict['voc1']:
-                    self.lblVOC1.setStyleSheet('color: green')
+                if self.statusDict['uva']:
+                    self.lblUVActr.setStyleSheet('color: green')
                 else:
-                    self.lblVOC1.setStyleSheet('color: red')
-
-                if self.statusDict['voc2']:
-                    self.lblVOC2.setStyleSheet('color: green')
-                else:
-                    self.lblVOC2.setStyleSheet('color: red')
-
-                if self.statusDict['tube_heat']:
-                    self.lblVOCTctr.setStyleSheet('color: green')
-                else:
-                    self.lblVOCTctr.setStyleSheet('color: red')
-
-                if self.statusDict['pump1']:
-                    self.lblPump1.setStyleSheet('color: green')
-                else:
-                    self.lblPump1.setStyleSheet('color: red')
-
-                if self.statusDict['pump2']:
-                    self.lblPump2.setStyleSheet('color: green')
-                else:
-                    self.lblPump2.setStyleSheet('color: red')
+                    self.lblUVActr.setStyleSheet('color: red')
 
                 if self.statusDict['rH']:
                     self.lblBathrH.setStyleSheet('color: green')
@@ -566,14 +452,14 @@ class Visualizer(object):
         self.device.send_commands(commands, open_port = True)
         self.lineSERIAL.clear()
 
-    def setMFC2(self):
-        self.device.set_mfc2(self.spMFC2.value() ,open_port = True)
-
-    def setSVOC1(self):
-        self.device.set_voc1(self.spSVOC1.value() ,open_port = True)
-
-    def setVOCT(self):
-        self.device.set_tubeT(self.spVOCT.value() ,open_port = True)
+##    def setMFC2(self):
+##        self.device.set_mfc2(self.spMFC2.value() ,open_port = True)
+##
+##    def setSVOC1(self):
+##        self.device.set_voc1(self.spSVOC1.value() ,open_port = True)
+##
+##    def setVOCT(self):
+##        self.device.set_tubeT(self.spVOCT.value() ,open_port = True)
         
     def setRH(self):
         self.device.set_rH(self.spRH.value() ,open_port = True)
@@ -596,40 +482,40 @@ class Visualizer(object):
         print "New lamp String: " + new_string[::-1]
         self.device.set_lamps(new_string, open_port = True)
 
-    def toggleVOCHeater(self):
-        if self.statusDict['tube_heat']:
+    def toggleUVA(self):
+        if self.statusDict['uva']:
             commands = [self.device.tube_off_str]
         else:
             commands = [self.device.tube_on_str]
         self.device.send_commands(commands, open_port = True)
         
-    def toggleVOC1(self):
-        if self.statusDict['voc1']:
-            commands = [self.device.voc1_off_str]
-        else:
-            commands = [self.device.voc1_on_str]
-        self.device.send_commands(commands, open_port = True)
-
-    def toggleVOC2(self):
-        if self.statusDict['voc2']:
-            commands = [self.device.voc2_off_str]
-        else:
-            commands = [self.device.voc2_on_str]
-        self.device.send_commands(commands, open_port = True)
-
-    def togglePump1(self):
-        if self.statusDict['pump1']:
-            commands = [self.device.pump1_off_str]
-        else:
-            commands = [self.device.pump1_on_str]
-        self.device.send_commands(commands, open_port = True)
-
-    def togglePump2(self):
-        if self.statusDict['pump2']:
-            commands = [self.device.pump2_off_str]
-        else:
-            commands = [self.device.pump2_on_str]
-        self.device.send_commands(commands, open_port = True)
+##    def toggleVOC1(self):
+##        if self.statusDict['voc1']:
+##            commands = [self.device.voc1_off_str]
+##        else:
+##            commands = [self.device.voc1_on_str]
+##        self.device.send_commands(commands, open_port = True)
+##
+##    def toggleVOC2(self):
+##        if self.statusDict['voc2']:
+##            commands = [self.device.voc2_off_str]
+##        else:
+##            commands = [self.device.voc2_on_str]
+##        self.device.send_commands(commands, open_port = True)
+##
+##    def togglePump1(self):
+##        if self.statusDict['pump1']:
+##            commands = [self.device.pump1_off_str]
+##        else:
+##            commands = [self.device.pump1_on_str]
+##        self.device.send_commands(commands, open_port = True)
+##
+##    def togglePump2(self):
+##        if self.statusDict['pump2']:
+##            commands = [self.device.pump2_off_str]
+##        else:
+##            commands = [self.device.pump2_on_str]
+##        self.device.send_commands(commands, open_port = True)
         
     def togglerH(self):
         if self.statusDict['rH']:
