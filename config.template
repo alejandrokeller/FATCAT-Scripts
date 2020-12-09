@@ -1,7 +1,7 @@
 [GENERAL_SETTINGS]
-LOGS_PATH: '/home/pi/fatcat-files/logs'
-DATA_PATH: '/home/pi/fatcat-files/data'
-EVENTS_PATH: '/home/pi/fatcat-files/data/events'
+LOGS_PATH: '/home/pi/msc-files/logs'
+DATA_PATH: '/home/pi/msc-files/data'
+EVENTS_PATH: '/home/pi/msc-files/data/events'
 
 [TCP_INTERFACE]
 HOST_NAME: '127.0.0.1'
@@ -19,7 +19,7 @@ SERIAL_TIMEOUT: 1
 HEADER: 'extras/columns.txt'
 BUFFER: 30
 SENSE: False
-DATAFILE: 'FATCAT'
+DATAFILE: 'MSC'
 EXTENSION: '.txt'
 SN: True
 
@@ -27,14 +27,6 @@ SN: True
 PLOT_STYLE: 'ggplot'
 FILE_FORMAT: 'svg'
 ERROR_EVERY: 4
-
-[DATA_ANALYSIS]
-BASELINE_PATH: '/home/pi/fatcat-files/data/baseline'
-BASELINE_FILE: 'zero_event.csv'
-SUMMARY_PATH:  '/home/pi/fatcat-files/data/summaries'
-SUMMARY_FILE:   'summary_output.csv'
-INTEGRAL_LENGTH: 65
-EVENT_LENGTH: 120
 
 [CALIBRATION]
 UV_CONSTANT: 545.45

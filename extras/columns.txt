@@ -1,2 +1,2 @@
-Daytime	Time	SP VOC1	VOC1	Base1	SP VOC2	VOC2	Base2	MFC1	MFC2	flow1	flow2	UV Temperature	UV Current (545.45 nA/V)	Inlet rH	Inlet T	SP Tube Temp	Tube Temp	SP rH	Bath Temp	Status Byte	Lamps Status
+Daytime	Time	SP VOC1	VOC1	Base1	SP VOC2	VOC2	Base2	MFC1	MFC2	flow1	flow2	UV Temperature	UV Current (545.45 nA/V)	Inlet rH	Inlet T	SP Tube Temp	UVA Temp	SP rH	Bath Temp	Status Byte	Lamps Status
 hh:mm:ss	s	mV	mV	mV	mV	mV	mV	ml	ml	slpm	slpm	degC	mV	%	degC	degC	degC	%	degC	-	-
