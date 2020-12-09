@@ -28,8 +28,8 @@ class instrument(object):
         self.stop_str      = 'X0!'
         self.start_str     = 'X1!'
         self.zeroPID_str   = 'Z1100!'
-        self.tube_off_str  = 'q0000!'
-        self.tube_on_str   = 'q1000!'
+        self.uva_off_str   = 'q0000!'
+        self.uva_on_str    = 'q1000!'
         self.voc1_off_str  = 'C1000!'
         self.voc1_on_str   = 'C1100!'
         self.voc2_off_str  = 'C2000!'
@@ -44,16 +44,16 @@ class instrument(object):
         self.queries = [
             "a?", # Response: "p values: P1=x; P2=5; BATH:0; Set: px000 to px999" controls pump and humidification
             "b?", # Response: "i values: P1=x; P2=5; BATH:0; Set: ix000 to ix999" controls pump and humidification
-            "C?", # Response: "PID1=[value in mv], PID2=[value in mv], to Control PIDx: <ON> = Cx100 or <OFF> = Cx000"
-            "E?", # Response: "Status PUMP1=__, PUMP2=__, to Control PUMPx: <ON> = Ex100 or <OFF> = Ex000"
-            "F?", # Response: "SetPoint PUMP1=__ PUMP2=__ [%]"
+#            "C?", # Response: "PID1=[value in mv], PID2=[value in mv], to Control PIDx: <ON> = Cx100 or <OFF> = Cx000"
+#            "E?", # Response: "Status PUMP1=__, PUMP2=__, to Control PUMPx: <ON> = Ex100 or <OFF> = Ex000"
+#            "F?", # Response: "SetPoint PUMP1=__ PUMP2=__ [%]"
             "l?", # Response: "Control LAMPS 1 to 5: Lx000 (x= uint8 bitwise 0x00054321)"
-            "M?", # Response: "SET MassFlowController 2 = __ [ml], Set:M0000 to M0100"
+#            "M?", # Response: "SET MassFlowController 2 = __ [ml], Set:M0000 to M0100"
             "N?", # Response: "Serial Number=____"
-            "p?", # Response: "p val of VOC1 control loop = __ ; Set with: p0000 to p0999"
-            "i?", # Response: "i val of VOC1 control loop = __ ; Set with: i0001 to i0999"
-            "P?", # Response: "VOC1 SETPOINT=____ [mV]; Set with: P0000 to P2500"
-            "Q?", # Response: "Tubeheater SETPOINT=__[C]; Set temp with: Q0001 to Q080"
+#            "p?", # Response: "p val of VOC1 control loop = __ ; Set with: p0000 to p0999"
+#            "i?", # Response: "i val of VOC1 control loop = __ ; Set with: i0001 to i0999"
+#            "P?", # Response: "VOC1 SETPOINT=____ [mV]; Set with: P0000 to P2500"
+#            "Q?", # Response: "Tubeheater SETPOINT=__[C]; Set temp with: Q0001 to Q080"
             "R?", # Response: "RH SETPOINT=___%; Set percentage with: R0000 to R0100"
 #            "T?", # Response: "time and date"; // TODO! Not ready yet because of missing battery;
 #            "X?" # Response:"Control DATASTREAM: <ON> = X1000 or <OFF> = X0000 \r\n"
@@ -116,20 +116,6 @@ class instrument(object):
         if open_port:
             self.close_port()
 
-    def set_pump(self, pump, flow, open_port = False):
-        c = 'L{}{0:03d}!'.format(pump,flow)
-        if flow >= 0 and flow <= 100 and ( pump == 1 or pump == 2):
-            self.send_commands([c], open_port = open_port)
-        else:
-            self.log_message("SERIAL", "Pump setting invalid: '" + c + "'")
-
-    def set_mfc2(self, flow, open_port = False): # flow must be in ml
-        c = 'M{0:04d}!'.format(flow)
-        if flow >= 0 and flow <= 100:
-            self.send_commands([c], open_port = open_port)
-        else:
-            self.log_message("SERIAL", "MFC setting invalid: '" + c + "'")
-
     def set_lamps(self, binary_pattern, open_port = False): # i.e. '11111' for all lamps on
         lamps = int(binary_pattern, 2)
         offset = int('01000000',2)
@@ -140,20 +126,6 @@ class instrument(object):
             self.send_commands([c], open_port = open_port)
         else:
             self.log_message("SERIAL", "Lamp pattern invalid: '" + c + "'")
-
-    def set_voc1(self, mv, open_port = False): # set point in milivolts
-        c = 'P{0:04d}!'.format(mv)
-        if mv >= 0 and mv <= 2500:
-            self.send_commands([c], open_port = open_port)
-        else:
-            self.log_message("SERIAL", "VOC1 setting invalid: '" + c + "'")
-
-    def set_tubeT(self, temperature, open_port = False): # in degC
-        c = 'Q{0:04d}!'.format(temperature)
-        if temperature > 0 and temperature <= 80:
-            self.send_commands([c], open_port = open_port)
-        else:
-            self.log_message("SERIAL", "Tube temperature setting invalid: '" + c + "'")
 
     def set_rH(self, rH, open_port = False): # in %rH
         c = 'R{0:04d}!'.format(rH)

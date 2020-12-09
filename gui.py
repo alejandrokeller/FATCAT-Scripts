@@ -454,15 +454,6 @@ class Visualizer(object):
         print >> sys.stderr, commands
         self.device.send_commands(commands, open_port = True)
         self.lineSERIAL.clear()
-
-##    def setMFC2(self):
-##        self.device.set_mfc2(self.spMFC2.value() ,open_port = True)
-##
-##    def setSVOC1(self):
-##        self.device.set_voc1(self.spSVOC1.value() ,open_port = True)
-##
-##    def setVOCT(self):
-##        self.device.set_tubeT(self.spVOCT.value() ,open_port = True)
         
     def setRH(self):
         self.device.set_rH(self.spRH.value() ,open_port = True)
@@ -487,39 +478,11 @@ class Visualizer(object):
 
     def toggleUVA(self):
         if self.statusDict['uva']:
-            commands = [self.device.tube_off_str]
+            commands = [self.device.uva_off_str]
         else:
-            commands = [self.device.tube_on_str]
-        self.device.send_commands(commands, open_port = True)
-        
-##    def toggleVOC1(self):
-##        if self.statusDict['voc1']:
-##            commands = [self.device.voc1_off_str]
-##        else:
-##            commands = [self.device.voc1_on_str]
-##        self.device.send_commands(commands, open_port = True)
-##
-##    def toggleVOC2(self):
-##        if self.statusDict['voc2']:
-##            commands = [self.device.voc2_off_str]
-##        else:
-##            commands = [self.device.voc2_on_str]
-##        self.device.send_commands(commands, open_port = True)
-##
-##    def togglePump1(self):
-##        if self.statusDict['pump1']:
-##            commands = [self.device.pump1_off_str]
-##        else:
-##            commands = [self.device.pump1_on_str]
-##        self.device.send_commands(commands, open_port = True)
-##
-##    def togglePump2(self):
-##        if self.statusDict['pump2']:
-##            commands = [self.device.pump2_off_str]
-##        else:
-##            commands = [self.device.pump2_on_str]
-##        self.device.send_commands(commands, open_port = True)
-        
+            commands = [self.device.uva_on_str]
+        self.device.send_commands(commands, open_port = True)        
+       
     def togglerH(self):
         if self.statusDict['rH']:
             commands = [self.device.rH_off_str]
