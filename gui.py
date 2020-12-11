@@ -94,39 +94,39 @@ class Visualizer(object):
 
         self.keys = [
             "runtime",
-            "svoc1",
-            "voc1",
-            "base1",
-            "svoc2",
-            "voc2",
-            "base2",
-            "mfc1",
-            "mfc2",
-            "flow1",
-            "flow2",
-            "tuv",
-            "iuv",
-            "inrH",
-            "inT",
-            "stvoc",
-            "tuva",
-            "sinrH",
-            "tbath",
-            "status",
-            "lamps"
+##            "svoc1",
+##            "voc1",
+##            "base1",
+##            "svoc2",
+##            "voc2",
+##            "base2",
+##            "mfc1",
+##            "mfc2",
+##            "flow1",
+            "iuva",     # uva_curr 0.0 mV
+            "tuv",      # uvc temperature
+            "iuv",      # uvc_curr 0.0 mV
+            "inrH",     # AD5593_ADC_CH0 rH Inlet [%]
+            "inT",      # AD5593_ADC_CH1 Temperature Inlet 0.0 [C]
+            "stvoc",    # Unused
+            "tuva",     # AD5593_ADC_CH2 Temperature UVA *** Unused ***
+            "sinrH",    # set point bath rH
+            "tbath",    # AD5593_ADC_CH3 Bath Temperature
+            "status",   # HEX Byte
+            "lamps"     # UVC lamp status byte
             ]
         self.functions = [
             float,  # runtime
-            int,    # svoc1
-            float,  # voc1
-            float,  # base1
-            int,    # svoc2
-            float,  # voc2
-            float,  # base2
-            float,  # mfc1
-            float,  # mfc2
-            float,  # flow1
-            float,  # flow2
+##            int,    # svoc1
+##            float,  # voc1
+##            float,  # base1
+##            int,    # svoc2
+##            float,  # voc2
+##            float,  # base2
+##            float,  # mfc1
+##            float,  # mfc2
+##            float,  # flow1
+            float,  # iuva
             float,  # tuv
             float,  # iuv
             float,  # inrH
@@ -141,18 +141,18 @@ class Visualizer(object):
         
         self.units = [
             's',    # runtime
-            'mV',   # svoc1
-            'mV',   # voc1
-            'mV',   # base1
-            'mV',   # svoc2
-            'mV',   # voc2
-            'mV',   # base2
-            'ml',   # mfc1
-            'ml',   # mfc2
-            'slpm', # flow1
-            'slpm', # flow2
+##            'mV',   # svoc1
+##            'mV',   # voc1
+##            'mV',   # base1
+##            'mV',   # svoc2
+##            'mV',   # voc2
+##            'mV',   # base2
+##            'ml',   # mfc1
+##            'ml',   # mfc2
+##            'slpm', # flow1
+            'mV', # iuva
             'degC', # tuv
-            'mv',   # iuv
+            'mV',   # iuv
             '%',    # inrH
             'degC', # inT
             'degC', # stvoc
@@ -213,7 +213,8 @@ class Visualizer(object):
         self.UVCplot.setLabel('left', "UVC intensity", units='A')
         self.UVCplot.setLabel('bottom', "t", units='s')
         self.UVCplot.showGrid(False, True)
-        self.UVCcurves[0] = self.UVCplot.plot(self.t, self.df['iuv'], pen=pg.mkPen('y', width=1))
+        self.UVCcurves[0] = self.UVCplot.plot(self.t, self.df['iuv'], pen=pg.mkPen('y', width=1), name='UVC')
+        self.UVCcurves[1] = self.UVCplot.plot(self.t, self.df['iuva'], pen=pg.mkPen('r', width=1), name='UVA')
         
         self.Tcurves = dict()
 
@@ -384,6 +385,7 @@ class Visualizer(object):
                         self.lampString = self.lampString + statusbyte[j]
 
                 self.UVCcurves[0].setData(self.t, self.df['iuv']*self.device.uv_constant/1000/1000000)
+                self.UVCcurves[1].setData(self.t, self.df['iuva']*self.device.uv_constant/1000/1000000)
 
                 # Data is received in mlpm. Dividing through 1000 to use pyqugraph autolabeling
                 self.Tcurves[0].setData(self.t, self.df['tuva'])
@@ -402,7 +404,8 @@ class Visualizer(object):
 
                 self.lblBathrH.setText("".join(("rH (Bath: ",
                                                 str(int(newData['tbath'])), " degC)")))
-                self.lblUVAT.setText("".join(("UVA: ", str(int(newData['tuva'])), " degC")))
+                self.lblUVAT.setText("".join(("UVA: ", str(int(newData['tuva'])), " degC, ",
+                                                   str(int(newData['iuva'])), " ", self.unitsDict['iuva'])))
                 self.lblLampsData.setText("".join(("UVC: ",str(int(newData['tuv'])), " degC, ",
                                                    str(int(newData['iuv']*self.device.uv_constant/1000)), " uA" )))
                 self.lblInletData.setText("".join(("Inlet: ",str(int(newData['inT'])), " degC, ",
