@@ -914,6 +914,9 @@ if __name__ == "__main__":
     parser.add_argument('--alt-baseline', required=False, dest='altbaseline',
                         help="Points to an alternative path storing the baseline file.")
     parser.set_defaults(basedict=True)
+    parser.add_argument("-p", "--param",
+                        help="Plots also an additional parameter (e.g., {})".format("toven, pco2, co2, flow, countdown, co2-event, dtc, elapsed-time, baseline, dtc-baseline"),
+                        dest='param')
     
     args = parser.parse_args()
 
@@ -1092,6 +1095,12 @@ if __name__ == "__main__":
                     mydata.create_plot(style=plot_style, format=plot_format, mute = not args.individual_plots,
                                        axeslabel = axeslabel, legend = legend,
                                        xmax = xmax, ymax = ymax)
+
+            if args.param in mydata.keys:
+                print mydata.keys
+                mydata.create_dualplot(style=plot_style, format=plot_format, mute = not args.individual_plots,
+                                           xmax = xmax, y1max = tempmax, y2 = args.param, y3 = False)
+
 
         # write the results table to the summary file and include the stats in file header
         stats_df = generate_df_stats(results.summary)
