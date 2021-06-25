@@ -595,6 +595,7 @@ class ResultsList(object):
                         style='ggplot'):
 
         plt.style.use('ggplot')
+        show_y3 = False
 
         # definitions for the axes
         spacing = 0.01
@@ -1154,7 +1155,7 @@ if __name__ == "__main__":
             box_plot(results.summary['date']+' '+results.summary['time'], results.summary[box_y], r'$\mu$g-C', 'Total Carbon', filename, format=plot_format, date_format='%Y-%m-%d %H:%M:%S')
             if not args.mute:
                 if args.param:
-                    results.animated_plot(y2=args.param)
+                    results.animated_plot(y2=args.param, y3=None)
                 elif args.fit:
                     results.animated_plot(y3='dtc-baseline', y2='fitted data')
                 else:
