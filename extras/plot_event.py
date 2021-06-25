@@ -1071,6 +1071,11 @@ if __name__ == "__main__":
                 
             results.append_event(mydata)
 
+            if (args.param and (not args.param in mydata.keys)):
+                log_message("Alternative parameter muss be in this list: {}".format(mydata.keys))
+                args.param = False
+                
+
             if args.tplot:
                 axeslabel = {'y2' : r'$\Delta$TC'}
                 if args.fit:
@@ -1096,8 +1101,7 @@ if __name__ == "__main__":
                                        axeslabel = axeslabel, legend = legend,
                                        xmax = xmax, ymax = ymax)
 
-            if args.param in mydata.keys:
-                print mydata.keys
+            if args.param:
                 mydata.create_dualplot(style=plot_style, format=plot_format, mute = not args.individual_plots,
                                            xmax = xmax, y1max = tempmax, y2 = args.param, y3 = False)
 
@@ -1149,7 +1153,9 @@ if __name__ == "__main__":
         if results.n > 1:
             box_plot(results.summary['date']+' '+results.summary['time'], results.summary[box_y], r'$\mu$g-C', 'Total Carbon', filename, format=plot_format, date_format='%Y-%m-%d %H:%M:%S')
             if not args.mute:
-                if args.fit:
+                if args.param:
+                    results.animated_plot(y2=args.param)
+                elif args.fit:
                     results.animated_plot(y3='dtc-baseline', y2='fitted data')
                 else:
                     results.animated_plot()
