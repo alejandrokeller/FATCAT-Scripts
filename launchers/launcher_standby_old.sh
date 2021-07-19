@@ -4,5 +4,4 @@
 
 cd /FATCAT-scripts/commands
 ./fatcat_select_mode.py --standby --analysis
-./serial_commands.py --valve off
 cd /
