@@ -14,6 +14,9 @@ import re              # for regular expression matching
 base_path = os.path.abspath(os.path.dirname(sys.argv[0]))
 sys.path.append(base_path + '/extras/')
 
+import matplotlib # import previous to plot_event to avoid "server connection error"
+matplotlib.use('Agg') # needed when running from cronjob
+
 from fatcat_uploader import Uploader # httpsend command for uploading data
 from fatcat_uploader import FileUploader # httpsend command for uploading data
 from plot_event import Datafile

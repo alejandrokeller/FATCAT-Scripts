@@ -4,5 +4,6 @@
 cd /FATCAT-scripts/launchers
 . ./config
 cd ..
+echo "extracting the last event from $file1 and writing results to $file2"
 ./extract.py --no-header --last $file1 >> $file2
 cd /
