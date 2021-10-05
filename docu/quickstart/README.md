@@ -88,15 +88,17 @@ Note: The OCU has a touch screen but it is easier to operate using a keyboard an
 
 This section allows the user to toggle commands that start or stop a certain behaviour. Green text means "on", whereas red means "off". 
 
-* Lamps: Switches all UV lamps of the OFR on or off at once.
-* VOC heater: Start/Stop the tube heater for the VOC1 delivery, the temperature set point needs to be established in "section 2" of the GUI.
-* VOC1 *is-value/target-value* mV: Switches the VOC1 photoionization detector on or off. The curent reading of the detector and the target set point are displayed in mV. Offset and span of signal needs to determined (see [calibration section](#Calibrating the photoionization detector)).
-* VOC2 *is-value* mV: Switches the VOC1 photoionization detector on or off. The second dosing is done at a fixed carrier gas flow. Thus, only the current mV reading is displayed.
-* Pump1 (*is-flow* in slpm)
+* **Lamps**: Switches all UV lamps of the OFR on or off at once.
+* **VOC heater**: Start/Stop the tube heater for the VOC1 delivery, the temperature set point needs to be established in "section 2" of the GUI.
+* **VOC1** *is-value/target-value* mV: Switches the VOC1 photoionization detector on or off. The curent reading of the detector and the target set point are displayed in mV. Offset and span of signal needs to determined (see [calibration section](Calibrating-the-photoionization-detector)).
+* **VOC2** *is-value* mV: Switches the VOC1 photoionization detector on or off. The second dosing is done at a fixed carrier gas flow. Thus, only the current mV reading is displayed.
+* **Pump1** (*is-flow* in lpm): Switches the pump for the photoionization detector #1 (VOC1) on or off. This can be done independently of the sensor to, e.g., start the preheating of the sensor prior to an experiment. The set point for the flow can be modified via serial command on the [set-points section](2.-Set-points-section) of the GUI.
+* **Pump2** (*is-flow* in lpm): Switches the pump for the photoionization #2 (VOC2) detector on or off. This can be done independently of the sensor to, e.g., start the preheating of the sensor prior to an experiment. The set point for the flow can be modified via serial command on the [set-points section](2.-Set-points-section) of the GUI.
+* is-value/target-value **%rH**: Switches the humidity control for the OCU on and off. The measured value corresponds to the relative humidity of the sample entering the OCU (shown on [OCU status](3.-OCU-Status) section). The target value can be adjusted on the [set-points section](2.-Set-points-section) of the GUI.
 
 ### 2. Set-points section
 
-### 3. 
+### 3. OCU Status
 
 ## Serial Commands
 
