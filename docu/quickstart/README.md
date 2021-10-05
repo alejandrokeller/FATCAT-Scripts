@@ -80,7 +80,27 @@ Note: The OCU has a touch screen but it is easier to operate using a keyboard an
 
 # The Graphical user interface
 
+|![Elements of the graphical user interface](gui-numbered.png)|
+|:--:|
+|*Graphical User Interface of the OCU Microcomputer.|
+
+### 1. The button section
+
+This section allows the user to toggle commands that start or stop a certain behaviour. Green text means "on", whereas red means "off". 
+
+* Lamps: Switches all UV lamps of the OFR on or off at once.
+* VOC heater: Start/Stop the tube heater for the VOC1 delivery, the temperature set point needs to be established in "section 2" of the GUI.
+* VOC1 *is-value/target-value* mV: Switches the VOC1 photoionization detector on or off. The curent reading of the detector and the target set point are displayed in mV. Offset and span of signal needs to determined (see [calibration section](#Calibrating the photoionization detector)).
+* VOC2 *is-value* mV: Switches the VOC1 photoionization detector on or off. The second dosing is done at a fixed carrier gas flow. Thus, only the current mV reading is displayed.
+* Pump1 (*is-flow* in slpm)
+
+### 2. Set-points section
+
+### 3. 
+
 ## Serial Commands
+
+# Calibrating the photoionization detector
 
 # Experimental Setup
 
@@ -92,7 +112,3 @@ Note: The OCU has a touch screen but it is easier to operate using a keyboard an
 ## Coating of Particles with Secondary Organic Matter
 
 ![Soot coating experiment](mermaid-diagram-Coated-Soot.png)
-
-![OCU front](OCU-QuickStart-0236-screen.jpg)
-
-![screenshot](2021-09-17-130618_800x480_scrot.png)
