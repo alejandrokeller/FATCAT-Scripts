@@ -99,7 +99,7 @@ This section allows the user to toggle commands that start or stop a certain beh
 
 ### 2. Set-points section
 
-This section allos the user to modify the control loops set points or send serial commands to the OCU.
+This section allos the user to modify the control loops set points or send serial commands to the OCU. Press <kbd>>></kbd> to the right of the input field to set the new value.
 
 * **VOC1**: Sets the target concentration in mV for the control loop of the VOC1 precursor. See [calibration section](#calibrating-the-photoionization-detector)
 * **VOC**: Sets the temperature in °C for the VOC1 tube heater. Maximum temperature is 80°C. Heating has the purpose of preventing deposition on the tube. Also, the temperature can be increased to clean the tube when changing the precursor substance.
