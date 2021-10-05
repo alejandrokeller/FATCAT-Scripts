@@ -5,7 +5,7 @@
 ![Front](OCU-QuickStart-0241-screen.jpg)
 ![Back](OCU-QuickStart-0243-screen.jpg)
 
-## Preparing the OCU for operation
+# Preparing the OCU for operation
 
 This short guide will take you through the necessary steps for your first production of secondary organic aerosol (SOA) particles.
 
@@ -18,7 +18,7 @@ This short guide will take you through the necessary steps for your first produc
 5. Recommended: Festo blanking plugs for 6mm outer diameter tube (part Nr. QSC-6H)
 6. Optional: Ultra pure water (e.g. Milli-Q) for humidity experiments
 
-### Purging the oxidation flow reactor
+## 1. Purging the oxidation flow reactor
 
 The oxidation flow reactor consist of a UV-grade quartz tube surrounded by 5 mercury lamps. The reactor can be purged with an oxigen free gas, like N<sub>2</sub>, to avoid the formation of ozone outside of the reaction area. The purge inlet is located at the back of the OCU. It is enough to apply a low flow (e.g. 1 lpm) for 60 seconds in order to fill the reactor with the innert gas. The OCU is equipped with backflow prevention valves in order to keep the innert gas in the reactor. This opperation can be performed once a week.
 
@@ -26,7 +26,7 @@ The oxidation flow reactor consist of a UV-grade quartz tube surrounded by 5 mer
 |:--:| 
 |*Inlet for purging the oxidation flow reactor of the OCU. This procedure avoids the formation of ozone outside of the reaction area. Backflow prevention valves keep the innert gas in the reactor area for several days.*|
 
-### Gas for VOC dosing
+## 2. Gas for VOC dosing
 
 The OCU is equiped with two connectors for the VOC carrier gas. This way, it is possible to choose different gases for the two dosing systems or use, e.g., a premixed NO<sub>2</sub> mixture for the second dosing loop. The VOC1 and VOC2 connectors correspond to the gas delivery system for the VOC bottles marked with those names at the left side of the device. **The required pressure for those connectors is 2 Bars**. A different pressure may cause an incorrect reading of the flow dupplied by the mass flow controllers inside the OCU. Inlets that are not in use should be closed with a  blanking plug. Failure to do so can result in leackage and contamination of the sample.
 
@@ -34,7 +34,7 @@ The OCU is equiped with two connectors for the VOC carrier gas. This way, it is 
 |:--:| 
 |*Connection of the carrier gas for the VOC1. The VOC2 can supplied with the same carrier gas or an alternative gas mixture. Keeped unused connectors closed using a blanking plug to avoid contamination of the sample.*| 
 
-### VOC preursor
+## 3. VOC precursor
 
 Use the supplied 25ml bottles to for the VOC precursor. Typically, 5ml of liquid will allow for several hours of operation. We do not recommend using more than 10ml.  If one of the dosing bottles is missing, the corresponding inlet should be closed with a blanking plug.
 
@@ -46,7 +46,7 @@ Note: The volatility of the precursor and the room temperature will determine th
 |:--:| 
 |*Bottle for VOC precursor at the left side of the OCU. Avoid overfilling the bottle, 5ml of liquid will usually allow for several hours of operation. Also be sure to close the VOC inlets that are not being used by means of a blanking plug.*| 
 
-### Humidifier
+## 4. Humidifier
 
 The humidifier located in front of the device provides a practical and reproducible moisture control. This help to switch the main oxidation path from ozone oxidation, when using dry air as a carrier gas, to a mixture of ozone and hydroxile oxidation when using humidified air. The following images will guide you through the steps for to prepare the humidifier for ozone/hydroxile experiments.
 
@@ -62,7 +62,7 @@ The humidifier located in front of the device provides a practical and reproduci
 |![Emptying the humidifier](OCU-QuickStart-0250-screen.jpg)|
 |4. Never leave the water tank filled with water when the instrument is not in use. This will prevent condensation of water on the tubes. Empty the tank by disconnecting the tube from one of the tanks. Use a small container on the bottom to collect the water.|
 
-### Connecting the microcomputer
+## 5. Connecting the microcomputer
 
 You are almost there, the final step is to connect the microcomputer to the OCU. Use a USB cable to connect one of the microcomputer's USB ports to the front pannel of the OCU. There is no switch on the microcomputer, it will be turned on when connecting the USB power supply. Once the microcomputer is on, the user interface will start as soon as the OCU is turned on. It is also possible to turn the OCU before the microcomputer. You will need to restart the microcomputer if the OCU is turned off and back on. 
 
@@ -78,7 +78,13 @@ Note: The OCU has a touch screen but it is easier to operate using a keyboard an
 |![Microcomputer power connector](OCU-QuickStart-0255-screen.jpg)|
 |*Microcomputer power supply. Always use the supplied power supply or a 15 Watt supply compatible with a raspberry pi 4.*|
 
-## Setup
+# The Graphical user interface
+
+## Serial Commands
+
+# Experimental Setup
+
+## Generation of Pure Secondary Organic Matter Particles by Homogeneous Nucleation
 
 ```mermaid
 graph LR
@@ -96,6 +102,8 @@ OFR --> |1 lpm - SOA| E[Characterization]
 PID -.1 lpm - Filtered.-> F((Flow Dump))
 linkStyle 4 stroke:blue,stroke-width:2px,curve:natural,stroke-dasharray: 8 8;
 ```
+
+## Coating of Particles with Secondary Organic Matter
 
 ```mermaid
 graph LR
