@@ -72,11 +72,11 @@ Note: The OCU has a touch screen but it is easier to operate using a keyboard an
 
 |![USB in the microcomputer](OCU-QuickStart-0254-screen.jpg)|
 |:--:| 
-||
+|*USB connectors at the microcomputer. Also keyboard and a mouse can be connected here as an alternative to the touch screen.*|
 |![USB in the OCU](OCU-QuickStart-0252-screen.jpg)|
-||
+|*USB connector at the OCU for the microcomputer*|
 |![Microcomputer power connector](OCU-QuickStart-0255-screen.jpg)|
-||
+|*Microcomputer power supply. Always use the supplied power supply or a 15 Watt supply compatible with a raspberry pi 4.*|
 
 ## Setup
 
@@ -87,12 +87,14 @@ subgraph OCU
          Mixing --> OFR
          VOC1 --> Mixing
          Mixing --> PID
+         VOC1 -.-|Control Loop| PID
          end
 A((Air)) --> B[Flow Controller] 
 B  --> |2 lpm| Inlet
 D((N<sub>2</sub>)) --> |2 Bar| VOC1
-OFR ==> |1 lpm - SOA| E[Characterization]
+OFR --> |1 lpm - SOA| E[Characterization]
 PID -.1 lpm - Filtered.-> F((Flow Dump))
+linkStyle 4 stroke:blue,stroke-width:2px,curve:natural,stroke-dasharray: 8 8;
 ```
 
 ```mermaid
@@ -102,11 +104,13 @@ subgraph OCU
          Mixing --> OFR
          VOC1 --> Mixing
          Mixing --> PID
+         VOC1 -.-|Control Loop| PID
          end
 A[MiniCAST] ==> |2 lpm| Inlet
 D((N<sub>2</sub>)) --> |2 Bar| VOC1
-OFR ==> |1 lpm - Coated Soot| E[Characterization]
+OFR --> |1 lpm - Coated Soot| E[Characterization]
 PID -.1 lpm - Filtered.-> F((Flow Dump))
+linkStyle 4 stroke:blue,stroke-width:2px,curve:natural,stroke-dasharray: 8 8;
 ```
 
 
