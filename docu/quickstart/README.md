@@ -44,7 +44,7 @@ Note: The volatility of the precursor and the room temperature will determine th
 
 |![VOC Bottle](OCU-QuickStart-0246-screen.jpg)|
 |:--:| 
-|Bottle for VOC precursor at the left side of the OCU. Avoid overfilling the bottle, 5ml of liquid will usually allow for several hours of operation. Also be sure to close the VOC inlets that are not being used by means of a blanking plug.| 
+|*Bottle for VOC precursor at the left side of the OCU. Avoid overfilling the bottle, 5ml of liquid will usually allow for several hours of operation. Also be sure to close the VOC inlets that are not being used by means of a blanking plug.*| 
 
 ### Humidifier
 
@@ -64,20 +64,21 @@ The humidifier located in front of the device provides a practical and reproduci
 
 ### Connecting the microcomputer
 
+You are almost there, the final step is to connect the microcomputer to the OCU. Use a USB cable to connect one of the microcomputer's USB ports to the front pannel of the OCU. There is no switch on the microcomputer, it will be turned on when connecting the USB power supply. Once the microcomputer is on, the user interface will start as soon as the OCU is turned on. It is also possible to turn the OCU before the microcomputer. You will need to restart the microcomputer if the OCU is turned off and back on. 
+
+Anytime you can press the <kbd>Windows</kbd>-key to access the start menu of the operating system or <kbd>Alt</kbd> + <kbd>F11</kbd> to toggle the GUI between maximized and window-view mode.
+
+Note: The OCU has a touch screen but it is easier to operate using a keyboard and a mouse (not supplied).
+
 |![USB in the microcomputer](OCU-QuickStart-0254-screen.jpg)|
 |:--:| 
 ||
-|:--:| 
 |![USB in the OCU](OCU-QuickStart-0252-screen.jpg)|
-|:--:| 
 ||
-
+|![Microcomputer power connector](OCU-QuickStart-0255-screen.jpg)|
+||
 
 ## Setup
-
-|![Microcomputer power connector](OCU-QuickStart-0255-screen.jpg)|
-|:--:| 
-||
 
 ```mermaid
 graph LR
