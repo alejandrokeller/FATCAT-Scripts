@@ -86,6 +86,9 @@ Note: The OCU has a touch screen but it is easier to operate using a keyboard an
 
 ## Generation of Pure Secondary Organic Matter Particles by Homogeneous Nucleation
 
+
+![Homogeneous nucleation experiment](mermaid-diagram-Pure-SOM.png)
+
 ```mermaid
 graph LR
 subgraph OCU
@@ -104,6 +107,8 @@ linkStyle 4 stroke:blue,stroke-width:2px,curve:natural,stroke-dasharray: 8 8;
 ```
 
 ## Coating of Particles with Secondary Organic Matter
+
+![Soot coating experiment](mermaid-diagram-Coated-Soot.png)
 
 ```mermaid
 graph LR
