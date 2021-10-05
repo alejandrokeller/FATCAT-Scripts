@@ -92,8 +92,8 @@ This section allows the user to toggle commands that start or stop a certain beh
 * **VOC heater**: Start/Stop the tube heater for the VOC1 delivery, the temperature set point needs to be established in "section 2" of the GUI. High temperatures prevent depositio of the VOC in the tube.
 * **VOC1** *is-value/target-value* mV: Switches the VOC1 photoionization detector on or off. The curent reading of the detector and the target set point are displayed in mV. Offset and span of signal needs to determined (see [calibration section](#calibrating-the-photoionization-detector)).
 * **VOC2** *is-value* mV: Switches the VOC1 photoionization detector on or off. The second dosing is done at a fixed carrier gas flow. Thus, only the current mV reading is displayed.
-* **Pump1** (*is-flow* in lpm): Switches the pump for the photoionization detector #1 (VOC1) on or off. This can be done independently of the sensor to, e.g., start the preheating of the sensor prior to an experiment. The set point for the flow can be modified via serial command on the [set-points section](#2-set-points-section) of the GUI.
-* **Pump2** (*is-flow* in lpm): Switches the pump for the photoionization #2 (VOC2) detector on or off. This can be done independently of the sensor to, e.g., start the preheating of the sensor prior to an experiment. The set point for the flow can be modified via serial command on the [set-points section](#2-set-points-section) of the GUI.
+* **Pump1** (*is-flow* in lpm): Switches the pump for the photoionization detector #1 (VOC1) on or off. This can be done independently of the sensor to, e.g., start the preheating of the sensor prior to an experiment. The set point for the flow can be modified via the *F1xxx* serial command of the [set-points section](#2-set-points-section) of the GUI.
+* **Pump2** (*is-flow* in lpm): Switches the pump for the photoionization #2 (VOC2) detector on or off. This can be done independently of the sensor to, e.g., start the preheating of the sensor prior to an experiment. The set point for the flow can be modified via the *F2xxx* serial command of the [set-points section](#2-set-points-section) of the GUI.
 * is-value/target-value **%rH**: Switches the humidity control for the OCU on and off. The measured value corresponds to the relative humidity of the sample entering the OCU (shown on [OCU status](#3-ocu-status) section). The target value can be adjusted on the [set-points section](#2-set-points-section) of the GUI.
 * **L1** through **L4**: Toggles individual lamps on and off. This buttons create less reactive species in OFR compared to the full UV intensity of the lamps. The UV intensity as measured by a photodiode is displayed on the [OCU status](#3-ocu-status) section. 
 
@@ -121,7 +121,28 @@ This graph shows the dosing flow going through the VOC1 and VOC2 precursor bottl
 
 ## Serial Commands
 
-# Calibrating the photoionization detector
+**Important:** Commands are case sensitive!
+
+|Command|Function|Range|Example|
+|:------------|:------------|--:|:--|
+|Cx1   |Switch the PID #x on   |1-2 |C11 |
+|Cx0   |Switch the PID #x off  |1-2 |C10 | 
+|Ex1   |Switch the Pump #x on  |1-2 |E21 |
+|Ex0   |Switch the Pump #x off |1-2 |E20 |
+|F1xxx |Setpoint PID1 pump in ml/minute | 0-999 | F1500 |
+|F2xxx |Setpoint PID2 pump in ml/minute | 0-999 | F1300 |
+|M0xxx |Setpoint for MFC2 (VOC2 dosing) in ml/minute | 0-100 | M0050 |
+|Pxxxx |Setpoint VOC1 in mV | 1-2500 | P0500 |
+|qx    |Set the VOC Tube heater on (1) or off (0) | 0-1 | q1 |
+|rx    |Set the humidifier n (1) or off (0) | 0-1 | r1 |
+|Q00xx |Set the VOC tube heater target temperature | 1-80 | Q0070 |
+|R00xx |Set the humidifier target humidity | 1-99 | R0065 |
+|Z1    |Set the current PID mV values to zero (baseline). PID must be turned on before (*Cx1* command). **Use with caution!** | - | Z1 |
+|z1    |Clear the baseline set by *Z1* command. | - | z1 |
+
+
+
+
 
 # Experimental Setup
 
@@ -133,6 +154,8 @@ This graph shows the dosing flow going through the VOC1 and VOC2 precursor bottl
 ## Coating of Particles with Secondary Organic Matter
 
 ![Soot coating experiment](mermaid-diagram-Coated-Soot.png)
+
+# Calibrating the photoionization detector
 
 # Useful links
 
