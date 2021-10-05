@@ -53,21 +53,13 @@ The humidifier located in front of the device provides a practical and reproduci
 |![Pluging the humidifier to the control electronics](OCU-QuickStart-0237-screen.jpg)|
 |:--:| 
 |1. Start by making sure that the humidifier is plugged to the control panel using the round connector.|
-|:--:| 
 |![Filled humidifier](OCU-QuickStart-0249-screen.jpg)|
-|:--:| 
 |2. Fill large section (left) of the humidifier tank with high purity water, like Milli-Q water. As you fill the tank, the tube in the bottom will fill up the comunicating tank on the right. This prevents the formation of air bubbles. Make sure the tube is connected to both tanks before starting to pour water. During the experiemnt, the transparent material of the tank will help you to monitor water consumption during the experiment. Refill as necesary.|
-|:--:| 
 |![Selecting dry operation](OCU-QuickStart-0238-screen.jpg)|
-|:--:| 
 |3a. **Dry operation mode:** Front valve closed and back valve open. If the tank is full of water, avoiding the front part is the only way to keep the carrier gas dry.|
-|:--:| 
 |![Selecting rH regulation](OCU-QuickStart-0239-screen.jpg)|
-|:--:| 
 |3b. **Humidity control mode:** Front valve open and back valve closed. The minimum and maximum achievable humidity depend on factors like flow rate and room temperature. The set point for the relative humidity can be selected later using the graphical user interface on the microcomputer.|
-|:--:| 
 |![Emptying the humidifier](OCU-QuickStart-0250-screen.jpg)|
-|:--:| 
 |4. Never leave the water tank filled with water when the instrument is not in use. This will prevent condensation of water on the tubes. Empty the tank by disconnecting the tube from one of the tanks. Use a small container on the bottom to collect the water.|
 
 ### Connecting the microcomputer
