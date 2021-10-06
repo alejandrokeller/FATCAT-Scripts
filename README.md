@@ -1,20 +1,23 @@
-# FATCAT Control, Monitor & Visualization System (local)
-## Collection of scripts for controlling FATCAT from a RASPI (python and unix shell)
-*Application developed in **Python** to work (optional) in conjunction with an **HTTP Database** and a **serial** controlled device.*
+# Organic Coating Unit: Control & Visualization System
+## Collection of scripts for controlling OCU from a RASPI (python and unix shell)
+*Application developed in **Python** to work in conjunction a **serial** controlled device.*
 
 ### **Installation**
 1. Clone repository:
 ```bash
-$ git clone https://github.com/alejandrokeller/FATCAT-scripts
+$ sudo git clone https://github.com/alejandrokeller/FATCAT-scripts /logger
 ```
 2. Travel to cloned folder:
 ```bash
-$ cd FATCAT-scripts
+$ cd /logger
 ```
-3. Open config.ini and check **[configuration file](#configuration-file)**. You can set here the destination directories for the output files.
-4. Create required data and logs directories:
+3. Copy the configuration template to the config.ini file. Then open config.ini and check **[configuration file](#configuration-file)**. You can set here the destination directories for the output files.
 ```bash
-$ sudo mkdir  ~/fatcat-files/ ~/fatcat-files/data ~/fatcat-files/data/summaries ~/fatcat-files/data/events ~/fatcat-files/data/events/graph ~/fatcat-files/logs ~/fatcat-files/data/baseline
+$ cp /logger/config.template /logger/config.ini
+```
+5. Create required data and logs directories:
+```bash
+$ sudo mkdir  ~/ocu/ ~/ocu/data ~/ocu/logs ~/ocu/data/baseline
 ```
 5. Install python requirements:
 ```bash
@@ -28,23 +31,23 @@ $ sudo apt-get install python-pyside
 ```bash
 sudo apt-get install python-tk
 ```
-## Adding the FATCAT directories to your user `PATH` environment
+## Adding the OCU directories to your user `PATH` environment
 
 1. Open the `.profile` file.
 ```
 nano ~\.profile
 ```
-2. Append the following text (substitute `/FATCAT-scripts` with the directory where you installed the scripts):
+2. Append the following text (substitute `/logger` with the directory where you installed the scripts):
 ```
 # set PATH so it includes the Fatcat scripts if it exists
-if [ -d "/FATCAT-scripts" ] ; then
-    PATH="/FATCAT-scripts:$PATH"
+if [ -d "/logger" ] ; then
+    PATH="/logger:$PATH"
 fi
-if [ -d "/FATCAT-scripts/extras" ] ; then
-    PATH="/FATCAT-scripts/extras:$PATH"
+if [ -d "/logger/extras" ] ; then
+    PATH="/logger/extras:$PATH"
 fi
 ```
-3. Press `ctl-x` followed by `y` and then press enter to save the file.
+3. Press <kbd>ctl</kbd>+<kbd>x</kbd> followed by <kbd>y</kbd> and then press enter to save the file.
 4. The new `PATH` environment will be available next time you start a session.
 
 ### Using cron daemon to run scripts
@@ -58,39 +61,25 @@ If this is the first time that you use *cron*, the system will ask you to choose
 
 2. Go to the end of the line and type the following command:
 ```
-@reboot sh /FATCAT-scripts/launchers/launcher.sh >>/home/pi/fatcat-files/logs/analysislog 2>&1
+@reboot sh /logger/launchers/launcher.sh >>/home/pi/ocu/logs/devicelog 2>&1
 ```
-This will run the `launcher.sh` script at startup and save the error messages to `/home/pi/fatcat-files/logs/analysislog`. Make sure that the script and log directories are correct and that your user has enough priviliges to read (script directory) or write (log directory), otherwise the command will not run.
+This will run the `launcher.sh` script at startup and save the error messages to `/home/pi/ocu/logs/devicelog`. Make sure that the script and log directories are correct and that your user has enough priviliges to read (script directory) or write (log directory), otherwise the command will not run.
 
-3. Press `ctrl-x` and then `y`to save the changes.
-
-Similarly, measurement scripts can be sheduled in *cron*. For instance, in order to set daily measurements at two hours intervals use:
-```
-# extract the information from the DB, analyses and uploads
-11 */2 * * * /FATCAT-scripts/launchers/launcher_analyze.sh >>/home/pi/fatcat-files/logs/analysislog 2>&1
-# create summary file after first and last event of the day
-15 0,23 * * * /FATCAT-scripts/launchers/launcher_summary2.sh >>/home/pi/fatcat-files/logs/analysislog 2>&1
-# launch analysis mode
-0 */2 * * * /FATCAT-scripts/launchers/launcher_analysis_mode.sh >>/home/pi/fatcat-files/logs/instrumentlog 2>&1
-# launch sample mode
-10 */2 * * * /FATCAT-scripts/launchers/launcher_sample_mode.sh >>/home/pi/fatcat-files/logs/instrumentlog 2>&1
-# turn oven on
-6 */2 * * * /FATCAT-scripts/launchers/launcher_oven.sh >>/home/pi/fatcat-files/logs/instrumentlog 2>&1
-```
+3. Press <kbd>ctl</kbd>+<kbd>x</kbd> and then <kbd>y</kbd> to save the changes.
 
 ### Launching the graphical user interface at startup (Raspberry Pi)
 
 1. Go to the autostart directory: `cd ~/.config/autostart`
-2. Add an autostart file `nano fatcatgui.desktop`
+2. Add an autostart file `nano ocu.desktop`
 3. Populate the file using:
 ```
 [Desktop Entry]
 Type=Application
-Name=FatcatGUI
-Exec=/FATCAT-scripts/gui.py &
+Name=OCUGUI
+Exec=/logger/gui.py &
 StartupNotify=false
 ```
-4. Pres `ctrl-X` and the Y to seve the changes
+4. Pres <kbd>ctl</kbd>+<kbd>x</kbd> and then <kbd>y</kbd> to seve the changes
 
 ## Enabling USB/Serial Port Permissions on Linux (not needed for the Raspberry Pi)
 
