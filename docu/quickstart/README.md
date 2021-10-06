@@ -187,12 +187,11 @@ Alphasense table of VOC Correction factors[^3]
 
 ## PID Sensors
 
-Alphasense introduction to photoionization detection (PID)[^4]
-Alphasense Photoionization Detector application notes[^5].
+The OCU uses two [Alphasense](https://www.alphasense.com/) photoionization detectors PID-A1 Rev 2 (VOCs up to 4,000ppm). Replacement sensors can be ordered directly by the manufacturer. When doing so, be sure to stress that the you require **regulator enabled PID sensors (Part Number 000-0U22-A12)**. Alphasense offers a detailed introduction to photoionization detection[^4], application notes[^5] for use and mantainance, as well as datasheets[^6].
 
-### Changing the particle filters
+### Accesing the PID Sensors for cleaning or replacement
 
-### Cleaning or replacing the PID Sensors
+## Changing the particle filters
 
 ## OFR UV Lamp replacement
 
@@ -203,3 +202,4 @@ Alphasense Photoionization Detector application notes[^5].
 [^3]: Alphasense table of [VOC Correction factors](https://www.alphasense.com/wp-content/uploads/2017/05/AAN-305-06.pdf)
 [^4]: Alphasense [introduction to photoionization detection (PID)](https://www.alphasense.com/wp-content/uploads/2013/07/AAN_301-04.pdf)
 [^5]: Alphasense [Photoionization Detector application notes](https://www.alphasense.com/downloads/application-notes/)
+[^6]: Alphasense [PID A12 Datasheet](https://www.alphasense.com/wp-content/uploads/2019/08/PID-A12-1.pdf)
