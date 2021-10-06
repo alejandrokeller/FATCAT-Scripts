@@ -2,6 +2,8 @@
 
 # Introduction
 
+[![Watch the video](https://img.youtube.com/vi/TsagAz7ZlR4/maxresdefault.jpg)](https://www.youtube.com/watch?v=TsagAz7ZlR4)
+
 There is a need for well-defined reference aerosols generated in the laboratory, simulating properties of real ambient aerosols while being stable and reproducible. Ambient aerosols are mixtures of fresh and aged products. Atmospheric photochemical aging influences both physical and chemical properties and should be considered for complex studies as well as everyday applications. Within the framework of the EMPIR AeroTox project, we developed the organic coating unit. This instrument is a novel portable aerosol generator equipped with a humidifier, a precursor dosing system and specially designed oxidation flow reactor (OFR). Using the OCU you will be able to generate pure secondary organic matter (SOM) particles or, used in combination with a standard soot generator, particles consisting of a soot core coated with SOM. Other type of particles can also be coated with SOM using this device.
 
 This guide will take you through the necessary steps for the production of secondary organic matter (SOM) aerosol. The physical and chemical properties of the generated particles can be tuned in a simple manner by selecting target values for parameters, such as precursor concentration, humidity, and UV light intensity to simulate a wide range of atmospherically relevant carbonaceous aerosols. Applications include instrument calibration, filter testing, and health and climate studies. 
