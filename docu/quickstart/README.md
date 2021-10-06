@@ -2,12 +2,19 @@
 
 # Introduction
 
-![Front](OCU-QuickStart-0241-screen.jpg)
-![Back](OCU-QuickStart-0243-screen.jpg)
+There is a need for well-defined reference aerosols generated in the laboratory, simulating properties of real ambient aerosols while being stable and reproducible. Ambient aerosols are mixtures of fresh and aged products. Atmospheric photochemical aging influences both physical and chemical properties and should be considered for complex studies as well as everyday applications. Within the framework of the EMPIR AeroTox project, we developed the organic coating unit. This instrument is a novel portable aerosol generator equipped with a humidifier, a precursor dosing system and specially designed oxidation flow reactor (OFR). Using the OCU you will be able to generate pure secondary organic matter (SOM) particles or, used in combination with a standard soot generator, particles consisting of a soot core coated with SOM. Other type of particles can also be coated with SOM using this device.
+
+The physical and chemical properties of the generated particles can be tuned in a simple manner by selecting target values for parameters, such as precursor concentration, humidity, and UV light intensity. This development allows, for the first time, to simulate in the laboratory a wide range of atmospherically relevant carbonaceous aerosols with the use of a single portable instrument. Applications include instrument calibration, filter testing, and health and climate studies. This guide will take you through the necessary steps for the production of secondary organic matter (SOM) aerosol. 
+
+This document is ongoing and will be updated regularly. Please feel free to contribute with content, questions, or new section requests. We wish a successful deployment of the instrument in your experimental campaigns.
+
+|![Front](OCU-QuickStart-0241-screen.jpg)|
+|:--:| 
+|*Front view of the organic coating unit, showing the control panle, inlet, humidifier and outlet. The VOC bottles are located on the left side of the device.*|
+|![Back](OCU-QuickStart-0243-screen.jpg)|
+|*Back view of the organic coating unit, showing the different gas connectors.*|
 
 # Preparing the OCU for operation
-
-This short guide will take you through the necessary steps for your first production of secondary organic aerosol (SOA) particles.
 
 ### Additional Material
 
@@ -16,7 +23,8 @@ This short guide will take you through the necessary steps for your first produc
 3. Flow controller capable of delivering 2 lpm (e.g., Mass flow controller, critical orifice, etc.)
 4. Recommended: Innert gas (e.g. N<sub>2</sub>) for purging of the oxidation flow reactor
 5. Recommended: Festo blanking plugs for 6mm outer diameter tube (part Nr. QSC-6H)
-6. Optional: Ultra pure water (e.g. Milli-Q) for humidity experiments
+6. Recommended: Reference isobutylene (C<sub>4</sub>H<sub>8</sub>) gas mixture (e.g. 100 ppm Isobutylene, N<sub>2</sub> rest) for calibration purposes.
+7. Optional: Ultra pure water (e.g. Milli-Q) for humidity experiments
 
 ## 1. Purging the oxidation flow reactor
 
@@ -130,18 +138,23 @@ This graph shows the dosing flow going through the VOC1 and VOC2 precursor bottl
 |Ex1   |Switch the Pump #x on  |1-2 |E21 |
 |Ex0   |Switch the Pump #x off |1-2 |E20 |
 |F1xxx |Setpoint PID1 pump in ml/minute | 0-999 | F1500 |
-|F2xxx |Setpoint PID2 pump in ml/minute | 0-999 | F1300 |
+|F2xxx |Setpoint PID2 pump in ml/minute | 0-999 | F2300 |
 |M0xxx |Setpoint for MFC2 (VOC2 dosing) in ml/minute | 0-100 | M0050 |
 |Pxxxx |Setpoint VOC1 in mV | 1-2500 | P0500 |
-|qx    |Set the VOC Tube heater on (1) or off (0) | 0-1 | q1 |
-|rx    |Set the humidifier n (1) or off (0) | 0-1 | r1 |
+|qx    |Switch the VOC Tube heater on (1) or off (0) | 0-1 | q1 |
+|rx    |Switch the humidifier on (1) or off (0) | 0-1 | r1 |
 |Q00xx |Set the VOC tube heater target temperature | 1-80 | Q0070 |
 |R00xx |Set the humidifier target humidity | 1-99 | R0065 |
 |Z1    |Set the current PID mV values to zero (baseline). PID must be turned on before (*Cx1* command). **Use with caution!** | - | Z1 |
-|z1    |Clear the baseline set by *Z1* command. | - | z1 |
+|z1    |Reset baseline set by the *Z1* command. | - | z1 |
 
+## Configuring the microcomputer
 
+The microcomputer is a raspberry pi model 4. It runs on the Linux-based Raspbian operating system. The python based software for control and data logging is preinstalled on the device, and is configured for an automatic start when the OCU and the microcomputer are connected. The microcomputer clock needs to be synchronized for a correct timestamp on the logfile. This can be performed automatically by setting the correct time zone and configuring the network access[^2] on a Network Time Protocol (NTP) enabled network. Make sure that the NTP port, port number 123, is enabled by your firewall. Alternativally, the clock can be set manually through the command line using the `date` command (e.g. `sudo date -s 'YYYY-MM-DD HH:MM:SS'`). The command line is accesible at any moment using the key combination <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>t</kbd>.
 
+Further configuration of the microcomputer can be performed following the Raspberry Pi OS guide[^1].
+
+## Accessing the log files
 
 
 # Experimental Setup
@@ -157,9 +170,25 @@ This graph shows the dosing flow going through the VOC1 and VOC2 precursor bottl
 
 # Calibrating the photoionization detector
 
+Alphasense table of VOC Correction factors[^3]
+
+# Mantainance
+
+## PID Sensors
+
+Alphasense introduction to photoionization detection (PID)[^4]
+Alphasense Photoionization Detector application notes[^5].
+
+### Changing the particle filters
+
+### Cleaning or replacing the PID Sensors
+
+## OFR UV Lamp replacement
+
 # Useful links
 
-* Raspberry pi OS documentation [for network configuration](https://www.raspberrypi.org/documentation/computers/configuration.html#configuring-networking)
-* Alphasense [Photoionization Detector application notes](https://www.alphasense.com/downloads/application-notes/)
-* Alphasense [introduction to photoionization detection (PID)](https://www.alphasense.com/wp-content/uploads/2013/07/AAN_301-04.pdf)
-* Alphasense table of [VOC Correction factors](https://www.alphasense.com/wp-content/uploads/2017/05/AAN-305-06.pdf)
+[^1]: [Raspberry Pi OS guide](https://www.raspberrypi.org/documentation/computers/os.html)
+[^2]: Raspberry pi OS documentation [for network configuration](https://www.raspberrypi.org/documentation/computers/configuration.html#configuring-networking)
+[^3]: Alphasense table of [VOC Correction factors](https://www.alphasense.com/wp-content/uploads/2017/05/AAN-305-06.pdf)
+[^4]: Alphasense [introduction to photoionization detection (PID)](https://www.alphasense.com/wp-content/uploads/2013/07/AAN_301-04.pdf)
+[^5]: Alphasense [Photoionization Detector application notes](https://www.alphasense.com/downloads/application-notes/)
