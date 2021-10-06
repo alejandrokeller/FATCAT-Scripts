@@ -11,9 +11,10 @@ $ sudo git clone https://github.com/alejandrokeller/FATCAT-scripts /logger
 ```bash
 $ cd /logger
 ```
-3. Copy the configuration template to the config.ini file. Then open config.ini and check **[configuration file](#configuration-file)**. You can set here the destination directories for the output files.
+3. Copy the configuration template to the config.ini file and the launchers configuration template to the launchers/config file (no .ini extension). Then open created files and check the **[configuration](#configuration-file)**. You can set here the destination directories for the output files.
 ```bash
 $ cp /logger/config.template /logger/config.ini
+$ cp /logger/launchers/config.template /logger/launchers/config
 ```
 5. Create required data and logs directories:
 ```bash
