@@ -195,6 +195,23 @@ The OCU uses two [Alphasense](https://www.alphasense.com/) photoionization detec
 
 ## OFR UV Lamp replacement
 
+The oxidation flow reactor uses five Hereaus low pressure mercury lamps to generate ozone. The light intensity of the lamps is registered in the automatically generated logfiles. The individual lamps can be tested by turning them on indepndently using the [graphical user interface](#the-graphical-user-interface). Replacement lamps can be ordered directly by representatives. The following table lists key details about the lamp: 
+
+|Lamp Model |GPH212T5VH/4|
+|:--|:--|
+|Type       |Low pressure, ozone generating|
+|Length     |212mm|
+|Arc length |132mm|
+|Tube diameter|15mm|
+|Lamp Power |10W|
+|UV-C Output|2.7W at 254nm|
+|Connection |4-Pin Single Ended|
+
+
+Follow this procedure procedure for lamp replacement:
+
+**include graphical procedure for access/replacement of lamps**
+
 # Useful links
 
 [^1]: [Raspberry Pi OS guide](https://www.raspberrypi.org/documentation/computers/os.html)
