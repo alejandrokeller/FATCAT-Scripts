@@ -1,8 +1,4 @@
 # Variables required for launchers
 today=`date '+%Y%m%d'`
 # Newest generated datafile
-file1="$(ls -t /home/pi/fatcat-files/data/* | head -1)"
-# File to output the summary
-file2="/home/pi/fatcat-files/data/summaries/$today-120s.dat"
-# File to generate in case of extracting data from the cloud application DB
-newfile="/home/pi/fatcat-files/data/$today-extracted_data.dat"
+file1="$(ls -t /home/pi/ocu/data/* | head -1)"
