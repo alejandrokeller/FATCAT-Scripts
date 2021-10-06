@@ -62,7 +62,7 @@ The humidifier located in front of the device provides a practical and reproduci
 |:--:| 
 |1. Start by making sure that the humidifier is plugged to the control panel using the round connector.|
 |![Filled humidifier](OCU-QuickStart-0249-screen.jpg)|
-|2. Fill large section (left) of the humidifier tank with high purity water, like Milli-Q water. As you fill the tank, the tube in the bottom will fill up the comunicating tank on the right. This prevents the formation of air bubbles. Make sure the tube is connected to both tanks before starting to pour water. During the experiemnt, the transparent material of the tank will help you to monitor water consumption during the experiment. Refill as necesary.|
+|2. Fill large section (right) of the humidifier tank with high purity water, like Milli-Q water. As you fill the tank, the connecting tube will fill the humidifier and the smaller tank on the left side. This procedure prevents the formation of air bubbles. Make sure the tube is connected to both tanks before starting to pour water. During the experiemnt, the transparent material of the tank will help you to monitor water consumption during the experiment. Refill as necesary.|
 |![Selecting dry operation](OCU-QuickStart-0238-screen.jpg)|
 |3a. **Dry operation mode:** Front valve closed and back valve open. If the tank is full of water, avoiding the front part is the only way to keep the carrier gas dry.|
 |![Selecting rH regulation](OCU-QuickStart-0239-screen.jpg)|
