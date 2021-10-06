@@ -158,9 +158,9 @@ Further configuration of the microcomputer can be performed following the Raspbe
 
 ## Accessing the log files
 
-By default, the generated log files can be found under `~/ocu/data` (unless you have pointed to another directory in the `config.ini` file). You can use the command line, accesible through <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>t</kbd>, or the file manager graphical application to access them or to copy them to a USB drive. The graphical file manager can be accesed through the start menu of the operating system (press <kbd>Windows</kbd>-key) under 
+By default, the generated log files can be found under `~/ocu/data` (unless you have pointed to another directory in the `config.ini` file). You can use the command line, accesible through <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>t</kbd>, or the file manager graphical application to access them or to copy them to a USB drive. The graphical file manager can be accesed through the start menu of the operating system (press <kbd>Windows</kbd>-key). File naming convention is `YYMMDD-HHMMSS-OCU-SNx.txt`, where x refers to the serial number of the device.
 
-![File manager GUI][(2021-09-17-132217_800x480_scrot.png)
+![File manager GUI](2021-09-17-132217_800x480_scrot.png)
 
 # Experimental Setup
 
