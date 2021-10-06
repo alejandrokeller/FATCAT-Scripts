@@ -152,7 +152,7 @@ This graph shows the dosing flow going through the VOC1 and VOC2 precursor bottl
 
 The microcomputer is a raspberry pi model 4. It runs on the Linux-based Raspbian operating system. The python based software for control and data logging is preinstalled on the device, and is configured for an automatic start when the OCU and the microcomputer are connected. The microcomputer clock needs to be synchronized for a correct timestamp on the logfile. This can be performed automatically by setting the correct time zone and configuring the network access[^2] on a Network Time Protocol (NTP) enabled network. Make sure that the NTP port, port number 123, is enabled by your firewall. Alternativally, the clock can be set manually through the command line using the `date` command (e.g. `sudo date -s 'YYYY-MM-DD HH:MM:SS'`). The command line is accesible at any moment using the key combination <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>t</kbd>.
 
-It is possible to install the software on an alternative computer. So far, we have only tested the python scripts under the Raspberry Pi OS and under Ubuntu running on a laptop computer. It should however be possible to use them also under Windows or Mac OS. Follow [these instructions](../../READMA.md) to install the scripts.
+It is possible to install the software on an alternative computer. So far, we have only tested the python scripts under the Raspberry Pi OS and under Ubuntu running on a laptop computer. It should however be possible to use them also under Windows or Mac OS. Follow [these instructions](../../README.md) to install the scripts.
 
 Further configuration of the microcomputer can be performed following the Raspberry Pi OS guide[^1].
 
