@@ -180,19 +180,19 @@ If you have follow the previous steps, you should be able to start the system an
 
 ## Generation of Pure Secondary Organic Matter Particles by Homogeneous Nucleation
 
-![Homogeneous nucleation experiment](mermaid-diagram-Pure-SOM.png)
+![Homogeneous nucleation experiment](mermaid-ocu-SOM.png)
 
 ## Coating of Particles with Secondary Organic Matter
 
-![Soot coating experiment](mermaid-diagram-Coated-Soot.png)
+![Soot coating experiment](mermaid-ocu-coated-soot.png)
 
 ## Calibrating the photoionization detector
 
 Alphasense table of VOC Correction factors[^3]
 
-![Baseline measurement](mermaid-diagram-Zero-Air.png)
+![Baseline measurement](mermaid-ocu-zero.png)
 
-![Isobutylene Span](mermaid-diagram-C4H8.png)
+![Isobutylene Span](mermaid-ocu-calibration.png)
 
 # Mantainance
 
