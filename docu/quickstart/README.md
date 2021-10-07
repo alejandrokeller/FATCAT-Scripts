@@ -180,7 +180,20 @@ If you have follow the previous steps, you should be able to start the system an
 
 ## Generation of Pure Secondary Organic Matter Particles by Homogeneous Nucleation
 
-![Homogeneous nucleation experiment](mermaid-ocu-SOM.png)
+|![Homogeneous nucleation experiment](mermaid-ocu-SOM.png)|
+|:--:|
+|*Suggested configuration for the generation of pure secondary organic matter particles by means of homogeneous nuclation using a single VOC precursor. The points marked as VOC1 and VOC2 correspond to the dosing gas inlets on the back of the unit, PID1 and PID2 are the two photoionization detectors, and OFR is the oxidation flow reactor.*|
+
+The figure above shows a suggested experimental setup for generating pure SOM particles by dosing a single precursor substance inside the VOC1 bottle. This setup assumes that you will control the carrier gas flow upstream of the device to achieve an inlet flow of *f*<sub>in</sub>\=2 lpm, and that the two pumps of the photoionization detectors, PID1 and PID2, are set to a flow of *f*<sub>PID</sub>\=0.5 lpm. This will cause a resulting flow of about *f*<sub>out</sub>\~1 lpm at the outlet (the dosing of the VOC1 can cause an aditional flow of Δ*f*≤0.1 lpm). Close the VOC2 connectors (sections [gas for VOC dosing](#2-gas-for-voc-dosing) and [VOC precursor](3-voc-precursor)) to prevent leackages. The pump outlet gives out the filtered gas mixture prior to oxidation. Depending on the used precursor, you will be required to connect the pump outlet to a laboratory hood. 
+
+Install your sampling or characterization equipment downstream of the front outlet. Keep in mind that the OCU produces a high number concentration of particles, typically of the order of *N*\~10<sup>8</sup> #/cc, and thus you may need to use a dilution system to achieve a concentration that is appropiate for your experiement.
+
+Follow this steps:
+1. Start by turning on the OCU, setting the PID1 and PID2 pump flow to 0.5 lpm, and turning the PID sensors and the OFR on. Wait for the system temperature to stabilize, this may take around 20 minutes if you turned the device on for the first time on that day. We recommend to also turn on the VOC heater and set an apprpriate temperature (e.g. *T*<sub>VOC</sub>=60°C), this will reduce the response time of the instrument when changing the target VOC concentration and will help to clean the lines after the experiment is over.
+2. If using humidity, configure the inlet and prepare the humidifier as described [above](#4-humidifier). Set the humidity target and start the humidifier using the graphical interface. Keep in mind that the relative humidity target is referenced to the inlet temperature (showed at the top of the graphical interface), which may be different to the ambient temperature. This can cause water condensation in the device or at the inlet if the target humidity is very high. Avoid this by making the appropriate conversion. Humidity will promote the formation of hydroxyl form the ozone generated in the OFR, thus openning further reaction paths. Some VOCs, e.g. Toluene or Mesitylene, will only generate SOM if you use humidity.
+3. If you are using VOC free air, the baseline of the PID reading is now your zero point. You can now set a target VOC concentration (in milli volts). Wait for the system to stabilize at the target concentration. The conversion of the milli volt signal to parts per million must be established through [calibration](#calibrating-the-photoionization-detector) and by using the appropriate VOC correction factor[^3].
+4. Increase the VOC concentration, the light intensity or reduce the flow through the OFR to achieve larger particles. Conversily, lower VOC concentrations, lower light intensity or faster OFR flow will decrease the particle size.
+5. Once you finish your experiment, set the target VOC concentration to zero and wait for the system to purge the VOC residuals. This will be faster if you increase the VOC heater temperature. You may turn off the PID sensors at this point to increase sensor lifetime. However, we do not recomment to turn the OFR off until the system is purged. This will prevent deposition of the precursor substance on the OFR and reduce your cleanning/wait time for the next experiment.
 
 ## Coating of Particles with Secondary Organic Matter
 
