@@ -1,8 +1,6 @@
-# Organic Coating Unit: Quick Start Manual
+# Organic Coating Unit Operating Manual
 
 # Introduction
-
-[![Watch the video](https://img.youtube.com/vi/TsagAz7ZlR4/maxresdefault.jpg)](https://www.youtube.com/watch?v=TsagAz7ZlR4)
 
 There is a need for well-defined reference aerosols generated in the laboratory, simulating properties of real ambient aerosols while being stable and reproducible. Ambient aerosols are mixtures of fresh and aged products. Atmospheric photochemical aging influences both physical and chemical properties and should be considered for complex studies as well as everyday applications. Within the framework of the EMPIR AeroTox project, we developed the organic coating unit. This instrument is a novel portable aerosol generator equipped with a humidifier, a precursor dosing system and specially designed oxidation flow reactor (OFR). Using the OCU you will be able to generate pure secondary organic matter (SOM) particles or, used in combination with a standard soot generator, particles consisting of a soot core coated with SOM. Other type of particles can also be coated with SOM using this device.
 
@@ -10,8 +8,10 @@ This guide will take you through the necessary steps for the production of secon
 
 This document is ongoing and will be updated regularly. Please feel free to contribute with content, questions, or new section requests. We wish a successful deployment of the instrument in your experimental campaigns.
 
-|![Front](OCU-QuickStart-0241-screen.jpg)|
-|:--:| 
+|[![Watch the video](https://img.youtube.com/vi/TsagAz7ZlR4/maxresdefault.jpg)](https://www.youtube.com/watch?v=TsagAz7ZlR4)|
+|:--:|
+|*Watch the short virtual poster presentation for the ETH Zurich Nanoparticle Conference 2021*|
+|![Front](OCU-QuickStart-0241-screen.jpg)| 
 |*Front view of the organic coating unit, showing the control panle, inlet, humidifier and outlet. The VOC bottles are located on the left side of the device.*|
 |![Back](OCU-QuickStart-0243-screen.jpg)|
 |*Back view of the organic coating unit, showing the different gas connectors.*|
@@ -88,7 +88,19 @@ Note: The OCU has a touch screen but it is easier to operate using a keyboard an
 |![Microcomputer power connector](OCU-QuickStart-0255-screen.jpg)|
 |*Microcomputer power supply. Always use the supplied power supply or a 15 Watt supply compatible with a raspberry pi 4.*|
 
-# The Graphical user interface
+## 6. Configuring the microcomputer
+
+The microcomputer is a raspberry pi model 4. It runs on the Linux-based Raspbian operating system. The python based software for control and data logging is preinstalled on the device, and is configured for an automatic start when the OCU and the microcomputer are connected. The microcomputer clock needs to be synchronized for a correct timestamp on the logfile. This can be performed automatically by setting the correct time zone and configuring the network access[^2]. Make sure that the Network Time Protocol (NTP) port, i.e. port number 123, is allowed by your firewall. Alternativally, the clock can be set manually through the command line using the `date` command (e.g. `sudo date -s 'YYYY-MM-DD HH:MM:SS'`). A manual configuration needs to be performed on a daily bases, because the Raspberry Pi is not equiped with a real time clock. The command line is accesible at any moment using the key combination <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>t</kbd>.
+
+For your convinience, the microcomputer can also be accessed as a remote desktop from another computer. The most straightforward way is to activate the VNC software[^7], which comes preinstalled on the the Raspberry Pi OS.
+
+Further configuration of the microcomputer can be performed following the Raspberry Pi OS guide[^1].
+
+You can replace the Raspberry Pi microcomputer by an alternative system. So far, we have only tested the python scripts on the Raspberry Pi OS and on a laptop computer running Ubuntu. It should however be possible to install them under Windows or Mac OS. Follow [these instructions](../../README.md) to install the scripts.
+
+# Using the System 
+
+## The Graphical user interface
 
 |![Elements of the graphical user interface](gui-numbered.png)|
 |:--:|
@@ -150,14 +162,6 @@ This graph shows the dosing flow going through the VOC1 and VOC2 precursor bottl
 |Z1    |Set the current PID mV values to zero (baseline). PID must be turned on before (*Cx1* command). **Use with caution!** | - | Z1 |
 |z1    |Reset baseline set by the *Z1* command. | - | z1 |
 
-## Configuring the microcomputer
-
-The microcomputer is a raspberry pi model 4. It runs on the Linux-based Raspbian operating system. The python based software for control and data logging is preinstalled on the device, and is configured for an automatic start when the OCU and the microcomputer are connected. The microcomputer clock needs to be synchronized for a correct timestamp on the logfile. This can be performed automatically by setting the correct time zone and configuring the network access[^2] on a Network Time Protocol (NTP) enabled network. Make sure that the NTP port, port number 123, is enabled by your firewall. Alternativally, the clock can be set manually through the command line using the `date` command (e.g. `sudo date -s 'YYYY-MM-DD HH:MM:SS'`). The command line is accesible at any moment using the key combination <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>t</kbd>.
-
-It is possible to install the software on an alternative computer. So far, we have only tested the python scripts under the Raspberry Pi OS and under Ubuntu running on a laptop computer. It should however be possible to use them also under Windows or Mac OS. Follow [these instructions](../../README.md) to install the scripts.
-
-Further configuration of the microcomputer can be performed following the Raspberry Pi OS guide[^1].
-
 ## Accessing the log files
 
 By default, the generated log files can be found under `~/ocu/data` (unless you have pointed to another directory in the `config.ini` file). You can use the command line, accesible through <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>t</kbd>, or the file manager graphical application to access them or to copy them to a USB drive. The graphical file manager can be accesed through the start menu of the operating system (press <kbd>Windows</kbd>-key). File naming convention is `YYMMDD-HHMMSS-OCU-SNx.txt`, where x refers to the serial number of the device.
@@ -166,10 +170,15 @@ By default, the generated log files can be found under `~/ocu/data` (unless you 
 |:--:|
 |*Accesing the log files through the graphical interface of the microcomputer*|
 
+# Frontpanel operation
+
+**\*\*Description of system operation through the instruments front panel to be included here** (P. Steigmeier?)
+
 # Experimental Setup
 
-## Generation of Pure Secondary Organic Matter Particles by Homogeneous Nucleation
+If you have follow the previous steps, you should be able to start the system and the GUI, send commands to the OCU, and log the system variables. Now you can connect the OCU to your experimental setup.
 
+## Generation of Pure Secondary Organic Matter Particles by Homogeneous Nucleation
 
 ![Homogeneous nucleation experiment](mermaid-diagram-Pure-SOM.png)
 
@@ -177,7 +186,7 @@ By default, the generated log files can be found under `~/ocu/data` (unless you 
 
 ![Soot coating experiment](mermaid-diagram-Coated-Soot.png)
 
-# Calibrating the photoionization detector
+## Calibrating the photoionization detector
 
 Alphasense table of VOC Correction factors[^3]
 
@@ -191,9 +200,11 @@ Alphasense table of VOC Correction factors[^3]
 
 The OCU uses two [Alphasense](https://www.alphasense.com/) photoionization detectors PID-A1 Rev 2 (VOCs up to 4,000ppm). Replacement sensors can be ordered directly by the manufacturer. When doing so, be sure to stress that the you require **regulator enabled PID sensors (Part Number 000-0U22-A12)**. Alphasense offers a detailed introduction to photoionization detection[^4], application notes[^5] for use and mantainance, as well as datasheets[^6].
 
-### Accesing the PID Sensors for cleaning or replacement
+**\*\*graphical procedure for access/replacement of PID Sensors to be included here**
 
 ## Changing the particle filters
+
+**\*\*graphical procedure for access/replacement of particle filters to be included here**
 
 ## OFR UV Lamp replacement
 
@@ -210,15 +221,15 @@ The oxidation flow reactor uses five [Hereaus](https://www.heraeus.com) low pres
 |UV-C Output|2.7W at 254nm|
 |Connection |4-Pin Single Ended|
 
-
 Follow this procedure procedure for lamp replacement:
 
-**include graphical procedure for access/replacement of lamps**
+**\*\*graphical procedure for access/replacement of lamps to be included here**
 
 # Useful links
 
 [^1]: [Raspberry Pi OS guide](https://www.raspberrypi.org/documentation/computers/os.html)
 [^2]: Raspberry pi OS documentation [for network configuration](https://www.raspberrypi.org/documentation/computers/configuration.html#configuring-networking)
+[^7]: [VNC: Remote access a Raspberry Pi](https://magpi.raspberrypi.org/articles/vnc-raspberry-pi)
 [^3]: Alphasense table of [VOC Correction factors](https://www.alphasense.com/wp-content/uploads/2017/05/AAN-305-06.pdf)
 [^4]: Alphasense [introduction to photoionization detection (PID)](https://www.alphasense.com/wp-content/uploads/2013/07/AAN_301-04.pdf)
 [^5]: Alphasense [Photoionization Detector application notes](https://www.alphasense.com/downloads/application-notes/)
