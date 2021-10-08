@@ -184,7 +184,7 @@ If you have follow the previous steps, you should be able to start the system an
 
 |![Homogeneous nucleation experiment](mermaid-ocu-SOM.png)|
 |:--:|
-|*Suggested configuration for the generation of pure secondary organic matter particles by means of homogeneous nuclation using a single VOC precursor. The large yellow rectangle is a schematic representation of the OCU. The points marked as VOC1 and VOC2 correspond to the dosing gas inlets on the back of the unit, PID1 and PID2 are the two photoionization detectors, and OFR is the oxidation flow reactor.*|
+|*Suggested configuration for the generation of pure secondary organic matter particles by means of homogeneous nuclation using a single VOC precursor. The large yellow rectangle is a schematic representation of the OCU. The points marked as MFC1 and MFC2 correspond to mass flow controllers, connected to the dosing gas inlets on the back of the unit, that provide the dosing air for the two VOC bottles (i.e. VOC1 and VOC2), PID1 and PID2 are the two photoionization detectors, and OFR is the oxidation flow reactor. The thick arrows show the main experimental path, from the inlet in the front to the outlet after the oxidation flow reactor.*|
 
 The figure above shows a suggested experimental setup for generating pure SOM particles by dosing a single precursor substance inside the VOC1 bottle. This setup assumes that you will control the carrier gas flow upstream of the device to achieve an inlet flow of *f*<sub>in</sub>\=2 lpm, and that the two pumps of the photoionization detectors, PID1 and PID2, are set to a flow of *f*<sub>PID</sub>\=0.5 lpm. This will cause a resulting flow of about *f*<sub>out</sub>\~1 lpm at the outlet (the dosing of the VOC1 can cause an aditional flow of Δ*f*≤0.1 lpm). Inside the OCU, two different VOC precursors can be dosed in separate steps, thus the two mixing chambers. In this example, only the first dosing step, governed by a control loop is active. The VOC concentration is monitor by two independnt photoionization detector after each mixing step. Close the VOC2 connectors (sections [gas for VOC dosing](#2-gas-for-voc-dosing) and [VOC precursor](3-voc-precursor)) to prevent leackages. The pump outlet gives out the filtered gas mixture prior to oxidation. Depending on the used precursor, you will be required to connect the pump outlet to a laboratory hood. 
 
@@ -201,7 +201,7 @@ Follow this steps:
 
 |![Soot coating experiment](mermaid-ocu-coated-soot.png)|
 |:--:|
-|*Suggested configuration for the generation of soot particles coated with secondary organic matter using a single VOC precursor. The points marked as VOC1 and VOC2 correspond to the dosing gas inlets on the back of the unit, PID1 and PID2 are the two photoionization detectors, and OFR is the oxidation flow reactor.*|
+|*Suggested configuration for the generation of soot particles coated with secondary organic matter using a single VOC precursor. The points marked as MFC1 and MFC2 correspond to mass flow controllers, connected to the dosing gas inlets on the back of the unit, that provide the dosing air for the two VOC bottles (i.e. VOC1 and VOC2), PID1 and PID2 are the two photoionization detectors, and OFR is the oxidation flow reactor. The thick arrows show the main experimental path, from the inlet in the front to the outlet after the oxidation flow reactor.*|
 
 The figure above shows a suggested experimental setup for generating soot particles coated with secondary organic matter from a single precursor substance. This setup assumes that you will control the carrier gas flow through the OCU either by supplying an inlet flow of *f*<sub>in</sub>\=2 lpm or by sucking a flow of *f*<sub>out</sub>\=1 lpm at the front outlet. In this example, the two pumps of the photoionization detectors, PID1 and PID2, are set to a flow of *f*<sub>PID</sub>\=0.5 lpm. Two different VOC precursors can be dosed in separate steps, thus the two mixing chambers. In this example, only the first dosing step, governed by a control loop is active. The VOC concentration is monitor by two independnt photoionization detector after each mixing step. The VOC2 connectors should be closed (sections [gas for VOC dosing](#2-gas-for-voc-dosing) and [VOC precursor](3-voc-precursor)) to prevent leackages. The pump outlet gives out the filtered gas mixture prior to oxidation. You may required to connect the pump outlet to a laboratory hood depending on the used precursor or the primary particle source (in this case the MiniCAST). Install your sampling or characterization equipment downstream of the front outlet.
 
@@ -211,19 +211,31 @@ Follow this steps:
 1. Start by turning on the OCU, setting the PID1 and PID2 pump flow to 0.5 lpm, and turning the PID sensors and the OFR on. Wait for the system temperature to stabilize, this may take around 20 minutes if you turned the device on for the first time on that day. We recommend to also turn on the VOC heater and set an apprpriate temperature (e.g. *T*<sub>VOC</sub>=60°C), this will reduce the response time of the instrument when changing the target VOC concentration and will help to clean the lines after the experiment is over.
 3. If using humidity, configure the inlet and prepare the humidifier as described [above](#4-humidifier). Set the humidity target and start the humidifier using the graphical interface. Keep in mind that the relative humidity target is referenced to the inlet temperature (showed at the top of the graphical interface), which may be different to the ambient temperature. This can cause water condensation in the device or at the inlet if the target humidity is very high. Avoid this by making the appropriate conversion. Humidity will promote the formation of hydroxyl form the ozone generated in the OFR, thus openning further reaction paths. Some VOCs, e.g. Toluene or Mesitylene, will only generate SOM if you use humidity.
 4. Start the production of seed particles, e.g. miniCAST soot, and wait until the device stabilizes. This can also be done in parallel to the previous steps.
-5. Take note the baseline of PID reading, which is the zero point. Depending on the particle source, you may reuquire a denuder to remove the gas-phase VOCs of the source and prevent them from generating SOM.
+5. Take note the baseline of PID reading, this zero point may be different to the zero point determined through [calibration](#calibrating-the-photoionization-detector) due to the composition of the carrier gas. Furthermore, depending on the particle source, you may reuquire a denuder to remove the gas-phase VOCs of the source and prevent them from generating SOM.
 6. Set a target VOC concentration (in milli volts). Wait for the system to stabilize at the target concentration. The conversion of the milli volt signal to parts per million must be established through [calibration](#calibrating-the-photoionization-detector) and by using the appropriate VOC correction factor[^3].
 7. Increase the VOC concentration, the light intensity or reduce the flow through the OFR to increase coating thickness. Conversily, lower VOC concentrations, lower light intensity or faster OFR flow to decrease coating. The coating process is limited by the available surface from the primary particles. For instance, homogeneous nuclation will compete with the coating of particles at low surface concentration or high precursor concentration. At very high surface concentration, the OCU may only be able to achieve a thin coating. You will need to experiment with your source of primary particles to achieve the optimum level of dilution.   
 8. Once you finish your experiment, change the seed particle source to a clean air source to start the cleaning process and set the target VOC concentration to zero and wait for the system to purge the VOC residuals. This will be faster if you increase the VOC heater temperature. You may turn off the PID sensors at this point to increase sensor lifetime. However, we do not recomment to turn the OFR off until the system is purged. This will prevent deposition of the precursor substance on the OFR and reduce your cleanning/wait time for the next experiment.
 
 
-## Calibrating the photoionization detector
+## Calibrating the photoionization detector (PID)
 
-Alphasense table of VOC Correction factors[^3]
+The OCU uses two photoionization detector with a 10.6eV ionization lamp to determine the concentration of broad range of VOC. This kind of detector is not equally efficient for all possible VOC. Thus, it is common to calibrate the sensors for a specific VOC and calculate the actual VOC concentration of a known species based on the so called correction factor. Alphasense, the manufacturer of the sensors used in the OCU, suggest isobutylene as the reference substance, and gives a long list of VOC Correction factors[^3]. **These are approximate values, so for best accuracy you should calibrate with the relevant VOC**. Given the broad range of detection of the PID sensors, we have decided to always store the signal based on the signal, *V*, in milli volts that is provided by the sensor. The concentration, *c*, of the substance of interest can be determined based on the  isobutylene equivalent concentration *c*<sub>C4H8</sub> and the correction factor *k*, as *c*=*kc*<sub>C4H8</sub>.
 
-![Baseline measurement](mermaid-ocu-zero.png)
+The correction factor for a gas mix containing *N* PID detectable gases with correction factors *k<sub>i</sub>* in relative proportions *n<sub>i</sub>*=*c<sub>i</sub>*/*c*<sub>mix</sub> is given by:
 
-![Isobutylene Span](mermaid-ocu-calibration.png)
+![\Large k_{mix}=\frac{1}{\sum_{i=1}^Nn_i/k_i}](https://latex.codecogs.com/svg.latex?\Large&space;k_{mix}=\frac{1}{\sum_{i=1}^Nn_i/k_i}) 
+
+
+
+|![Baseline measurement](mermaid-ocu-zero.png)|
+|:--:|
+|*Suggested configuration for the baseline determination of the photoionization detectors PID1 and PID2. MFC1 and MFC2 correspond to mass flow controllers, connected to the dosing gas inlets on the back of the unit, that provide the dosing air for the two VOC bottles (i.e. VOC1 and VOC2), and OFR is the oxidation flow reactor. The thick arrows show the main experimental path, from the inlet in the front to the outlet after the oxidation flow reactor.*|
+
+
+|![Isobutylene Span](mermaid-ocu-calibration.png)|
+|:--:|
+|*Suggested configuration for the span determination of the photoionization detectors PID1 and PID2 using a predefined concentration of Isobutylene. MFC1 and MFC2 correspond to mass flow controllers, connected to the dosing gas inlets on the back of the unit, that provide the dosing air for the two VOC bottles (i.e. VOC1 and VOC2), and OFR is the oxidation flow reactor. The thick arrows show the main experimental path, from the inlet in the front to the outlet after the oxidation flow reactor.*
+
 
 # Mantainance
 
