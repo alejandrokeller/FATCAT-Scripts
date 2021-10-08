@@ -253,9 +253,29 @@ Follow this steps:
 
 ## Calibrating the photoionization detector (PID)
 
-The OCU uses two photoionization detector with a 10.6eV ionization lamp to determine the concentration of broad range of VOC. This kind of detector is not equally efficient for all possible VOC. Thus, it is common to calibrate the sensors for a specific VOC and calculate the actual VOC concentration of a known species based on the so called correction factor. Alphasense, the manufacturer of the sensors used in the OCU, suggest isobutylene as the reference substance, and gives a long list of VOC Correction factors[^3]. The concentration, *c*, of the substance of interest can be determined based on the  isobutylene equivalent concentration *c*<sub>C4H8</sub> and the correction factor *k*, as *c*=*kc*<sub>C4H8</sub>. For a more complex gas mix containing *N* PID detectable gases with correction factors *k<sub>i</sub>* in relative proportions *n<sub>i</sub>*=*c<sub>i</sub>*/*c*<sub>mix</sub>, the correction factor of the mix *k*<sub>mix</sub> is given by:
+The OCU uses two photoionization detector with a 10.6eV ionization lamp to determine the concentration of broad range of VOC. This kind of detector is not equally efficient for all possible VOC. Thus, it is common to calibrate the sensors for a specific VOC and calculate the actual VOC concentration of a known species based on the so called correction factor. Alphasense, the manufacturer of the sensors used in the OCU, suggest isobutylene as the reference substance. The concentration, *c*, of the substance of interest can be determined based on the  isobutylene equivalent concentration *c*<sub>C4H8</sub> and the correction factor *k*, as *c*=*kc*<sub>C4H8</sub>. For a more complex gas mix containing *N* PID detectable gases with correction factors *k<sub>i</sub>* in relative proportions *n<sub>i</sub>*=*c<sub>i</sub>*/*c*<sub>mix</sub>, the correction factor of the mix *k*<sub>mix</sub> is given by:
 
 ![k_{mix}=\frac{1}{\sum_{i=1}^Nn_i/k_i}](https://latex.codecogs.com/svg.latex?k_{mix}=\frac{1}{\sum_{i=1}^Nn_i/k_i}) 
+
+The following table provides an extract of the correction factor list by Alphasense[^3]. Index refers to the substance number in the document, IE is the ionization energy, and *k*(10.6eV) is the correction factor for the 10.6eV PID sensor lamp. NR means no response (i.e. the VOC's IE is too high for the lamp):
+
+|Index|Chemical name|Alternative Name|Formula|IE (eV)|*k*(10.6eV)|
+|:--:|:--|:--|:--:|:--:|:--:|
+|11|Acetylene|ethyne   |C2H2  |11.4|NR|
+|35|Benzene||C6H6|9.24|0.5|
+|211|Cyclohexene|      |C3H10 |8.95|0.9|
+|224|n-Decane||C10H20|9.65|1.2|
+|404|Ethyl-2-methyl benzene, 1- |2-ethyltoluene|C9H12|~8.7|0.5|
+|408|Ethylbenzene|C8H10|8.76|0.56|
+|535|Isoprene|2-methyl-1,3-butadiene|C5H8|8.85|0.8|
+|658|Naphthalene||C10H8|8.14|0.4|
+|663|Nitric oxide||NO|9.27|8|
+|669|Nitrogene dioxide||NO2|9.58|10|
+|724|Phenol|hydroxybenzene|C6H6O|8.51|1.2|
+|741|Pinene, α-|acemic mixture|C10H16|8.07|0.34|
+|846|Toluene||C7H8|8.82|0.56|
+|886|Trimethylbenzene, 1,3,5- |Mesitylene         |C9H12|8.39|0.4|
+|913|Xylene, m-|                                  |C8H10|8.56|0.54|
 
 Given the broad range of detection of the PID sensors, we have decided to always store the signal based on the signal, *V*, in milli volts that is provided by the sensor. We do not correct for gas species or substract the baseline, *V*<sub>0</sub>. It is left to the user to perform this calibration and determine the required frequency for this task. In the following examples, we use a PID flow of *f*<sub>PID</sub>=0.5 lpm. Nevertheless, it is possible to operate the instruments using a different PID flowrate. The calibration should be performed at the flowrate that will be used during th experiments.
 
