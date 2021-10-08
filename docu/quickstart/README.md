@@ -257,7 +257,7 @@ The OCU uses two photoionization detector with a 10.6eV ionization lamp to deter
 
 ![k_{mix}=\frac{1}{\sum_{i=1}^Nn_i/k_i}](https://latex.codecogs.com/svg.latex?k_{mix}=\frac{1}{\sum_{i=1}^Nn_i/k_i}) 
 
-Some gases (e.g. methane and ethane) absorve UV light without causing a PID signal. Methane absorbs UV strongly, so for accurate measurements in methane containing atmospheres, calibrate with a calibration gas containing the expected methane concentration. Non VOC species (e.g. NO and NO<sub>2</sub>) can also cause a large PID signal, keep this in mind if you are using a seed particle source, such as a diesel vehicle, that generates this species. Finally, gases such as nitrogen and helium do not absorve UV light and do not interfere with the PID signal.
+Some gases (e.g. methane and ethane) absorve UV light without causing a PID signal. Methane absorbs UV strongly, so for accurate measurements in methane containing atmospheres, calibrate with a calibration gas containing the expected methane concentration. Non VOC species (e.g. NO and NO<sub>2</sub>) can also cause a large PID signal, keep this in mind if you are using a seed particle source, such as a diesel vehicle, that generates them. Finally, gases such as nitrogen and helium do not absorve UV light and do not interfere with the PID signal.
 
 The following table provides an extract of the correction factor list by Alphasense[^3] measured in a 20.9% oxygen and nitrogen mixture. Index refers to the substance number in the document, IE is the ionization energy, and *k*(10.6eV) is the correction factor for the 10.6eV PID sensor lamp. NR means no response (i.e. the VOC's IE is too high for the lamp):
 
