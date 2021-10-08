@@ -49,6 +49,46 @@ PO -.1 lpm - Filtered.-> F((Flow Dump))
 linkStyle 4 stroke:blue,stroke-width:2px,curve:natural,stroke-dasharray: 8 8;
 ```
 
+```mermaid
+graph LR
+   subgraph Organic Coating Unit
+         subgraph in
+                  Inlet[Inlet]
+                  MFC1
+                  MFC2
+                  end
+         subgraph out
+                  FO[Front Outlet]
+                  PO[Pump Outlet]
+                  end
+         subgraph VOC1 Mixing
+                  Mixing --> PID1
+                  VOC1 -->|VOC Heater| Mixing
+                  end
+         subgraph VOC2 Mixing
+                  M2[Mixing] --> PID2
+                  VOC2 --> M2
+                  end
+         Inlet ==> Mixing
+         MFC1 --> VOC1
+         VOC1 -.-|Control Loop| PID1
+         Mixing ==> M2
+         MFC2 --> VOC2
+         PID1 --> |0.5 lpm| PO
+         PID2 --> |0.5 lpm| PO
+         M2 ==> OFR
+         OFR ==> FO
+   end
+D((N<sub>2</sub>)) --> |2 Bar| MFC1
+A((Air)) ==> B[Flow Controller] 
+B  ==> |2 lpm| Inlet
+FO ==> |1 lpm - SOA| E[Characterization]
+PO -.1 lpm - Filtered.-> F((Flow Dump))
+linkStyle 6 stroke:blue,stroke-width:2px,curve:natural,stroke-dasharray: 8 8;
+linkStyle 1 stroke:red,stroke-width:2px,curve:natural;
+```
+
+
 
 ## Coating of Particles with Secondary Organic Matter
 
@@ -98,6 +138,44 @@ D((N<sub>2</sub>)) --> |2 Bar| VOC1
 FO --> |1 lpm - Coated Soot| E[Characterization]
 PO -.1 lpm - Filtered.-> F((Flow Dump))
 linkStyle 4 stroke:blue,stroke-width:2px,curve:natural,stroke-dasharray: 8 8;
+```
+
+```mermaid
+graph LR
+   subgraph Organic Coating Unit
+         subgraph in
+                  Inlet[Inlet]
+                  MFC1
+                  MFC2
+                  end
+         subgraph out
+                  FO[Front Outlet]
+                  PO[Pump Outlet]
+                  end
+         subgraph VOC1 Mixing
+                  Mixing --> PID1
+                  VOC1 -->|VOC Heater| Mixing
+                  end
+         subgraph VOC2 Mixing
+                  M2[Mixing] --> PID2
+                  VOC2 --> M2
+                  end
+         Inlet ==> Mixing
+         MFC1 --> VOC1
+         VOC1 -.-|Control Loop| PID1
+         Mixing ==> M2
+         MFC2 --> VOC2
+         PID1 --> |0.5 lpm| PO
+         PID2 --> |0.5 lpm| PO
+         M2 ==> OFR
+         OFR ==> FO
+   end
+D((N<sub>2</sub>)) --> |2 Bar| MFC1
+B[MiniCAST] ==> |2 lpm| Inlet
+FO ==> |1 lpm - Coated Soot| E[Characterization]
+PO -.1 lpm - Filtered.-> F((Flow Dump))
+linkStyle 6 stroke:blue,stroke-width:2px,curve:natural,stroke-dasharray: 8 8;
+linkStyle 1 stroke:red,stroke-width:2px,curve:natural;
 ```
 
 ## Zero point
@@ -150,6 +228,44 @@ PO -.1 lpm - Filtered.-> F
 linkStyle 4 stroke:blue,stroke-width:2px,curve:natural,stroke-dasharray: 8 8;
 ```
 
+```mermaid
+graph LR
+   subgraph Organic Coating Unit
+         subgraph in
+                  Inlet[Inlet]
+                  MFC1
+                  MFC2
+                  end
+         subgraph out
+                  FO[Front Outlet]
+                  PO[Pump Outlet]
+                  end
+         subgraph VOC1 Mixing
+                  Mixing --> PID1
+                  VOC1 -->|VOC Heater| Mixing
+                  end
+         subgraph VOC2 Mixing
+                  M2[Mixing] --> PID2
+                  VOC2 --> M2
+                  end
+         Inlet ==> Mixing
+         MFC1 --> VOC1
+         VOC1 -.-|Control Loop| PID1
+         Mixing ==> M2
+         MFC2 --> VOC2
+         PID1 --> |0.5 lpm| PO
+         PID2 --> |0.5 lpm| PO
+         M2 ==> OFR
+         OFR ==> FO
+   end
+A((Synth. Air)) ==> B[Flow Controller] 
+B  ==> |2 lpm| Inlet
+FO ==> |1 lpm| F((Flow Dump))
+PO -.1 lpm - Filtered.-> F
+linkStyle 6 stroke:blue,stroke-width:2px,curve:natural,stroke-dasharray: 8 8;
+linkStyle 1 stroke:red,stroke-width:2px,curve:natural;
+```
+
 
 ## Calibration
 
@@ -198,4 +314,42 @@ B  --> |2 lpm| Inlet
 FO --> |1 lpm| F((Flow Dump))
 PO -.1 lpm - Filtered.-> F
 linkStyle 4 stroke:blue,stroke-width:2px,curve:natural,stroke-dasharray: 8 8;
+```
+
+```mermaid
+graph LR
+   subgraph Organic Coating Unit
+         subgraph in
+                  Inlet[Inlet]
+                  MFC1
+                  MFC2
+                  end
+         subgraph out
+                  FO[Front Outlet]
+                  PO[Pump Outlet]
+                  end
+         subgraph VOC1 Mixing
+                  Mixing --> PID1
+                  VOC1 -->|VOC Heater| Mixing
+                  end
+         subgraph VOC2 Mixing
+                  M2[Mixing] --> PID2
+                  VOC2 --> M2
+                  end
+         Inlet ==> Mixing
+         MFC1 --> VOC1
+         VOC1 -.-|Control Loop| PID1
+         Mixing ==> M2
+         MFC2 --> VOC2
+         PID1 --> |0.5 lpm| PO
+         PID2 --> |0.5 lpm| PO
+         M2 ==> OFR
+         OFR ==> FO
+   end
+A((C<sub>4</sub>H<sub>8</sub> mix)) ==> B[Flow Controller] 
+B  ==> |2 lpm| Inlet
+FO ==> |1 lpm| F((Flow Dump))
+PO -.1 lpm - Filtered.-> F
+linkStyle 6 stroke:blue,stroke-width:2px,curve:natural,stroke-dasharray: 8 8;
+linkStyle 1 stroke:red,stroke-width:2px,curve:natural;
 ```
