@@ -266,7 +266,7 @@ The following table provides an extract of the correction factor list by Alphase
 |211|Cyclohexene|      |C3H10 |8.95|0.9|
 |224|n-Decane||C10H20|9.65|1.2|
 |404|Ethyl-2-methyl benzene, 1- |2-ethyltoluene|C9H12|~8.7|0.5|
-|408|Ethylbenzene|C8H10|8.76|0.56|
+|408|Ethylbenzene||C8H10|8.76|0.56|
 |535|Isoprene|2-methyl-1,3-butadiene|C5H8|8.85|0.8|
 |658|Naphthalene||C10H8|8.14|0.4|
 |663|Nitric oxide||NO|9.27|8|
