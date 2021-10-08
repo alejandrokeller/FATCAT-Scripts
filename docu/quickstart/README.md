@@ -1,5 +1,39 @@
 # Organic Coating Unit Operating Manual
 
+## Table of contents
+
+- [Introduction](#introduction)
+  * [Inside diagram and components section will be inserted here](#inside-diagram-and-components-section-will-be-inserted-here)
+- [Preparing the OCU for operation](#preparing-the-ocu-for-operation)
+    + [Additional Material](#additional-material)
+  * [1. Purging the oxidation flow reactor](#1-purging-the-oxidation-flow-reactor)
+  * [2. Gas for VOC dosing](#2-gas-for-voc-dosing)
+  * [3. VOC precursor](#3-voc-precursor)
+  * [4. Humidifier](#4-humidifier)
+  * [5. Connecting the microcomputer](#5-connecting-the-microcomputer)
+  * [6. Configuring the microcomputer](#6-configuring-the-microcomputer)
+- [Using the System](#using-the-system)
+  * [The Graphical user interface](#the-graphical-user-interface)
+    + [1. The button section](#1-the-button-section)
+    + [2. Set-points section](#2-set-points-section)
+    + [3. OCU Status](#3-ocu-status)
+    + [4. Photoionization Detector Voltage](#4-photoionization-detector-voltage)
+    + [5. VOC Flow](#5-voc-flow)
+  * [Serial Commands](#serial-commands)
+  * [Accessing the log files](#accessing-the-log-files)
+- [Frontpanel operation](#frontpanel-operation)
+- [Experimental Setup](#experimental-setup)
+  * [Generation of Pure Secondary Organic Matter Particles by Homogeneous Nucleation](#generation-of-pure-secondary-organic-matter-particles-by-homogeneous-nucleation)
+  * [Coating of Particles with Secondary Organic Matter](#coating-of-particles-with-secondary-organic-matter)
+  * [Calibrating the photoionization detector (PID)](#calibrating-the-photoionization-detector-pid)
+    + [Baseline](#baseline)
+    + [Signal span](#signal-span)
+- [Mantainance](#mantainance)
+  * [PID Sensors](#pid-sensors)
+  * [Changing the particle filters](#changing-the-particle-filters)
+  * [OFR UV Lamp replacement](#ofr-uv-lamp-replacement)
+- [Useful links](#useful-links)
+
 # Introduction
 
 There is a need for well-defined reference aerosols generated in the laboratory, simulating properties of real ambient aerosols while being stable and reproducible. Ambient aerosols are mixtures of fresh and aged products. Atmospheric photochemical aging influences both physical and chemical properties and should be considered for complex studies as well as everyday applications. Within the framework of the EMPIR AeroTox project, we developed the organic coating unit. This instrument is a novel portable aerosol generator equipped with a humidifier, a precursor dosing system and specially designed oxidation flow reactor (OFR). Using the OCU you will be able to generate pure secondary organic matter (SOM) particles or, used in combination with a standard soot generator, particles consisting of a soot core coated with SOM. Other type of particles can also be coated with SOM using this device.
