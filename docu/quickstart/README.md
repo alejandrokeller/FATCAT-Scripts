@@ -219,11 +219,9 @@ Follow this steps:
 
 ## Calibrating the photoionization detector (PID)
 
-The OCU uses two photoionization detector with a 10.6eV ionization lamp to determine the concentration of broad range of VOC. This kind of detector is not equally efficient for all possible VOC. Thus, it is common to calibrate the sensors for a specific VOC and calculate the actual VOC concentration of a known species based on the so called correction factor. Alphasense, the manufacturer of the sensors used in the OCU, suggest isobutylene as the reference substance, and gives a long list of VOC Correction factors[^3]. **These are approximate values, so for best accuracy you should calibrate with the relevant VOC**. Given the broad range of detection of the PID sensors, we have decided to always store the signal based on the signal, *V*, in milli volts that is provided by the sensor. The concentration, *c*, of the substance of interest can be determined based on the  isobutylene equivalent concentration *c*<sub>C4H8</sub> and the correction factor *k*, as *c*=*kc*<sub>C4H8</sub>.
+The OCU uses two photoionization detector with a 10.6eV ionization lamp to determine the concentration of broad range of VOC. This kind of detector is not equally efficient for all possible VOC. Thus, it is common to calibrate the sensors for a specific VOC and calculate the actual VOC concentration of a known species based on the so called correction factor. Alphasense, the manufacturer of the sensors used in the OCU, suggest isobutylene as the reference substance, and gives a long list of VOC Correction factors[^3]. **These are approximate values, so for best accuracy you should calibrate with the relevant VOC**. Given the broad range of detection of the PID sensors, we have decided to always store the signal based on the signal, *V*, in milli volts that is provided by the sensor. The concentration, *c*, of the substance of interest can be determined based on the  isobutylene equivalent concentration *c*<sub>C4H8</sub> and the correction factor *k*, as *c*=*kc*<sub>C4H8</sub>. For a more complex gas mix containing *N* PID detectable gases with correction factors *k<sub>i</sub>* in relative proportions *n<sub>i</sub>*=*c<sub>i</sub>*/*c*<sub>mix</sub>, the correction factor of the mix *k*<sub>mix</sub> is given by:
 
-The correction factor for a gas mix containing *N* PID detectable gases with correction factors *k<sub>i</sub>* in relative proportions *n<sub>i</sub>*=*c<sub>i</sub>*/*c*<sub>mix</sub> is given by:
-
-![\Large k_{mix}=\frac{1}{\sum_{i=1}^Nn_i/k_i}](https://latex.codecogs.com/svg.latex?\Large&space;k_{mix}=\frac{1}{\sum_{i=1}^Nn_i/k_i}) 
+![k_{mix}=\frac{1}{\sum_{i=1}^Nn_i/k_i}](https://latex.codecogs.com/svg.latex?k_{mix}=\frac{1}{\sum_{i=1}^Nn_i/k_i}) 
 
 
 
