@@ -46,7 +46,7 @@ This document is ongoing and will be updated regularly. Please feel free to cont
 |:--:|
 |*Watch the short virtual poster presentation for the ETH Zurich Nanoparticle Conference 2021*|
 |![Front](OCU-QuickStart-0241-screen.jpg)| 
-|*Front view of the organic coating unit, showing the control panle, inlet, humidifier and outlet. The VOC bottles are located on the left side of the device.*|
+|*Front view of the organic coating unit, showing the control panel, inlet, humidifier and outlet. The VOC bottles are located on the left side of the device.*|
 |![Back](OCU-QuickStart-0243-screen.jpg)|
 |*Back view of the organic coating unit, showing the different gas connectors.*|
 
