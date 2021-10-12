@@ -1,3 +1,52 @@
+# OCU diagram
+
+
+```mermaid
+graph LR
+   subgraph Organic Coating Unit
+         subgraph Preconditioning
+                  rH[Humidifier]
+                  Bypass
+                  Inlet
+                  end
+         subgraph out
+                  FO[Front Outlet]
+                  PO[Pump Outlet]
+                  end
+         subgraph VOC1 Mixing
+                  MFC1
+                  Mixing --> PID1
+                  VOC1 -->|VOC Heater| Mixing
+                  PID1 --> f1[Flow Regulator]
+                  end
+         subgraph VOC2 Mixing
+                  MFC2
+                  M2[Mixing] --> PID2
+                  VOC2 --> M2
+                  PID2 --> f2[Flow Regulator]
+                  end
+         rH ==> Inlet
+         Bypass ==> Inlet
+         Inlet ==> Mixing
+         MFC1 --> |0 to 0.1 lpm| VOC1
+         VOC1 -.-|Control Loop| PID1
+         Mixing ==> M2
+         MFC2 --> |0 to 0.1 lpm| VOC2
+         f1 --> |0 to 0.5 lpm| PO
+         f2 --> |0 to 0.5 lpm| PO
+         M2 ==> OFR[Oxidation Flow Reactor]
+         OFR ==> FO
+   end
+D((Synth. Air)) --> MFC1
+D --> MFC2
+A[Synth. Air / Seed Aerosol] ==> rH 
+A ==> Bypass
+FO ==> |1 lpm - SOA| E[Characterization]
+PO -.0 to 1 lpm - Filtered.-> F((Flow Dump))
+linkStyle 10 stroke:blue,stroke-width:2px,curve:natural,stroke-dasharray: 8 8;
+linkStyle 1 stroke:red,stroke-width:2px,curve:natural;
+```
+
 ## Generation of Pure Secondary Organic Matter Particles by Homogeneous Nucleation
 
 ```mermaid
