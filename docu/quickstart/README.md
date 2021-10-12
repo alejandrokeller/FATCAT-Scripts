@@ -257,7 +257,7 @@ The OCU uses two photoionization detector with a 10.6eV ionization lamp to deter
 
 ![k_{mix}=\frac{1}{\sum_{i=1}^Nn_i/k_i}](https://latex.codecogs.com/svg.latex?k_{mix}=\frac{1}{\sum_{i=1}^Nn_i/k_i}) 
 
-Some gases (e.g. methane and ethane) absorve UV light without causing a PID signal. Methane absorbs UV strongly, so for accurate measurements in methane containing atmospheres, calibrate with a calibration gas containing the expected methane concentration. Non VOC species (e.g. NO and NO<sub>2</sub>) can also cause a large PID signal, keep this in mind if you are using a seed particle source, such as a diesel vehicle, that generates them. Finally, gases such as nitrogen and helium do not absorve UV light and do not interfere with the PID signal.
+Some gases (e.g. methane and ethane) absorve UV light without causing a PID signal. Methane absorbs UV strongly, so for accurate measurements in methane containing atmospheres, calibrate with a calibration gas containing the expected methane concentration. Non VOC species (e.g. NO and NO<sub>2</sub>) can also cause a large PID signal, keep this in mind if you are using a seed particle source, such as a diesel vehicle, that generates them. Finally, gases such as water, nitrogen and helium do not absorve UV light at this wavelength and do not interfere with the PID signal.
 
 The following table provides an extract of the correction factor list by Alphasense[^3] measured in a 20.9% oxygen and nitrogen mixture. Index refers to the substance number in the document, IE is the ionization energy, and *k*(10.6eV) is the correction factor for the 10.6eV PID sensor lamp. NR means no response (i.e. the VOC's IE is too high for the lamp):
 
@@ -277,6 +277,7 @@ The following table provides an extract of the correction factor list by Alphase
 |741|Pinene, α-|acemic mixture|C10H16|8.07|0.34|
 |846|Toluene||C7H8|8.82|0.56|
 |886|Trimethylbenzene, 1,3,5- |Mesitylene         |C9H12|8.39|0.4|
+|910|Water| dihydrogen monoxide | H2O | 12.61 | NR |
 |913|Xylene, m-|                                  |C8H10|8.56|0.54|
 
 Given the broad range of detection of the PID sensors, we have decided to always store the signal based on the signal, *V*, in milli volts that is provided by the sensor. We do not correct for gas species or substract the baseline, *V*<sub>0</sub>. It is left to the user to perform this calibration and determine the required frequency for this task. In the following examples, we use a PID flow of *f*<sub>PID</sub>=0.5 lpm. Nevertheless, it is possible to operate the instruments using a different PID flowrate. The calibration should be performed at the flowrate that will be used during the experiments.
