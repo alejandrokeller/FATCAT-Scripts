@@ -9,13 +9,13 @@ graph LR
                   Inlet
                   end
          subgraph Outlets
-                  FO[SOM]
-                  PO[Pump]
+                  FO[Main]
+                  PO[Flow Dump]
                   end
          subgraph First Dosing Stage
                   MFC1
                   Mixing --> PID1
-                  VOC1 -->|VOC Heater| Mixing
+                  VOC1 -->|Heated Line| Mixing
                   PID1 --> f1[Flow Regulator]
                   end
          subgraph Second Dosing Stage
@@ -41,7 +41,6 @@ D --> MFC2
 A[Synth. Air / Seed Aerosol] ==> rH 
 A ==> Bypass
 FO ==> E[SOM Aerosol]
-PO -.0 to 1 lpm - Filtered.-> F((Flow Dump))
 linkStyle 10 stroke:blue,stroke-width:2px,curve:natural,stroke-dasharray: 8 8;
 linkStyle 1 stroke:red,stroke-width:2px,curve:natural;
 ```
