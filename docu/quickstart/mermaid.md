@@ -28,7 +28,7 @@ graph LR
          Bypass ==> Inlet
          Inlet ==> Mixing
          MFC1 --> |0 to 0.1 lpm| VOC1
-         VOC1 -.-|Control Loop| PID1
+         MFC1 -.-|Control Loop| PID1
          Mixing ==> M2
          MFC2 --> |0 to 0.1 lpm| VOC2
          f1 --> |0 to 0.5 lpm| PO
