@@ -1,6 +1,5 @@
 # OCU diagram
 
-
 ```mermaid
 graph LR
    subgraph Organic Coating Unit
@@ -9,17 +8,17 @@ graph LR
                   Bypass
                   Inlet
                   end
-         subgraph out
-                  FO[Front Outlet]
-                  PO[Pump Outlet]
+         subgraph Outlets
+                  FO[SOM]
+                  PO[Pump]
                   end
-         subgraph VOC1 Mixing
+         subgraph First Dosing Stage
                   MFC1
                   Mixing --> PID1
                   VOC1 -->|VOC Heater| Mixing
                   PID1 --> f1[Flow Regulator]
                   end
-         subgraph VOC2 Mixing
+         subgraph Second Dosing Stage
                   MFC2
                   M2[Mixing] --> PID2
                   VOC2 --> M2
@@ -41,7 +40,7 @@ D((Synth. Air)) --> MFC1
 D --> MFC2
 A[Synth. Air / Seed Aerosol] ==> rH 
 A ==> Bypass
-FO ==> |1 lpm - SOA| E[Characterization]
+FO ==> E[SOM Aerosol]
 PO -.0 to 1 lpm - Filtered.-> F((Flow Dump))
 linkStyle 10 stroke:blue,stroke-width:2px,curve:natural,stroke-dasharray: 8 8;
 linkStyle 1 stroke:red,stroke-width:2px,curve:natural;
