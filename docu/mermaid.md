@@ -38,16 +38,16 @@ graph LR
          RV --> CO
          CO --> ZV
          Sample --> SV
-         ZV --> F1
-         ZV --> F2
-         SV --> F1
-         SV --> F2
+         ZV --> |One| F1
+         ZV --> |Two| F2
+         SV --> |Two| F1
+         SV --> |One| F2
          AV{3W Valve} --> Cat
-         F1 --> AV
-         F2 --> AV
+         F1 --> |One| AV
+         F2 --> |Two| AV
          IP --> FD
-         F1 --> SV2
-         F2 --> SV2
+         F1 --> |Two| SV2
+         F2 --> |One| SV2
          SV2{3W Valve}
          SV2 --> MFC2[MFC]
          MFC2 --> PO
