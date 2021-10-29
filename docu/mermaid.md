@@ -29,10 +29,12 @@ graph LR
                   MFC1 --> IP
                   end
          SV{3W Valve}
+         RV[reduction valve]
          CO[Critical Orifice]
          VZ{Valve}
          ZV{3W Valve}
-         Zero --> CO
+         Zero --> RV
+         RV --> CO
          CO --> VZ
          VZ --> ZV
          Sample --> SV
