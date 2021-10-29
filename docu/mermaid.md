@@ -25,7 +25,7 @@ graph LR
                   IP[Membrane Pump]
                   Cat --> F3
                   F3 --> CO2
-                  CO2 --> MFC1
+                  CO2 --> MFC1[MFC]
                   MFC1 --> IP
                   end
          SV{3W Valve}
@@ -49,7 +49,8 @@ graph LR
          F1 --> SV2
          F2 --> SV2
          SV2{3W Valve}
-         SV2 --> PO
+         SV2 --> MFC2[MFC]
+         MFC2 --> PO
    end
 D((Synth. Air)) --> Zero
 A[Ambient] --> Denuder
