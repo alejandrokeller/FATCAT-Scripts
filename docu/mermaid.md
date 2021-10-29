@@ -33,27 +33,27 @@ graph LR
          CO[Critical Orifice]
          VZ{Valve}
          ZV{3W Valve}
+         SV2{3W Valve}
          Zero --> VZ
          VZ --> RV
          RV --> CO
          CO --> ZV
-         Sample --> SV
+         Sample ==> SV
          ZV --> |One| F1
          ZV --> |Two| F2
-         SV --> |Two| F1
-         SV --> |One| F2
+         SV ==> |Two| F1
+         SV ==> |One| F2
          AV{3W Valve} --> Cat
          F1 --> |One| AV
          F2 --> |Two| AV
          IP --> FD
-         F1 --> |Two| SV2
-         F2 --> |One| SV2
-         SV2{3W Valve}
-         SV2 --> MFC2[MFC]
-         MFC2 --> PO
+         F1 ==> |Two| SV2
+         F2 ==> |One| SV2
+         SV2 ==> MFC2[MFC]
+         MFC2 ==> PO
    end
 D((Synth. Air)) --> Zero
-A[Ambient] --> Denuder
-Denuder --> Sample
-PO --> Pump[External Pump]
+A[Ambient] ==> Denuder
+Denuder ==> Sample
+PO ==> Pump[External Pump]
 ```
