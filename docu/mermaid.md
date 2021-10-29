@@ -33,10 +33,10 @@ graph LR
          CO[Critical Orifice]
          VZ{Valve}
          ZV{3W Valve}
-         Zero --> RV
+         Zero --> VZ
+         VZ --> RV
          RV --> CO
-         CO --> VZ
-         VZ --> ZV
+         CO --> ZV
          Sample --> SV
          ZV --> F1
          ZV --> F2
