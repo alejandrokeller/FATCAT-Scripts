@@ -61,7 +61,7 @@ This document is ongoing and will be updated regularly. Please feel free to cont
 3. Flow controller capable of delivering 2 lpm (e.g., Mass flow controller, critical orifice, etc.)
 4. Recommended: Innert gas (e.g. N<sub>2</sub>) for purging of the oxidation flow reactor
 5. Recommended: Festo blanking plugs for 6mm outer diameter tube (part Nr. QSC-6H)
-6. Recommended: Reference isobutylene (C<sub>4</sub>H<sub>8</sub>) gas mixture (e.g. 100 ppm Isobutylene, N<sub>2</sub> rest) for calibration purposes.
+6. Recommended: Reference isobutylene (C<sub>4</sub>H<sub>8</sub>) gas mixture (e.g. 100 ppm Isobutylene, synthetic air rest) for calibration purposes.
 7. Optional: Ultra pure water (e.g. Milli-Q) for humidity experiments
 
 ## 1. Purging the oxidation flow reactor
