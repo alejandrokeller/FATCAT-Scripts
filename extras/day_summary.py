@@ -31,7 +31,7 @@ def day_plot(df, df_list, tc_column = 'tc', filename = "day_overview", title = "
 
     # definitions for the axes
     left, width = 0.075, 0.37
-    bottom, height = 0.1, 0.27
+    bottom, height = 0.1, 0.20
     spacing = 0.005
     contour_spacing = 0.04
 
@@ -39,10 +39,11 @@ def day_plot(df, df_list, tc_column = 'tc', filename = "day_overview", title = "
     x = df['date']+' '+df['time']
     x = pd.to_datetime(x, format='%Y-%m-%d %H:%M:%S')
 
-    rect_tc = [left, bottom + 2*(height+ spacing), width, height]
+    rect_tc = [left, bottom + 3*(height+ spacing), width, height]
+    rect_p = [left, bottom + 2*(height+ spacing), width, height]
     rect_temp = [left, bottom + height + spacing, width, height]
     rect_co2 = [left, bottom, width, height]
-    rect_box = [left + width + spacing, bottom + 2*(height+ spacing), (1 - (2*left + width + spacing))/6, height]
+    rect_box = [left + width + spacing, bottom + 3*(height+ spacing), (1 - (2*left + width + spacing))/6, height]
     rect_contour = [left + width + 2*contour_spacing, bottom, 1 - (2*left + width + contour_spacing), 2*height + spacing - contour_spacing]
 
     # start with a rectangular Figure
@@ -52,6 +53,8 @@ def day_plot(df, df_list, tc_column = 'tc', filename = "day_overview", title = "
 
     ax_tc = plt.axes(rect_tc)
     ax_tc.tick_params(direction='in', top=True, right=True, labelbottom=False)
+    ax_p = plt.axes(rect_p)
+    ax_p.tick_params(direction='in', top=True, right=True, labelbottom=False)
     ax_temp = plt.axes(rect_temp)
     ax_temp.tick_params(direction='in', top=True, right=True, labelbottom=False)
     ax_co2 = plt.axes(rect_co2)
@@ -71,7 +74,7 @@ def day_plot(df, df_list, tc_column = 'tc', filename = "day_overview", title = "
         dtc_column = 'dtc-baseline'
         visible = False
     ax_tc.plot(x, df[tc_column], '--', x, df[tc_column], 'o')
-    ax_tc.set(xlabel='time/date', ylabel=r'Total Carbon ($\mu$g-C)')
+    ax_tc.set(xlabel='time/date', ylabel=r'TC ($\mu$g-C)')
     my_date_formater(ax_tc, x.max() - x.min())
     ax_tc.get_xaxis().set_visible(False)
     ax_tc.set_title(tc_title, loc = 'right', verticalalignment = 'top', visible = False)
@@ -81,10 +84,17 @@ def day_plot(df, df_list, tc_column = 'tc', filename = "day_overview", title = "
     
     # the temp(erature) plot:
     ax_temp.plot(x, df['maxtemp'], '--', x, df['maxtemp'], 'o')
-    ax_temp.set(xlabel='time/date', ylabel=r'Temperature ($^\circ$C)')
+    ax_temp.set(xlabel='time/date', ylabel=r'Temp. ($^\circ$C)')
     my_date_formater(ax_temp, x.max() - x.min())
     ax_temp.get_xaxis().set_visible(False)
     ax_temp.set_title("Maximum Temperature", loc = 'right', verticalalignment = 'top', visible = False)
+
+    # the [initial] p(ressure) plot:
+    ax_p.plot(x, df['p'], '--', x, df['p'], 'o')
+    ax_p.set(xlabel='time/date', ylabel=r'P (kPa)')
+    my_date_formater(ax_p, x.max() - x.min())
+    ax_p.get_xaxis().set_visible(False)
+    ax_p.set_title("Initial P", loc = 'right', verticalalignment = 'top', visible = False)
 
     # the co2 plot:
     ax_co2.plot(x, df['co2-base'], '--', x, df['co2-base'], 'o')
@@ -112,18 +122,23 @@ def day_plot(df, df_list, tc_column = 'tc', filename = "day_overview", title = "
     lim1 = df[tc_column].max()
     templim0 = df['maxtemp'].min()
     templim1 = df['maxtemp'].max()
+    plim0 = df['p'].min()
+    plim1 = df['p'].max()
     colim0 = df['co2-base'].min()
     colim1 = df['co2-base'].max()
     tlim0 = x.min()
     tlim1 = x.max()
     extra_space_tc = (lim1 - lim0)/10
     extra_space_temp = (templim1 - templim0)/10
+    extra_space_p = (plim1 - plim0)/10
     extra_space_co2 = (colim1 - colim0)/10
     extra_time = datetime.timedelta(minutes=30)
     ax_tc.set_ylim((lim0-extra_space_tc, lim1+extra_space_tc))
     ax_tc.set_xlim((tlim0-extra_time, tlim1+extra_time))
     ax_temp.set_ylim((templim0-extra_space_temp, templim1+extra_space_temp))
     ax_temp.set_xlim(ax_tc.get_xlim())
+    ax_p.set_ylim((plim0-extra_space_p, plim1+extra_space_p))
+    ax_p.set_xlim(ax_tc.get_xlim()) 
     ax_co2.set_ylim((colim0-extra_space_co2, colim1+extra_space_co2))
     ax_co2.set_xlim(ax_tc.get_xlim())
     ax_box.set_ylim(ax_tc.get_ylim())
@@ -469,7 +484,7 @@ if __name__ == "__main__":
                                title = report_name, xlabel = time_axis,
                                units = new_units, filename = report_graph)
 
-    print stats_df.head()
+    print stats_df.head(8)
     print results.summary.tail(20)
 
     if len(file_list) > 1:

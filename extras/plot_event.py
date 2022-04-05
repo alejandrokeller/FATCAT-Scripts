@@ -127,7 +127,9 @@ class Datafile(object):
             "tc",
             "tc-baseline",
             "tc concentration",
-            "sample"
+            "sample",
+            "p",
+            "minp"
             ]
 
         # Create a subset of the DataFrame and load data up to the desired integral time
@@ -161,7 +163,9 @@ class Datafile(object):
 #            "tc-baseline": round(np.trapz(self.tc_df['dtc-baseline'], x=self.tc_df['elapsed-time'])/60, 3) if 'dtc-baseline' in self.df else '-'
             "tc concentration": concentration, 
             "sample": self.volume if self.volume else '-',
-            "sample co2": self.sample_co2 if self.sample_co2 else '-'
+            "sample co2": self.sample_co2 if self.sample_co2 else '-',
+            "p": self.df['pco2'][0],
+            "minp": min(self.df['pco2'])
             }
         self.result_units = {
             "date": 'yyyy-mm-dd',
@@ -173,7 +177,9 @@ class Datafile(object):
             "tc-baseline": r'$\mu$g-C',
             "tc concentration": r'$\mu$g-C/m$^3$',
             "sample": r'm$^3$',
-            "sample co2": 'ppm'
+            "sample co2": 'ppm',
+            "p": 'kPa',
+            "minp": 'kPa'
             }
         
     def __repr__(self):
@@ -1118,7 +1124,7 @@ if __name__ == "__main__":
             results.summary.to_csv(f, index=False, header=False)
             f.close()
 
-        print stats_df.head()
+        print stats_df.head(8)
         print results.summary.tail(20)
 
         if args.fit:
