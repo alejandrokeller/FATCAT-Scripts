@@ -7,6 +7,7 @@ def clean_file(filename, print_clean_file = False, skip = 3, tab_count = 23):
     status = False
 
     with open(filename, 'r') as f:
+        f.seek(0, 0)
         head = [next(f) for x in range(skip)]
         if print_clean_file:
             for line in head:
@@ -27,6 +28,8 @@ def clean_file(filename, print_clean_file = False, skip = 3, tab_count = 23):
 if __name__ == "__main__":
 
     base_path = os.path.abspath(os.path.dirname(sys.argv[0]))
+    # move one up
+    base_path = os.path.abspath(os.path.join(base_path, os.pardir))
     #base_path = '/FATCAT-scripts'
     config_file = base_path + '/config.ini'
     if os.path.exists(config_file):
