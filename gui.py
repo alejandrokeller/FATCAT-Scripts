@@ -5,7 +5,7 @@
 # provides also a buttons interface for interacting with the 
 # measurement instrument
 
-from pyqtgraph.Qt import QtGui, QtCore
+from pyqtgraph.Qt import QtGui, QtCore, QtWidgets
 import pyqtgraph as pg
 import socket
 import sys, os
@@ -66,17 +66,20 @@ class Visualizer(object):
         # init socket
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # Create a TCP/IP socket
         self.server_address = (host_name, host_port)
-        print >>sys.stderr, 'starting up on %s port %s' % self.server_address
+        print('starting up on {}'.format(self.server_address), file=sys.stderr)
+#        print >>sys.stderr, 'starting up on %s port %s' % self.server_address
         self.sock.bind(self.server_address) # Bind the socket to the port
         self.sock.listen(1) # Listen for incoming connections
-        print >>sys.stderr, 'waiting for a connection'
+        print('waiting for a connection', file=sys.stderr)
+#        print >>sys.stderr, 'waiting for a connection'
         self.connection, self.client_address = self.sock.accept() # Wait for a connection
-        print >>sys.stderr, 'connection from', self.client_address
+        print('connection from {}'.format(self.client_address), file=sys.stderr)
+#        print >>sys.stderr, 'connection from', self.client_address
 
         self.device = instrument(config_file = config_file)
 
         # init pyqt
-        self.app = QtGui.QApplication([])
+        self.app = QtWidgets.QApplication([])
 ###        self.win = pg.GraphicsWindow(title="TC Analyzer")
 ###        self.win.showFullScreen()
 ###        self.win.setWindowTitle('TC Analyzer')
@@ -172,7 +175,9 @@ class Visualizer(object):
         zeroDict = dict(zip(self.keys,
                        map(partial(apply, a="0"), self.functions)
                        ))
-        self.df = self.df.append([zeroDict]*self.numSamples,ignore_index=True)
+        
+ #       self.df = self.df.append([zeroDict]*self.numSamples,ignore_index=True)
+        self.df = pd.concat([self.df, pd.DataFrame([zeroDict]*self.numSamples)],ignore_index=True)
             
         self.statusKeys = [
             "valve",
@@ -201,15 +206,15 @@ class Visualizer(object):
 ###        self.Tplot = self.win.addPlot(row=0, col=0, title="")
         self.Tplot = pg.PlotWidget()
         self.Tplot.addLegend()
-        self.Tplot.setRange(yRange=[0, 900])
+        self.Tplot.setRange(yRange=[0, 900], xRange=[self.t[0], self.t[-1]])
         self.Tplot.setLabel('left', "Temperature", units='°C')
         self.Tplot.setLabel('bottom', "t", units='s')
         self.Tplot.showGrid(False, True)
-        self.Tcurves[0] = self.Tplot.plot(self.t, self.df['spoven'], pen=pg.mkPen('y', width=1, style=QtCore.Qt.DashLine))
+        self.Tcurves[0] = self.Tplot.plot(self.t, self.df['spoven'].astype(str).astype(int), pen=pg.mkPen('y', width=1, style=QtCore.Qt.DashLine))
         self.Tcurves[1] = self.Tplot.plot(self.t, self.df['toven'], pen=pg.mkPen('y', width=1), name='Oven')
-        self.Tcurves[2] = self.Tplot.plot(self.t, self.df['spcoil'], pen=pg.mkPen('r', width=1, style=QtCore.Qt.DashLine))
+        self.Tcurves[2] = self.Tplot.plot(self.t, self.df['spcoil'].astype(str).astype(int), pen=pg.mkPen('r', width=1, style=QtCore.Qt.DashLine))
         self.Tcurves[3] = self.Tplot.plot(self.t, self.df['tcoil'], pen=pg.mkPen('r', width=1), name='Coil')
-        self.Tcurves[4] = self.Tplot.plot(self.t, self.df['spband'], pen=pg.mkPen('b', width=1, style=QtCore.Qt.DashLine))
+        self.Tcurves[4] = self.Tplot.plot(self.t, self.df['spband'].astype(str).astype(int), pen=pg.mkPen('b', width=1, style=QtCore.Qt.DashLine))
         self.Tcurves[5] = self.Tplot.plot(self.t, self.df['tband'], pen=pg.mkPen('b', width=1), name='Band')
         self.Tcurves[6] = self.Tplot.plot(self.t, self.df['tcat'], pen=pg.mkPen('g', width=1), name='Cat')
 #        self.win.nextRow()
@@ -252,56 +257,56 @@ class Visualizer(object):
 #####################################################################
 
         ## Define a top level widget to hold the controls
-        self.widgets = QtGui.QWidget()
+        self.widgets = QtWidgets.QWidget()
         self.widgets.setWindowTitle("FATCAT: Total Carbon Analizer")
         self.widgets.showFullScreen()
 
         ## Create infotext widgets to be placed inside
-        self.lblLicor     = QtGui.QLabel("Ext. Valve")
-        self.lblBand      = QtGui.QLabel("Band Heater")
-        self.lblOven      = QtGui.QLabel("Oven")
-        self.lblFan       = QtGui.QLabel("Fan")
-        self.lblPump      = QtGui.QLabel("Pump")
-        self.lblValve     = QtGui.QLabel("Int. Valve")
-        self.lblRes2      = QtGui.QLabel("Ext. Pump")
-        self.lblRes       = QtGui.QLabel("Res")
-        self.lblSample    = QtGui.QLabel("Sample")
-        self.lblZeroAir   = QtGui.QLabel("Zero Air")
-        self.lblESample   = QtGui.QLabel("Sample (int. pump on)")
-        self.lblEAnalysis = QtGui.QLabel("Zero Air +bypass")
-        self.lblStandby   = QtGui.QLabel("Standby")
+        self.lblLicor     = QtWidgets.QLabel("Ext. Valve")
+        self.lblBand      = QtWidgets.QLabel("Band Heater")
+        self.lblOven      = QtWidgets.QLabel("Oven")
+        self.lblFan       = QtWidgets.QLabel("Fan")
+        self.lblPump      = QtWidgets.QLabel("Pump")
+        self.lblValve     = QtWidgets.QLabel("Int. Valve")
+        self.lblRes2      = QtWidgets.QLabel("Ext. Pump")
+        self.lblRes       = QtWidgets.QLabel("Res")
+        self.lblSample    = QtWidgets.QLabel("Sample")
+        self.lblZeroAir   = QtWidgets.QLabel("Zero Air")
+        self.lblESample   = QtWidgets.QLabel("Sample (int. pump on)")
+        self.lblEAnalysis = QtWidgets.QLabel("Zero Air +bypass")
+        self.lblStandby   = QtWidgets.QLabel("Standby")
         
-        self.lblCD        = QtGui.QLabel("0")
+        self.lblCD        = QtWidgets.QLabel("0")
 
-        self.lblLicorT    = QtGui.QLabel("CO2: ")
-        self.lblLicorH2O  = QtGui.QLabel("H2O: ")
+        self.lblLicorT    = QtWidgets.QLabel("CO2: ")
+        self.lblLicorH2O  = QtWidgets.QLabel("H2O: ")
 
         ## Create bypass checkbox
-        self.cbBypass = QtGui.QCheckBox("Use &bypass")
+        self.cbBypass = QtWidgets.QCheckBox("Use &bypass")
 
         ## Create button widgets for actions
         self.button_size = 30
-        self.btnPump      = QtGui.QPushButton("")            # Turn internal pump on/off
+        self.btnPump      = QtWidgets.QPushButton("")            # Turn internal pump on/off
         self.btnPump.setFixedWidth(self.button_size)
-        self.btnBand      = QtGui.QPushButton("")            # Turn Cat. Heating on/off
+        self.btnBand      = QtWidgets.QPushButton("")            # Turn Cat. Heating on/off
         self.btnBand.setFixedWidth(self.button_size)
-        self.btnValve     = QtGui.QPushButton("")            # Toggle sampling/clean-air valves
+        self.btnValve     = QtWidgets.QPushButton("")            # Toggle sampling/clean-air valves
         self.btnValve.setFixedWidth(self.button_size)
-        self.btnLicor     = QtGui.QPushButton("")            # Toggle external valve
+        self.btnLicor     = QtWidgets.QPushButton("")            # Toggle external valve
         self.btnLicor.setFixedWidth(self.button_size)
-        self.btnOven      = QtGui.QPushButton("!")           # Turn Induction Heating on/off
+        self.btnOven      = QtWidgets.QPushButton("!")           # Turn Induction Heating on/off
         self.btnOven.setFixedWidth(self.button_size)
-        self.btnRes2      = QtGui.QPushButton("")            # Turn external pump on/off
+        self.btnRes2      = QtWidgets.QPushButton("")            # Turn external pump on/off
         self.btnRes2.setFixedWidth(self.button_size)
-        self.btnSample    = QtGui.QPushButton("")            # activate sampling mode
+        self.btnSample    = QtWidgets.QPushButton("")            # activate sampling mode
         self.btnSample.setFixedWidth(self.button_size)
-        self.btnZeroAir   = QtGui.QPushButton("")            # prepare for analisys
+        self.btnZeroAir   = QtWidgets.QPushButton("")            # prepare for analisys
         self.btnZeroAir.setFixedWidth(self.button_size)
-        self.btnESample   = QtGui.QPushButton("")            # activate emissions sampling mode
+        self.btnESample   = QtWidgets.QPushButton("")            # activate emissions sampling mode
         self.btnESample.setFixedWidth(self.button_size)
-        self.btnEAnalysis = QtGui.QPushButton("")            # prepare for emissions analisys
+        self.btnEAnalysis = QtWidgets.QPushButton("")            # prepare for emissions analisys
         self.btnEAnalysis.setFixedWidth(self.button_size)
-        self.btnStandby = QtGui.QPushButton("")              # Enter Standby mode
+        self.btnStandby = QtWidgets.QPushButton("")              # Enter Standby mode
         self.btnStandby.setFixedWidth(self.button_size)
 
         self.btnPump.clicked.connect(self.togglePump)
@@ -317,27 +322,27 @@ class Visualizer(object):
         self.btnStandby.clicked.connect(self.standby)
 
         ## Create widgets for controlling Internal MFC
-        self.btnMFC1      = QtGui.QPushButton(">>")  # Sends new MFC2 flow
+        self.btnMFC1      = QtWidgets.QPushButton(">>")  # Sends new MFC2 flow
         self.btnMFC1.setFixedWidth(self.button_size)
         self.btnMFC1.setFixedHeight(self.button_size)
         self.btnMFC1.clicked.connect(self.setMFC1)
-        self.lblMFC1      = QtGui.QLabel("Pump (dlpm):")
-        self.spMFC1       = QtGui.QSpinBox()
+        self.lblMFC1      = QtWidgets.QLabel("Pump (dlpm):")
+        self.spMFC1       = QtWidgets.QSpinBox()
         self.spMFC1.setRange(0,20)
         
         ## Create widgets for controlling External MFC
-        self.btnMFC2      = QtGui.QPushButton(">>")  # Sends new MFC2 flow
+        self.btnMFC2      = QtWidgets.QPushButton(">>")  # Sends new MFC2 flow
         self.btnMFC2.setFixedWidth(self.button_size)
         self.btnMFC2.setFixedHeight(self.button_size)
         self.btnMFC2.clicked.connect(self.setMFC2)
-        self.lblMFC2      = QtGui.QLabel("E. Pump (dlpm):")
-        self.spMFC2       = QtGui.QSpinBox()
+        self.lblMFC2      = QtWidgets.QLabel("E. Pump (dlpm):")
+        self.spMFC2       = QtWidgets.QSpinBox()
         self.spMFC2.setRange(0,170)
 
         ## Create a grid layout to manage the controls size and position
-        self.controlsLayout = QtGui.QGridLayout()
-        self.mfcLayout = QtGui.QGridLayout()
-        self.encloserLayout = QtGui.QVBoxLayout()
+        self.controlsLayout = QtWidgets.QGridLayout()
+        self.mfcLayout = QtWidgets.QGridLayout()
+        self.encloserLayout = QtWidgets.QVBoxLayout()
         self.encloserLayout.addLayout(self.controlsLayout)
         self.encloserLayout.addLayout(self.mfcLayout)
         self.encloserLayout.addStretch(1)
@@ -389,7 +394,7 @@ class Visualizer(object):
 
 
         ## Create a QVBox layout to manage the plots
-        self.plotLayout = QtGui.QVBoxLayout()
+        self.plotLayout = QtWidgets.QVBoxLayout()
 
         self.plotLayout.addWidget(self.Tplot)
         self.plotLayout.addWidget(self.Cplot)
@@ -397,7 +402,7 @@ class Visualizer(object):
         self.plotLayout.addWidget(self.Fplot)
 
         ## Create a QHBox layout to manage the plots
-        self.centralLayout = QtGui.QHBoxLayout()
+        self.centralLayout = QtWidgets.QHBoxLayout()
 
         self.centralLayout.addLayout(self.encloserLayout)
         self.centralLayout.addLayout(self.plotLayout)
@@ -422,11 +427,12 @@ class Visualizer(object):
                 newData = self.df.iloc[[-1]].to_dict('records')[0]
                 for k, f, v in zip(self.keys, self.functions, values):
                     try:
-                        newData[k] = f(v)
+                        newData[k] = f(v.decode('UTF-8'))
                     except:
-                        print "could not apply funtion " + str(f) + " to " + str(v)
+                        print("could not apply funtion", str(f),"to",str(v))
 
-                self.df = self.df.append([newData],ignore_index=True)
+#                self.df = self.df.append([newData],ignore_index=True)
+                self.df = pd.concat([self.df, pd.DataFrame([newData])],ignore_index=True)
 
                 statusbyte = newData['status']
                 j = 0
@@ -464,11 +470,11 @@ class Visualizer(object):
 ##                    self.streamVarsData = self.streamVarsData._replace(**{k:self.tempArray})
 ##                    i += 1
 ####                print >>sys.stderr, self.streamVarsData.runtime
-                self.Tcurves[0].setData(self.t, self.df['spoven'])
+                self.Tcurves[0].setData(self.t, self.df['spoven'].astype(str).astype(int))
                 self.Tcurves[1].setData(self.t, self.df['toven'])
-                self.Tcurves[2].setData(self.t, self.df['spcoil'])
+                self.Tcurves[2].setData(self.t, self.df['spcoil'].astype(str).astype(int))
                 self.Tcurves[3].setData(self.t, self.df['tcoil'])
-                self.Tcurves[4].setData(self.t, self.df['spband'])
+                self.Tcurves[4].setData(self.t, self.df['spband'].astype(str).astype(int))
                 self.Tcurves[5].setData(self.t, self.df['tband'])
                 self.Tcurves[6].setData(self.t, self.df['tcat'])
 
@@ -572,7 +578,7 @@ class Visualizer(object):
                     self.lblStandby.setStyleSheet('color: red')
                 
         except Exception as e:
-            print >>sys.stderr, e
+            print(e, file=sys.stderr)
 ##            raise
 
     def setMFC1(self):
@@ -680,7 +686,7 @@ if __name__ == '__main__':
         host_name = eval(config['TCP_INTERFACE']['HOST_NAME'])
         host_port = eval(config['TCP_INTERFACE']['HOST_PORT'])
     else:
-        print >> sys.stderr, "Could not find the configuration file: " + config_file
+        print("Could not find the configuration file: {}".format(config_file), file=sys.stderr)
         exit()
 
 
@@ -691,4 +697,4 @@ if __name__ == '__main__':
     timer.start(vis.deltaT*1000)
 
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+        QtWidgets.QApplication.instance().exec_()

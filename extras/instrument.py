@@ -90,7 +90,7 @@ class instrument(object):
         if open_port:
             self.open_port()
         for c in commands:
-            self.ser.write(c)
+            self.ser.write(c.encode())
         if open_port:
             self.close_port()
 
@@ -98,23 +98,25 @@ class instrument(object):
         # This function sends the stop datastream command (X0000) and
         # waits until there is no furter answer
         self.log_message("SERIAL", "Stopping datastream.")
-        self.ser.write(self.stop_str)
+        self.ser.write(self.stop_str.encode())
         while len(self.ser.readline()):
             pass
 
     def start_datastream(self):
         # This function sends the start datastream command (X1000)
         self.log_message("SERIAL", "Starting datastream.")
-        self.ser.write(self.start_str)
+        self.ser.write(self.start_str.encode())
 
     def query_status(self, query):
         # This function sends a query to port 'ser' and returns the instrument response
         self.log_message("SERIAL", "Sending command '" + query + "'")
-        self.ser.write(query)
+        self.ser.write(query.encode())
         answer = ""
-        while not answer.endswith("\n"):
+        while len(answer) == 0:
+            answer = self.ser.readline()
+        while answer.decode('UTF-8')[-1] != "\n":
             answer=self.ser.readline()
-        return answer
+        return answer.decode('UTF-8')
 
     def set_mfc1(self, flow, open_port = False): # flow must be in dl
         c = 'F{:04d}'.format(flow)
@@ -140,4 +142,4 @@ class instrument(object):
         timestamp = time.strftime("%Y.%m.%d-%H:%M:%S ")
         log_message = "- [{0}] :: {1}"
         log_message = timestamp + log_message.format(module,msg)
-        print >>sys.stderr,log_message
+        print(log_message, file=sys.stderr)

@@ -117,18 +117,18 @@ while 1:
        time.sleep(5)
        device.open_port()
 
-    if data_string <> "":
+    if data_string:
 ##       if use_sense:
 ##          ambient_data = sense.sense_sensor_string()
 ##          sense.increase()
-       x+=daytime + '\t' + data_string
+       x+=daytime + '\t' + data_string.decode('UTF-8')
        # transmit TCP data
        sock = send_string(data_string, server_address, sock)
     counter+=1;
     newdate = datetime.datetime.now()
 
     # Create a new file at midnight
-    if newdate.day <> filedate.day:
+    if newdate.day != filedate.day:
 ##       if use_sense:
 ##           sense.sense.clear(sense.blue)
        fo = open(file, "a")
