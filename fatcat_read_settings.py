@@ -34,7 +34,7 @@ if __name__ == "__main__":
         
         logs_path = eval(config['GENERAL_SETTINGS']['LOGS_PATH']) + '/'
     else:
-        print >> sys.stderr, "Could not find the configuration file: " + config_file
+        print("Could not find the configuration file: {}".format(config_file), file = sys.stderr)
         exit()
 
     device = instrument(config_file = config_file)
@@ -48,12 +48,12 @@ if __name__ == "__main__":
     device.start_datastream()
     device.close_port()
 
-    print >>sys.stderr, fatcat_status
+    print(fatcat_status, file = sys.stderr)
 
     newname = create_status_file(path=logs_path)
-    print >>sys.stderr, "Writing to Datafile: " + newname
+    print("Writing to Datafile: {}".format(newname), file = sys.stderr)
     fo = open(newname, "a")
     fo.write(fatcat_status)
     fo.close()
 
-    print >>sys.stderr, "bye..."
+    print("bye...", file = sys.stderr)

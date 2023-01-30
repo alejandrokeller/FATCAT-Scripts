@@ -48,7 +48,7 @@ class Datafile(object):
         self.fit_coeff  = [] # variable to hold the fitting results
         self.npeak      = npeak # number of fitted gausian curves (must identical in Results object)
 
-        #print >>sys.stderr, "loading: {}".format(datafile.name)
+        #print("loading: {}".format(datafile.name), file = sys.stderr)
 
         # search for the serial number
         # first test if data was taken at JFJ 
@@ -75,7 +75,7 @@ class Datafile(object):
                 try:
                     self.sample_co2 = float(temp[1].split(' ')[1])
                     if self.sample_co2 >= 0:
-                        #print >>sys.stderr, 'Using vol. weigthed co2 data found in file: {:.0f} ppm'.format(self.co2)
+                        #print('Using vol. weigthed co2 data found in file: {:.0f} ppm'.format(self.co2), file = sys.stderr)
                         skip_rows += 2
                         header    += 2
                         self.keys  = temp[2].replace(" ","").split(',')
@@ -91,7 +91,7 @@ class Datafile(object):
             self.units = temp[1].replace(" ","").split(',')
             self.volume = False
             self.sample_co2 = False
-        #print >>sys.stderr, "keys: {}".format(self.keys)
+        #print("keys: {}".format(self.keys), file = sys.stderr)
 
         # Use TeX notation :-)
         self.units = replace_in_list(self.units, 'ug-C', r'$\mu$g-C')
@@ -144,7 +144,7 @@ class Datafile(object):
         # Create the results DataSeries, integrating dtc and, if available, dtc-baseline
         if 'dtc-baseline' in self.df:
             tc_corrected = round(np.trapz(self.tc_df['dtc-baseline'], x=self.tc_df['elapsed-time'])/60, 3)
-            print "tc_corrected = {}, volume = {}".format(tc_corrected, self.volume)
+            print("tc_corrected = {}, volume = {}".format(tc_corrected, self.volume))
             if self.volume:
                 concentration = round(tc_corrected/self.volume, 2)
             else:
@@ -233,7 +233,7 @@ class Datafile(object):
 
             # fit the data
             if fit:
-                print "fitting event {}".format(self.datafile)
+                print("fitting event {}".format(self.datafile))
                 try:
                     self.keys.append('fitted data') # add a new column with the baseline values
                     self.units.append(r'$\mu$g-C/min')
@@ -256,12 +256,12 @@ class Datafile(object):
                     for n in range(self.npeak):
                         self.fit_coeff.append(coeffDict)
                 else:
-                    #print >>sys.stderr, "----fitted {}, r-squared = {}".format(self.datafile, round(self.r_squared, 4))
+                    #print("----fitted {}, r-squared = {}".format(self.datafile, round(self.r_squared, 4)), file = sys.stderr)
                     coeff_string = "----fitted, r-squared = {}, ".format(round(self.r_squared, 4))
                     for num, coeff_list in enumerate(self.fit_coeff):
                         coefficient_name = "A{}".format(num)
                         coeff_string += coefficient_name + "={} ".format(round(coeff_list['A'], 2))
-                    print coeff_string
+                    print(coeff_string)
 
     def create_plot(self, x='elapsed-time', y='dtc', y2='dtc-baseline', style='ggplot', format='svg',
                     err=False, error_interval = 4, mute = False, axeslabel={}, legend={},
@@ -809,7 +809,7 @@ def create_baseline_file(files, baseline_path, baseline_file, summary_path, tmax
         results.summary.to_csv(f, index=False, header=False)
         f.close()
 
-    print stats_df.head()
+    print(stats_df.head())
     box_plot(x = results.summary['date']+' '+results.summary['time'], y = results.summary['tc'], title = 'Baseline data', units = r'$\mu$g-C', filename = filename)
         
     return filename
@@ -1124,8 +1124,8 @@ if __name__ == "__main__":
             results.summary.to_csv(f, index=False, header=False)
             f.close()
 
-        print stats_df.head(8)
-        print results.summary.tail(20)
+        print(stats_df.head(8))
+        print(results.summary.tail(20))
 
         if args.fit:
             header2 = ",".join(results.fit_coeff_keys) + "\n" + ",".join(results.fit_coeff_units) + "\n"

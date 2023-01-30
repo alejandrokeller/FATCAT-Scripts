@@ -19,7 +19,7 @@ if os.path.exists(config_file):
     host_name = eval(config['TCP_INTERFACE']['HOST_NAME'])
 else:
     host_name = 'localhost'
-    print >>sys.stderr, 'Could not find the configuration file {0}'.format(config_file)
+    print('Could not find the configuration file {0}'.format(config_file), file = sys.stderr)
 
 
 # Connect the socket to the port where the server is listening
@@ -35,8 +35,8 @@ for line in fi:
    if (i > 2):
        datastring = line.rstrip('\n')
        daytime, datastring = datastring.split('\t', 1)
-       #print >>sys.stderr, line.rstrip('\n')
-       print >>sys.stderr, datastring
+       #print(line.rstrip('\n'), file = sys.stderr)
+       print(datastring, file = sys.stderr)
        # Send data
        #sock = send_string(line, server_address, sock)
        sock = send_string(datastring, server_address, sock)

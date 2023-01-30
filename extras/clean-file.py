@@ -18,8 +18,8 @@ def clean_file(filename, print_clean_file = False, skip = 3, tab_count = 23):
             tabs = line.count('\t')
             if tabs <> tab_count:
                 status = True
-                print >> sys.stderr, "Found {} tabs instead of {}:".format(tabs, tab_count)
-                print >> sys.stderr, line
+                print("Found {} tabs instead of {}:".format(tabs, tab_count), file = sys.stderr)
+                print(line, file = sys.stderr)
             elif print_clean_file:
                 print line.rstrip('\n')
 
@@ -56,12 +56,12 @@ if __name__ == "__main__":
     if not args.datafile:
         list_of_datafiles = glob.glob(data_path + '*' + data_ext) # * means all if need specific format then *.csv
         latest_datafile = max(list_of_datafiles, key=os.path.getctime)
-##        print >>sys.stderr, "Using file: {}".format(latest_datafile)
+##        print("Using file: {}".format(latest_datafile), file = sys.stderr)
         args.datafile = [open(latest_datafile, 'r')]
 
     for file in args.datafile:
         try:
             clean_file(file.name, print_clean_file = args.print_clean)
         except:
-            print >> sys.stderr, "Oops! could not load the file {}".format(file.name)
+            print("Oops! could not load the file {}".format(file.name), file = sys.stderr)
             raise       

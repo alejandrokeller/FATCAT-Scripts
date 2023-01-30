@@ -17,8 +17,6 @@ sys.path.append(base_path + '/extras/')
 import matplotlib # import previous to plot_event to avoid "server connection error"
 matplotlib.use('Agg') # needed when running from cronjob
 
-from fatcat_uploader import Uploader # httpsend command for uploading data
-from fatcat_uploader import FileUploader # httpsend command for uploading data
 from plot_event import Datafile
 from gui import hex2bin
 from log import log_message
@@ -146,18 +144,6 @@ class Rawfile(object):
             "Cycle Countdown":"countdown",
             "Status Byte":"statusbyte"}
 
-        # Keys to upload data to a sql database (not been used in long time)
-        self.uploadKeys = [
-            "date",
-            "time",
-            "datafile",
-            "dataindex",
-            "runtime",
-            "co2base",
-            "tempoven",
-            "tc",
-            "userfile"]
-
         # interpretation of bits on the "Status Byte" column
         self.statusKeys = [
             "valve",   # internal valve
@@ -172,7 +158,8 @@ class Rawfile(object):
         self.fileData = pd.DataFrame(columns = self.keys)
         self._load()
         
-        print >>sys.stderr, '{1}\nCounting events in datafile "{0}"'.format(self.datafile, time.asctime( time.localtime(time.time()) ))
+        print('{1}\nCounting events in datafile "{0}"'.format(self.datafile, time.asctime( time.localtime(time.time()) )),
+              file=sys.stderr)
         events = self._countAndFetchEvents()
         # in case there is not enough data for the last event ignore it
         if events[-1] >= self.numSamples - data_length*2: 
@@ -188,7 +175,8 @@ class Rawfile(object):
         self.resultsDf['sample'] = self.sample_volume
         self.resultsDf['sample co2'] = self.sample_co2
 
-        print >>sys.stderr, '{0} lines of data.\n{1} event(s) found at index(es): {2}'.format(self.numSamples, len(self.resultsDf), events)
+        print('{0} lines of data.\n{1} event(s) found at index(es): {2}'.format(self.numSamples, len(self.resultsDf), events),
+              file=sys.stderr)
         if not all_events:
             self.resultsDf = self.resultsDf.iloc[[-1]].reset_index(drop=True)
             self.numEvents = 1
@@ -239,7 +227,7 @@ class Rawfile(object):
 
     def _load(self):
 
-        print >>sys.stderr, "loading file", self.datafile
+        print("loading file {}".format(self.datafile), file=sys.stderr)
 
         try:
             self._read_header()
@@ -273,7 +261,7 @@ class Rawfile(object):
                                   )
             self.numSamples = len(self.df.index)
 
-        print >>sys.stderr, "loaded successfully"
+        print("loaded successfully", file=sys.stderr)
         # validate status byte to find rows with errors
         mask = self.df['Status Byte'].apply(lambda x: iserror(hex2bin, x))
         #number_of_errors = (mask.values).sum() # fastest way to count errorlines
@@ -312,7 +300,8 @@ class Rawfile(object):
             time = df_subset["Time"]
             sample_volume = np.trapz(flow, x=time)/60/1000
             if len(df_subset) > 0:
-                 print >> sys.stderr, "sample interval found: {}-{}".format(df_subset['Daytime'][df_subset.index[0]],df_subset['Daytime'][df_subset.index[-1]])
+                 print("sample interval found: {}-{}".format(df_subset['Daytime'][df_subset.index[0]],df_subset['Daytime'][df_subset.index[-1]]),
+                       file=sys.stderr)
 
             if sample_volume > 0:
                 # use co2 data only if the internal pump was active
@@ -473,9 +462,9 @@ class Rawfile(object):
             if self.sample_co2:
                 col_names += '\tsample co2'
                 col_units += '\tppm'
-            print "datafile:", self.datafile
-            print col_names
-            print col_units
+            print("datafile:", self.datafile)
+            print(col_names)
+            print(col_units)
 
         if all_events:
             start = 0
@@ -500,42 +489,7 @@ class Rawfile(object):
                     data_str = data_str + '\t{:.1f}'.format(self.resultsDf['sample co2'][event])
                 else:
                     data_str = data_str + '\t-'
-            print data_str
-
-    def uploadData(self, date, all_events = True, istart = 0):
-
-        if len(date) == 0:
-            date = self.date
-        myUploader = FileUploader()
-
-        if all_events:
-            start = 0
-        else:
-            start = self.numEvents - 1
-        j = 1
-        for event in range(start,self.numEvents):
-            filename = self.eventDir + self.date + "-" + self.resultsDf['daytime'][0:2] + self.resultsDf['daytime'][3:5] + self.eventfileSuffix
-            data   = {}
-            values = [
-                date,
-                self.resultsDf['daytime'][event],
-                self.datafile,
-                self.resultsDf['index'][event],
-                self.resultsDf['runtime'][event],
-                self.resultsDf['baseline'][event],
-                self.resultsDf['maxtoven'][event],
-                self.resultsDf['tc'][event],
-                open(filename, 'r')]
-            i = 0
-            for k in self.uploadKeys:
-                data[k] = values[i]
-                i += 1
-            if j > istart:
-                print >>sys.stderr, "Datapoint", j, ", event file:", filename
-                myUploader.httpsend(data)
-            else:
-                print >>sys.stderr, "Skipping upload of datapoint", j
-            j += 1
+            print(data_str)
 
 if __name__ == "__main__":
 
@@ -571,16 +525,8 @@ if __name__ == "__main__":
     all_parser.add_argument('--last', dest='all', action='store_false',
                     help='include only last event')
     parser.set_defaults(all=True)
-    upload_parser = parser.add_mutually_exclusive_group(required=False)
-    upload_parser.add_argument('--upload', dest='upload', action='store_true',
-                    help='upload data to cloud')
-    upload_parser.add_argument('--no-upload', dest='upload', action='store_false',
-                    help='do not upload data (default)')
-    parser.set_defaults(upload=False)
     parser.add_argument('--usedate', required=False, dest='DATE',
                     help='Use this date for the generated result table (DATE=Today if omitted). Format: YYYY-MM-DD')
-    parser.add_argument('--startindex', required=False, dest='istart', type=int,
-                    help='Use this if you want to start uploading data at an index other than the first (i.e. i>0). This option is for errors in the uploading process')
 #    parser.add_argument('--inifile', required=False, dest='INI', default=config_file,
 #                    help='Path to configuration file (config.ini if omitted)')
     parser.add_argument('--intlength', dest='intlength', type=int, default=integral_length,
@@ -596,11 +542,6 @@ if __name__ == "__main__":
     else:
         date = ""
 
-    if args.istart:
-        startIndex = args.istart
-    else:
-        startIndex = 0
-        
     integral_length = args.intlength
     data_length = args.datalength
 
@@ -610,7 +551,7 @@ if __name__ == "__main__":
         f = open(filename, 'r')
         baselineFile = Datafile(f, tmax = integral_length)
         baseline = baselineFile.results['tc']
-        print >>sys.stderr, "Instrument baseline: {} ug-C".format(baseline)
+        print("Instrument baseline: {} ug-C".format(baseline), file=sys.stderr)
     else:
         baseline = False
 
@@ -618,7 +559,7 @@ if __name__ == "__main__":
     if not args.datafile:
         list_of_datafiles = glob.glob(data_path + '*' + data_ext) # * means all if need specific format then *.csv
         latest_datafile = max(list_of_datafiles, key=os.path.getctime)
-##        print >>sys.stderr, "Using file: {}".format(latest_datafile)
+##        print("Using file: {}".format(latest_datafile), file = sys.stderr)
         args.datafile = [open(latest_datafile, 'r')]
 
     for file in args.datafile:
@@ -637,7 +578,3 @@ if __name__ == "__main__":
             except:
                 log_message("Oops!  could not calculate tc table.  Try again...")
                 raise
-
-            if args.upload:
-                    print >>sys.stderr, "uploading events to DB..."
-                    mydata.uploadData(date, all_events = args.all, istart = startIndex)

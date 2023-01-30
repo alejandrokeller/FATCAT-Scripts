@@ -48,7 +48,7 @@ def get_newest_events(value):
             start_date = datetime.datetime.today() - datetime.timedelta(weeks=number)
         elif text == 'years':
             start_date = datetime.datetime.today() - datetime.timedelta(days=365*number)
-        print >>sys.stderr, 'Searching from {}'.format(start_date)
+        print('Searching from {}'.format(start_date), file = sys.stderr)
 
         for e in reversed(events):
             event_date = datetime.datetime.strptime(e[-29:-14], '%Y-%m-%d-%H%M')
@@ -69,7 +69,7 @@ if __name__ == "__main__":
 
     if args.LAST:
         file_list = args.LAST
-        print >>sys.stderr, "{} files found".format(len(file_list))
+        print("{} files found".format(len(file_list)), file = sys.stderr)
         date_range = "latest"
     else:
-        print >>sys.stderr, "No files found"
+        print("No files found", file = sys.stderr)

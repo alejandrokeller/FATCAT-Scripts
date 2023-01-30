@@ -48,14 +48,14 @@ def send_string(line, server_address, sock = 0):
             # Create a TCP/IP socket
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-##            print >>sys.stderr, 'Sending data to %s port %s' % server_address
+##            print('Sending data to %s port %s' % server_address, file = sys.stderr)
             sock.connect(server_address)
             
         sock.sendall(line)
     except socket.error:
-##        print >>sys.stderr, "nobody listening"
+##        print("nobody listening", file = sys.stderr)
         sock.close()
-##        print >>sys.stderr, 'closing socket'
+##        print('closing socket', file = sys.stderr)
         sock = 0
 
     return sock
@@ -67,14 +67,11 @@ class Visualizer(object):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # Create a TCP/IP socket
         self.server_address = (host_name, host_port)
         print('starting up on {}'.format(self.server_address), file=sys.stderr)
-#        print >>sys.stderr, 'starting up on %s port %s' % self.server_address
         self.sock.bind(self.server_address) # Bind the socket to the port
         self.sock.listen(1) # Listen for incoming connections
         print('waiting for a connection', file=sys.stderr)
-#        print >>sys.stderr, 'waiting for a connection'
         self.connection, self.client_address = self.sock.accept() # Wait for a connection
         print('connection from {}'.format(self.client_address), file=sys.stderr)
-#        print >>sys.stderr, 'connection from', self.client_address
 
         self.device = instrument(config_file = config_file)
 
@@ -176,7 +173,6 @@ class Visualizer(object):
                        map(partial(apply, a="0"), self.functions)
                        ))
         
- #       self.df = self.df.append([zeroDict]*self.numSamples,ignore_index=True)
         self.df = pd.concat([self.df, pd.DataFrame([zeroDict]*self.numSamples)],ignore_index=True)
             
         self.statusKeys = [
@@ -431,7 +427,6 @@ class Visualizer(object):
                     except:
                         print("could not apply funtion", str(f),"to",str(v))
 
-#                self.df = self.df.append([newData],ignore_index=True)
                 self.df = pd.concat([self.df, pd.DataFrame([newData])],ignore_index=True)
 
                 statusbyte = newData['status']
@@ -439,37 +434,7 @@ class Visualizer(object):
                 for k in self.statusKeys:
                     self.statusDict[k] = int(statusbyte[j])
                     j += 1
-                
-##                i = 0
-##                self.datavector = []
-##                for s in self.datastring.split( ):
-####                    if i < len(self.keys):
-##                    if i < 13:
-##                         #### use this values als integers
-##                         self.datavector.append(ast.literal_eval(s))
-##                    else:
-##                        try:
-##                             #### transcode the last value from hex to a binary array
-##                             self.statusbyte = hex2bin(s)
-##                             j = 0
-##                             #### now store it in the status variables
-##                             for k in self.statusKeys:
-##                                 self.tempArray = np.roll(self.statusVarsData[j], -1)
-##                                 self.tempArray[-1] = int(self.statusbyte[j])                             
-##                                 self.statusVarsData = self.statusVarsData._replace(**{k:self.tempArray})
-##                                 j += 1
-##                             break
-##                        except:
-##                            pass
-##                    i += 1
-##                    
-##                i = 0
-##                for k in self.keys:
-##                    self.tempArray = np.roll(self.streamVarsData[i], -1)
-##                    self.tempArray[-1] = self.datavector[i]
-##                    self.streamVarsData = self.streamVarsData._replace(**{k:self.tempArray})
-##                    i += 1
-####                print >>sys.stderr, self.streamVarsData.runtime
+
                 self.Tcurves[0].setData(self.t, self.df['spoven'].astype(str).astype(int))
                 self.Tcurves[1].setData(self.t, self.df['toven'])
                 self.Tcurves[2].setData(self.t, self.df['spcoil'].astype(str).astype(int))

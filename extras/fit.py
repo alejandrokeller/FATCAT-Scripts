@@ -84,7 +84,7 @@ def my_fit(xdata, ydata, p0 = False, npeaks = 5):
                 (np.inf, 19,   6, np.inf, 23,   7, np.inf, 32,   8, np.inf, 40,  10, np.inf, 50,  10, np.inf, 60, 10))
         peak_function = _6gauss
     else:
-        print >>sys.stderr, "number of peaks not defined in fitting function: {}".format(npeaks)
+        print("number of peaks not defined in fitting function: {}".format(npeaks), file = sys.stderr)
 
     fitResult, ier = curve_fit( peak_function, xdata, ydata, p0=p0, bounds = bounds )
         

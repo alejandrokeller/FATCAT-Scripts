@@ -10,4 +10,4 @@ def log_message(msg):
     timestamp = time.strftime("%Y.%m.%d-%H:%M:%S ")
     log_message = "- [{0}] :: {1}"
     log_message = timestamp + log_message.format(module,msg)
-    print >>sys.stderr,log_message
+    print (log_message, file=sys.stderr)
