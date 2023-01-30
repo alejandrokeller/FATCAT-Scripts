@@ -321,7 +321,7 @@ class Datafile(object):
             type_of_plot = ""
         #filename = (self.outputDir + self.internname.replace('.','_') + '_' + y + type_of_plot + '.' + format).replace(' ','_')
         filename = ("{}_{}{}.{}".format(self.internname.replace('.','_'), y, type_of_plot, format)).replace(' ','_')
-        plot.canvas.set_window_title(filename)
+        plot.canvas.manager.set_window_title(filename)
         filename = self.outputDir + filename
         plt.savefig(filename)
         if not mute:
@@ -333,7 +333,7 @@ class Datafile(object):
                         legend={}, axeslabel={}, fitComponents = [], xmax = False, y1max = False, y2max = False):
 
         plt.style.use('ggplot')
-
+        
         # introduces a different name for the plotted curves
         if 'y2' in legend:
             y2name = legend['y2']
@@ -367,7 +367,7 @@ class Datafile(object):
         spacing = 0.01
 
         # create a figure with two subplots
-        dualplot, (ax1, ax2) = plt.subplots(2,1)
+        dualplot, (ax1, ax2) = plt.subplots(nrows=2, ncols=1)
         dualplot.subplots_adjust(wspace=spacing, hspace=spacing)
         ax1.tick_params(direction='in', labelbottom=False)
 
@@ -433,8 +433,7 @@ class Datafile(object):
             type_of_plot = ""
 
         filename = ("{}_{}_{}{}.{}".format(self.internname.replace('.','_'), y1, y2, type_of_plot, format)).replace(' ','_')
-        dualplot.canvas.set_window_title(filename)
-        #filename = (self.outputDir + self.internname.replace('.','_') + '_' + y1 + '_' + y2 + type_of_plot + '.' + format).replace(' ','_')
+        dualplot.canvas.manager.set_window_title(filename)
         filename = self.outputDir + filename
         plt.savefig(filename)
         if not mute:
@@ -533,7 +532,9 @@ class ResultsList(object):
                 newDict['{}{}'.format(c,n)] = round(coeff_dict[n][c], self.coef_units_decimals[c])
         newDict['r-squared'] = round(r_squared, 4)
         
-        self.coeff_df = self.coeff_df.append(newDict, ignore_index = True)
+        #self.coeff_df = self.coeff_df.append(newDict, ignore_index = True)
+        # Python3.9 version
+        self.coeff_df = pd.concat([self.coeff_df, pd.DataFrame([newDict])],ignore_index=True)
         
     def append_event(self, datafile):
         self.files.append(datafile.internname.rstrip('\r'))
@@ -552,7 +553,10 @@ class ResultsList(object):
                     self.all_keys.append('fitted data' + '-sd')
                 self.df_concat = pd.DataFrame(columns=self.average_keys)
             
-            self.summary = pd.DataFrame(columns=datafile.result_keys).append(datafile.results, ignore_index = True)
+            ### python2.7 version
+            #self.summary = pd.DataFrame(columns=datafile.result_keys).append(datafile.results, ignore_index = True)
+            ### python3.9 version
+            self.summary = pd.DataFrame([datafile.results])
             self.summary_keys = datafile.result_keys
             for k in self.summary_keys:
                 self.summary_units.append(datafile.result_units[k])
@@ -564,7 +568,9 @@ class ResultsList(object):
                 self.all_units.append(unit)
 
         else:
-            self.summary = self.summary.append(datafile.results, ignore_index = True)
+            ##self.summary = self.summary.append(datafile.results, ignore_index = True)
+            ### python3.9 version
+            self.summary = pd.concat([self.summary, pd.DataFrame([datafile.results])],ignore_index=True)
         
         # Extract relevant information for the mean dataframe
         subset_df = pd.DataFrame(columns=self.average_keys)
@@ -736,7 +742,8 @@ def bubble_plot(xdata, ydata, axisnames, units, title=None, style='ggplot', size
     plt.style.use(style)
 
     plot = plt.figure("scatter plot")
-    for n, (x, y, s, c, l, xerr, yerr) in enumerate(itertools.izip_longest(xdata, ydata, size, color, label, xerror, yerror, fillvalue=None)):
+    ## changes Python2.7 itertools.izip_longest to Python3.9 itertools.zip_longest
+    for n, (x, y, s, c, l, xerr, yerr) in enumerate(itertools.zip_longest(xdata, ydata, size, color, label, xerror, yerror, fillvalue=None)):
         if not l:
             l = "group{}".format(n)
         plt.scatter(x, y, s=s, color=c, alpha=0.3, edgecolors='none', label=l)
@@ -818,12 +825,13 @@ def generate_df_stats(mydata):
     mydata = mydata.drop(['runtime','time', 'date'], axis=1) # drop unnecesary fields
     stats_df = pd.DataFrame()
     
-    stats_df['mean']   = mydata.mean()
-    stats_df['std']    = mydata.std()
-    stats_df['3*std']  = (3*mydata.std())
-    stats_df['median'] = mydata.median()
-    stats_df['max']    = mydata.max()
-    stats_df['min']    = mydata.min()
+    ## added "numeric_only=True". Non numeric columns are not processed.
+    stats_df['mean']   = mydata.mean(numeric_only=True)
+    stats_df['std']    = mydata.std(numeric_only=True)
+    stats_df['3*std']  = (3*mydata.std(numeric_only=True))
+    stats_df['median'] = mydata.median(numeric_only=True)
+    stats_df['max']    = mydata.max(numeric_only=True)
+    stats_df['min']    = mydata.min(numeric_only=True)
     
     stats_df = stats_df.round(2)
     
@@ -872,10 +880,15 @@ def read_baseline_dictionary(baseline_path, baseline_filename):
     baseline_dictionary = {}
     baselines = glob.glob(baseline_path + 'SN*/' + baseline_filename)
     keys = map(lambda x: re.findall(r'(/SN\d+/)', x), baselines)
+    if baselines:
+        print("Baselines: {}".format(baselines))
+        print("Keys: {}".format(keys))
     # add elements from JFJ
     baselines_jfj = glob.glob(baseline_path + 'JFJ-SN*/' + baseline_filename)
-    baselines += baselines_jfj
-    keys += map(lambda x: re.findall(r'(/JFJ-SN\d+/)', x), baselines_jfj)
+    if baselines_jfj:
+        baselines += baselines_jfj
+        print("map: {}".format(map(lambda x: re.findall(r'(/JFJ-SN\d+/)', x), baselines_jfj)))
+        keys += map(lambda x: re.findall(r'(/JFJ-SN\d+/)', x), baselines_jfj)
     # construct the dictionary
     for k, p in zip(keys, baselines):
         if k:
