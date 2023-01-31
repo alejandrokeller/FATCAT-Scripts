@@ -110,7 +110,11 @@ def day_plot(df, df_list, tc_column = 'tc', filename = "day_overview", title = "
         for j in list(df_list[i]['elapsed-time'].index.values):
             row.append(df_list[i][dtc_column][j])
         Zcontour.append(row)
-    Zcontour = map(list, zip(*Zcontour))
+    ## Now transpose the Zcontour
+    ## Python2.7 version
+    #Zcontour = map(list, zip(*Zcontour))
+    ## replaced by Python3.9 version
+    Zcontour = list(zip(*Zcontour))
     cf = ax_contour.contourf(Xcontour, Ycontour, Zcontour)
     ax_contour.set(xlabel='time/date', ylabel='Time [filter heating] (s)')
     my_date_formater(ax_contour, x.max() - x.min())
@@ -232,9 +236,13 @@ def simple_day_plot(df, df_list, average_df, tc_column = 'tc', filename = "day_o
     for i in reduced_list:
         row = []
         for j in i[dtc_column]:
-            row.append(j)
+            row.append(round(j,3))
         Zcontour.append(row)
-    Zcontour = map(list, zip(*Zcontour))
+    ## Now transpose the Zcontour
+    ## Python2.7 version
+    #Zcontour = map(list, zip(*Zcontour))
+    ## replaced by Python3.9 version
+    Zcontour = list(zip(*Zcontour))
     cf = ax_contour.contourf(Xcontour, Ycontour, Zcontour)
     ax_contour.set(ylabel='Time since heating start (s)')
     ax_contour.set_title(r'Total Carbon [$\Delta TC$] ($\mu$g-C/minute)')
@@ -484,8 +492,8 @@ if __name__ == "__main__":
                                title = report_name, xlabel = time_axis,
                                units = new_units, filename = report_graph)
 
-    print stats_df.head(8)
-    print results.summary.tail(20)
+    print(stats_df.head(8))
+    print(results.summary.tail(20))
 
     if len(file_list) > 1:
         # send summary path, figure will append appropriate data
