@@ -11,17 +11,17 @@ def clean_file(filename, print_clean_file = False, skip = 3, tab_count = 23):
         head = [next(f) for x in range(skip)]
         if print_clean_file:
             for line in head:
-                print line.rstrip('\n')
+                print(line.rstrip('\n'))
         
         for line in f:
             line_length = len(line)
             tabs = line.count('\t')
-            if tabs <> tab_count:
+            if tabs != tab_count:
                 status = True
                 print("Found {} tabs instead of {}:".format(tabs, tab_count), file = sys.stderr)
                 print(line, file = sys.stderr)
             elif print_clean_file:
-                print line.rstrip('\n')
+                print(line.rstrip('\n'))
 
     return status
 
