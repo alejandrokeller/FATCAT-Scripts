@@ -879,16 +879,16 @@ def my_days_format_function(x, pos=None):
 def read_baseline_dictionary(baseline_path, baseline_filename):
     baseline_dictionary = {}
     baselines = glob.glob(baseline_path + 'SN*/' + baseline_filename)
-    keys = map(lambda x: re.findall(r'(/SN\d+/)', x), baselines)
+    keys = list(map(lambda x: re.findall(r'(/SN\d+/)', x), baselines))
     if baselines:
         print("Baselines: {}".format(baselines))
-        print("Keys: {}".format(keys))
+#        print("Keys: {}".format(keys))
     # add elements from JFJ
     baselines_jfj = glob.glob(baseline_path + 'JFJ-SN*/' + baseline_filename)
     if baselines_jfj:
         baselines += baselines_jfj
-        print("map: {}".format(map(lambda x: re.findall(r'(/JFJ-SN\d+/)', x), baselines_jfj)))
-        keys += map(lambda x: re.findall(r'(/JFJ-SN\d+/)', x), baselines_jfj)
+#        print("map: {}".format(list(map(lambda x: re.findall(r'(/JFJ-SN\d+/)', x), baselines_jfj))))
+        keys += list(map(lambda x: re.findall(r'(/JFJ-SN\d+/)', x), baselines_jfj))
     # construct the dictionary
     for k, p in zip(keys, baselines):
         if k:
@@ -1013,7 +1013,7 @@ if __name__ == "__main__":
         if len(file_list) == 0:
             log_message("No events found.")
             exit()
-        args.datafile = map(lambda x: open(x, 'r'), file_list)
+        args.datafile = list(map(lambda x: open(x, 'r'), file_list))
 
     # Get the last event if none is given
     if not args.datafile:
@@ -1052,7 +1052,7 @@ if __name__ == "__main__":
 
     else:
         # if only one file, then show the diagram per default
-        if len(args.datafile) == 1 and not args.mute:
+        if len(list(args.datafile)) == 1 and not args.mute:
                args.individual_plots = True
         # Uses the default first guess for fitting
         p0 = False
