@@ -884,7 +884,6 @@ def my_days_format_function(x, pos=None):
 
 def read_baseline_dictionary(baseline_path, baseline_filename):
     baseline_dictionary = {}
-<<<<<<< HEAD
     path = os.path.join(baseline_path, 'SN*', baseline_filename)
     baselines = glob.glob(path)
     keys = list(map(lambda x: re.findall(r'(/SN\d+/)', x.replace("\\",'/')), baselines))
@@ -896,22 +895,10 @@ def read_baseline_dictionary(baseline_path, baseline_filename):
     if baselines_jfj:
         #baselines += baselines_jfj
         baselines.extend(baselines_jfj)
-        print("Baselines JFJ: {}".format(list(map(lambda x: re.findall(r'(/JFJ-SN\d+/)', x.replace("\\",'/')), baselines_jfj))))
+        keys_jfj = list(map(lambda x: re.findall(r'(/JFJ-SN\d+/)', x.replace("\\",'/')), baselines_jfj))
+        print("Baselines JFJ: {}".format(keys_jfj))
         #keys += map(lambda x: re.findall(r'(/JFJ-SN\d+/)', x), baselines_jfj)
-        keys.extend(list(map(lambda x: re.findall(r'(/JFJ-SN\d+/)', x.replace("\\",'/')), baselines_jfj)))
-=======
-    baselines = glob.glob(baseline_path + 'SN*/' + baseline_filename)
-    keys = list(map(lambda x: re.findall(r'(/SN\d+/)', x), baselines))
-    if baselines:
-        print("Baselines: {}".format(baselines))
-#        print("Keys: {}".format(keys))
-    # add elements from JFJ
-    baselines_jfj = glob.glob(baseline_path + 'JFJ-SN*/' + baseline_filename)
-    if baselines_jfj:
-        baselines += baselines_jfj
-#        print("map: {}".format(list(map(lambda x: re.findall(r'(/JFJ-SN\d+/)', x), baselines_jfj))))
-        keys += list(map(lambda x: re.findall(r'(/JFJ-SN\d+/)', x), baselines_jfj))
->>>>>>> 7f7989d33a57c64bafbc87e291525f5b5ab312ad
+        keys.extend(keys_jfj)
     # construct the dictionary
     for k, p in zip(keys, baselines):
         if k:
