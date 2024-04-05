@@ -11,10 +11,11 @@ import pandas as pd
 from pandas.plotting import register_matplotlib_converters
 
 import matplotlib
-if not sys.stdout.isatty():
+if not sys.stdout.isatty() and os.name != "nt":
     # runs graphs silently without user interaction
     # used if the script is run as cronjob or if
     # stdout has been redirected
+    # "nt" check: windows command line reports false always
     matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
