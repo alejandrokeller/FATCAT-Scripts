@@ -322,8 +322,10 @@ class Datafile(object):
         #filename = (self.outputDir + self.internname.replace('.','_') + '_' + y + type_of_plot + '.' + format).replace(' ','_')
         filename = ("{}_{}{}.{}".format(self.internname.replace('.','_'), y, type_of_plot, format)).replace(' ','_')
         plot.canvas.manager.set_window_title(filename)
-        filename = self.outputDir + filename
-        plt.savefig(filename)
+        path = os.path.join(self.outputDir, filename)
+        plt.savefig(path)
+        #filename = self.outputDir + filename
+        #plt.savefig(filename)
         if not mute:
             plt.show()
         plt.close(plot)
@@ -434,8 +436,9 @@ class Datafile(object):
 
         filename = ("{}_{}_{}{}.{}".format(self.internname.replace('.','_'), y1, y2, type_of_plot, format)).replace(' ','_')
         dualplot.canvas.manager.set_window_title(filename)
-        filename = self.outputDir + filename
-        plt.savefig(filename)
+        #filename = self.outputDir + filename
+        path = os.path.join(self.outputDir, filename)
+        plt.savefig(path)
         if not mute:
             plt.show()
         plt.close(dualplot)
@@ -671,7 +674,7 @@ class ResultsList(object):
 
         plt.show()
 
-def box_plot(x, y, units, title, filename, style='ggplot', format='svg', date_format='%Y-%m-%d', xlabel='date'):
+def box_plot(x, y, units, title, filename, path, style='ggplot', format='svg', date_format='%Y-%m-%d', xlabel='date'):
     #plt.style.use('ggplot')
     plt.style.use(style)
 
@@ -732,12 +735,13 @@ def box_plot(x, y, units, title, filename, style='ggplot', format='svg', date_fo
 ##    ax_hist.set_ylim(ax_scatter.get_ylim())
 
     filename = (filename.replace('.','_') + '_' + y.name + '-boxplot.' + format).replace(' ','_')
-    plt.savefig(filename)
+    plt_file = os.path.join(path, filename)
+    plt.savefig(plt_file)
 
     return box
 
 def bubble_plot(xdata, ydata, axisnames, units, title=None, style='ggplot', size = None, color = None, label = None,
-                xerror = None, yerror = None, filename="fitted_coefficients_plot", format='svg',
+                xerror = None, yerror = None, path = "./", filename="fitted_coefficients_plot", format='svg',
                 show_error = False):
     plt.style.use(style)
 
@@ -769,7 +773,8 @@ def bubble_plot(xdata, ydata, axisnames, units, title=None, style='ggplot', size
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     filename = (filename.replace('.','_') + '.' + format).replace(' ','_')
-    plt.savefig(filename)
+    plt_file = os.path.join(path, filename)
+    plt.savefig(plt_file)
 
     return plot
 
@@ -799,7 +804,7 @@ def create_baseline_file(files, baseline_path, baseline_file, summary_path, tmax
     header = baseline_file + "\nAverage datafile: " + str(len(results.files)) + " entries:" + " ".join(results.files) + "\n"
     header = header + ",".join(results.all_keys) + "\n" + ",".join(results.all_units) + "\n"
 
-    filename = baseline_path + baseline_file
+    filename = os.path.join(baseline_path, baseline_file)
     with open(filename, 'w') as f:
         f.write(header)
         results.build_average_df().to_csv(f, index=False, header=False)
@@ -817,7 +822,8 @@ def create_baseline_file(files, baseline_path, baseline_file, summary_path, tmax
         f.close()
 
     print(stats_df.head())
-    box_plot(x = results.summary['date']+' '+results.summary['time'], y = results.summary['tc'], title = 'Baseline data', units = r'$\mu$g-C', filename = filename)
+    box_plot(x = results.summary['date']+' '+results.summary['time'], y = results.summary['tc'],
+             title = 'Baseline data', units = r'$\mu$g-C', filename = baseline_file, path = baseline_path)
         
     return filename
 
@@ -872,23 +878,26 @@ def my_days_format_function(x, pos=None):
      if pos == 0:
          fmt = '%b %d\n%Y'
      else:
-         fmt = '%b %-d'
+         fmt = '%b %d'
      label = x.strftime(fmt)
      return label
 
 def read_baseline_dictionary(baseline_path, baseline_filename):
     baseline_dictionary = {}
-    baselines = glob.glob(baseline_path + 'SN*/' + baseline_filename)
-    keys = map(lambda x: re.findall(r'(/SN\d+/)', x), baselines)
-    if baselines:
-        print("Baselines: {}".format(baselines))
-        print("Keys: {}".format(keys))
-    # add elements from JFJ
-    baselines_jfj = glob.glob(baseline_path + 'JFJ-SN*/' + baseline_filename)
+    path = os.path.join(baseline_path, 'SN*', baseline_filename)
+    baselines = glob.glob(path)
+    keys = list(map(lambda x: re.findall(r'(/SN\d+/)', x.replace("\\",'/')), baselines))
+    print("Baselines: {}".format(keys))
+    # add elements from JFJg
+    path = os.path.join(baseline_path, 'JFJ-SN*', baseline_filename).replace("\\",'/')
+    baselines_jfj = glob.glob(path)
+    #baselines_jfj = glob.glob(baseline_path + 'JFJ-SN*/' + baseline_filename)
     if baselines_jfj:
-        baselines += baselines_jfj
-        print("map: {}".format(map(lambda x: re.findall(r'(/JFJ-SN\d+/)', x), baselines_jfj)))
-        keys += map(lambda x: re.findall(r'(/JFJ-SN\d+/)', x), baselines_jfj)
+        #baselines += baselines_jfj
+        baselines.extend(baselines_jfj)
+        print("Baselines JFJ: {}".format(list(map(lambda x: re.findall(r'(/JFJ-SN\d+/)', x.replace("\\",'/')), baselines_jfj))))
+        #keys += map(lambda x: re.findall(r'(/JFJ-SN\d+/)', x), baselines_jfj)
+        keys.extend(list(map(lambda x: re.findall(r'(/JFJ-SN\d+/)', x.replace("\\",'/')), baselines_jfj)))
     # construct the dictionary
     for k, p in zip(keys, baselines):
         if k:
@@ -1142,6 +1151,7 @@ if __name__ == "__main__":
 
         if args.fit:
             header2 = ",".join(results.fit_coeff_keys) + "\n" + ",".join(results.fit_coeff_units) + "\n"
+            fit_full_path = os.path.join(summary_path, fit_file)
             with open(fit_full_path, 'w') as f:
                 f.write(header1)
                 f.write(header2)
@@ -1164,14 +1174,16 @@ if __name__ == "__main__":
                 label.append("peak{}".format(i))
             color = ['tab:blue', 'tab:orange', 'tab:green', 'tab:grey', 'tab:olive' ]
             color = color[0 : results.npeak]
-            filename = fit_full_path.replace('.','_') + '-FitCoeffPlot'
+            filename = fit_file.replace('.','_') + '-FitCoeffPlot'
             bubble_plot(xdata, ydata, axisnames = ["sigma", "xc"], units = ["s", "s"], title="Fitted parameters", size = size, color = color,
                         label = label, xerror = xerror, yerror = yerror,
-                        filename = filename, format=plot_format, show_error = args.ferror)
+                        path = summary_path, filename = filename, format=plot_format, show_error = args.ferror)
         
-        filename = summary_path + summary_file.replace('.','_') + '-boxplot.' + plot_format
+        #filename = summary_path + summary_file.replace('.','_') + '-boxplot.' + plot_format
+        filename = summary_file.replace('.','_') + '-boxplot.' + plot_format
         if results.n > 1:
-            box_plot(results.summary['date']+' '+results.summary['time'], results.summary[box_y], r'$\mu$g-C', 'Total Carbon', filename, format=plot_format, date_format='%Y-%m-%d %H:%M:%S')
+            box_plot(results.summary['date']+' '+results.summary['time'], results.summary[box_y], r'$\mu$g-C', 'Total Carbon',
+                     filename = filename, path = summary_path, format=plot_format, date_format='%Y-%m-%d %H:%M:%S')
             if not args.mute:
                 if args.param:
                     results.animated_plot(y2=args.param, y3=None)

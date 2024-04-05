@@ -269,9 +269,13 @@ def simple_day_plot(df, df_list, average_df, tc_column = 'tc', filename = "day_o
     ax_temp.set_ylim(ax_contour.get_ylim())
     ax_temp.set_xlim((20, 810))
             
-
-    filename = filename.replace('.','_') + '_' + df[tc_column].name + '-simple_day_overview.' + format
-    plt.savefig(filename)
+    # 2024.04.04 A. Keller fix path error under windows
+    basename = os.path.basename(filename)
+    dirname = os.path.dirname(filename)
+    basename = basename.replace('.','_') + '_' + df[tc_column].name + '-simple_day_overview.' + format
+    path = os.path.join(dirname, basename)
+    #filename = filename.replace('.','_') + '_' + df[tc_column].name + '-simple_day_overview.' + format
+    plt.savefig(path)
 
     return overview
 
@@ -404,7 +408,7 @@ if __name__ == "__main__":
         try:
             date_range = (start_date if days_to_show == 1 else start_date + '-' + end_date)
         except:
-            log_message("No event flies found (range {} to {})".format(args.START.strftime('%Y-%m-%d'), args.END.strftime('%Y-%m-%d')))
+            log_message("No event flies found (range {} to {}) in {}".format(args.START.strftime('%Y-%m-%d'), args.END.strftime('%Y-%m-%d'), events_path))
             exit()
         log_message("{} files found (range {})".format(len(file_list), date_range))
 
@@ -439,6 +443,7 @@ if __name__ == "__main__":
     results = ResultsList()
 
     sn = False
+    print("integral: {}s".format(tmax))
     for e in file_list:
         with open(e, 'r') as f:
             mydata = Datafile(f, output_path = output_path, tmax = tmax)
