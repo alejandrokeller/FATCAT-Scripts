@@ -26,7 +26,7 @@ from plot_event import box_plot, read_baseline_dictionary
 from event_list import get_newest_events
 from log import log_message
 
-def day_plot(df, df_list, tc_column = 'tc', filename = "day_overview", title = "Day Overview", style='ggplot',
+def day_plot(df, df_list, tc_column = 'tc', filename = "day_overview", path = "./", title = "Day Overview", style='ggplot',
              format='svg', tmax = False):
     plt.style.use('ggplot')
 
@@ -104,18 +104,31 @@ def day_plot(df, df_list, tc_column = 'tc', filename = "day_overview", title = "
     ax_co2.set_title(r'CO$_2$ baseline', loc = 'right', verticalalignment = 'top', visible = False)
 
     # The contourplot
-    Xcontour, Ycontour = np.meshgrid(x, df_list[0]['elapsed-time'])
+    # create a list of all posible 'elapsed-time' values
+    y_contour_values = pd.DataFrame()
+    for i in df_list:
+        if y_contour_values.empty:
+            y_contour_values = i['elapsed-time']
+        else:
+            y_contour_values = pd.merge(y_contour_values, i['elapsed-time'],
+                                how='outer', on=['elapsed-time'])
+    # rearange relevant columns of the dataframes into reduce_list so
+    # that all DataFrames use the same 'elapsed time' values
+    reduced_list = []
+    for i in df_list:
+        temp_df = i[['elapsed-time', dtc_column]]
+        temp_df = pd.merge(y_contour_values, temp_df, how='left', on=['elapsed-time'])
+        reduced_list.append(temp_df)
+    Xcontour, Ycontour = np.meshgrid(x, y_contour_values)
     Zcontour = []
-    for i in list(x.index.values):
+    for i in reduced_list:
         row = []
-        for j in list(df_list[i]['elapsed-time'].index.values):
-            row.append(df_list[i][dtc_column][j])
+        for j in i[dtc_column]:
+            row.append(round(j,3))
         Zcontour.append(row)
     ## Now transpose the Zcontour
-    ## Python2.7 version
-    #Zcontour = map(list, zip(*Zcontour))
-    ## replaced by Python3.9 version
     Zcontour = list(zip(*Zcontour))
+    print("(x, y, z) = ({}, {}, {})".format(np.array(Xcontour).shape, np.array(Ycontour).shape, np.array(Zcontour).shape))
     cf = ax_contour.contourf(Xcontour, Ycontour, Zcontour)
     ax_contour.set(xlabel='time/date', ylabel='Time [filter heating] (s)')
     my_date_formater(ax_contour, x.max() - x.min())
@@ -149,10 +162,11 @@ def day_plot(df, df_list, tc_column = 'tc', filename = "day_overview", title = "
     ax_box.set_ylim(ax_tc.get_ylim())
     if tmax:
         ax_contour.set_ylim((0, tmax))
-            
 
     filename = filename.replace('.','_') + '_' + df[tc_column].name + '-day_overview.' + format
-    plt.savefig(filename)
+    path = os.path.join(path, filename)
+    #filename = filename.replace('.','_') + '_' + df[tc_column].name + '-simple_day_overview.' + format
+    plt.savefig(path)
 
     return complete_overview
 
@@ -216,7 +230,6 @@ def simple_day_plot(df, df_list, average_df, tc_column = 'tc', filename = "day_o
     ax_temp.set_title("Furnace Temp.")
 
     # The contourplot
-##    y_contour_values = df_list[0]['elapsed-time']
     # create a list of all posible 'elapsed-time' values
     y_contour_values = pd.DataFrame()
     for i in df_list:
@@ -240,8 +253,6 @@ def simple_day_plot(df, df_list, average_df, tc_column = 'tc', filename = "day_o
             row.append(round(j,3))
         Zcontour.append(row)
     ## Now transpose the Zcontour
-    ## Python2.7 version
-    #Zcontour = map(list, zip(*Zcontour))
     ## replaced by Python3.9 version
     Zcontour = list(zip(*Zcontour))
     cf = ax_contour.contourf(Xcontour, Ycontour, Zcontour)
@@ -378,7 +389,7 @@ if __name__ == "__main__":
         raise parser.error("End date is prior to start date")
 
     if args.title:
-        report_name = args.title
+        report_name = args.title 
 
     if args.datename:
         time_axis = args.datename 
@@ -460,7 +471,8 @@ if __name__ == "__main__":
                 mydata.add_baseline(baseline = baseline_df)
             results.append_event(mydata)
 
-    summary_full_path = summary_path + date_range + "-" + summary_file
+    sumary_file_name = date_range + "-" + summary_file
+    summary_full_path = os.path.join(summary_path, sumary_file_name) 
             
     # write the results table to the summary file and include the stats in file header
     stats_df = generate_df_stats(results.summary)
@@ -500,16 +512,21 @@ if __name__ == "__main__":
 
     print(stats_df.head(8))
     print(results.summary.tail(20))
+    
+    if not report_name:
+        graph_title = 'Overview ' + date_range
+    else:
+        graph_title = report_name
 
     if len(file_list) > 1:
         # send summary path, figure will append appropriate data
         if args.allplots:
-            overview = day_plot(results.summary, results.df_list, tc_column = tc_column, title = date_range, filename = summary_full_path,
+            overview = day_plot(results.summary, results.df_list, tc_column = tc_column, title = graph_title + " (individual plots)", path = summary_path, filename = sumary_file_name,
                      format=plot_format, tmax = graphmax)
             if args.mute_graphs:
                 plt.close(overview)
         if args.simple:
-            simple_overview = simple_day_plot(results.summary, results.df_list, tc_column = tc_column, title = 'Overview ' + date_range, filename = summary_full_path,
+            simple_overview = simple_day_plot(results.summary, results.df_list, tc_column = tc_column, title = graph_title, filename = summary_full_path,
                      format=plot_format, average_df = results.build_average_df(), tmax = graphmax)
             if args.mute_graphs:
                 plt.close(simple_overview)
