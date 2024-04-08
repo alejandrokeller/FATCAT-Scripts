@@ -41,36 +41,39 @@ if __name__ == "__main__":
     
     queries = []
 
-    if args.flowrate > 20:
-        device.log_message("COMMANDS", "ERROR: valid flow range is 0 to 20 dl per minute.")
-    elif args.flowrate >= 0:
-        flow = 'F{:04d}'.format(args.flowrate)
-        msg = "Setting pump flow rate to " + flow 
-        device.log_message("COMMANDS", msg)
-        queries.append(flow)
+    if args.flowrate:
+        if args.flowrate > 20:
+            device.log_message("COMMANDS", "ERROR: valid flow range is 0 to 20 dl per minute.")
+        elif args.flowrate >= 0:
+            flow = 'F{:04d}'.format(args.flowrate)
+            msg = "Setting pump flow rate to " + flow 
+            device.log_message("COMMANDS", msg)
+            queries.append(flow)
 #    elif args.flowrate < 0:
 #        device.log_message("COMMANDS", "ERROR: flow must be larger than 0.")
 
-    if args.eflowrate > 170:
-        device.log_message("COMMANDS", "ERROR: valid flow range is 0 to 170 dl per minute.") 
-    elif args.eflowrate >= 0:
-        flow = 'C{:04d}'.format(args.eflowrate)
-        msg = "Setting external pump flow rate to " + flow 
-        device.log_message("COMMANDS", msg)
-        queries.append(flow)
+    if args.eflowrate:
+        if args.eflowrate > 170:
+            device.log_message("COMMANDS", "ERROR: valid flow range is 0 to 170 dl per minute.") 
+        elif args.eflowrate >= 0:
+            flow = 'C{:04d}'.format(args.eflowrate)
+            msg = "Setting external pump flow rate to " + flow 
+            device.log_message("COMMANDS", msg)
+            queries.append(flow)
 #    elif args.eflowrate < 0:
 #        device.log_message("COMMANDS", "ERROR: flow must be larger than 0.")
 
-    if args.seconds > 80:
-        device.log_message("COMMANDS", "ERROR: valid countdown range is 0 to 80 seconds.")
-    elif args.seconds:
-        if args.seconds > 0:
-            seconds = 'A{:04d}'.format(args.seconds)
-            msg = "Setting countdown to " + seconds + "seconds"
-            device.log_message("COMMANDS", msg)
-            queries.append(seconds)
-        else:
-            device.log_message("COMMANDS", "ERROR: countdown must be larger than 0.")
+    if args.seconds:
+        if args.seconds > 80:
+            device.log_message("COMMANDS", "ERROR: valid countdown range is 0 to 80 seconds.")
+        elif args.seconds:
+            if args.seconds > 0:
+                seconds = 'A{:04d}'.format(args.seconds)
+                msg = "Setting countdown to " + seconds + "seconds"
+                device.log_message("COMMANDS", msg)
+                queries.append(seconds)
+            else:
+                device.log_message("COMMANDS", "ERROR: countdown must be larger than 0.")
 
 
     if args.pump_status == 'on':
