@@ -498,17 +498,18 @@ if __name__ == "__main__":
             if  report_df.loc[idx,'sample'] == '-':
                 report_df.loc[idx,new_column] = (report_df.loc[idx,tc_column]/sampling_volume).round(2)
         report_df[new_column] = pd.to_numeric(report_df[new_column])
-        report_full_path = summary_path + "report/" + date_range + "-" + summary_file
+        report_filename = date_range + "-" + summary_file
+        report_path = os.path.join(summary_path, "report/")
+        report_full_path = os.path.join(report_path, report_filename)
         with open(report_full_path, 'w') as f:
             f.write(header_report)
             report_df.to_csv(f, index=False, header=False)
             f.close()
-        report_graph = report_full_path
         if not report_name:
             report_name = 'Total Carbon Concentration: ' + date_range
         report_plot = box_plot(x = report_df['date'] + ' ' + report_df['time'], y = report_df[new_column],
-                               title = report_name, xlabel = time_axis,
-                               units = new_units, filename = report_graph)
+                               title = report_name, xlabel = time_axis, date_format='%Y-%m-%d %H:%M:%S',
+                               units = new_units, path = report_path, filename = report_filename)
 
     print(stats_df.head(8))
     print(results.summary.tail(20))
