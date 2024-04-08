@@ -607,7 +607,7 @@ class ResultsList(object):
         return df
 
     def animated_plot(self, x='elapsed-time', y1='toven', y2='dtc', y3='dtc-baseline',
-                        style='ggplot'):
+                        style='ggplot', xmax = False):
 
         plt.style.use('ggplot')
         show_y3 = False
@@ -638,7 +638,10 @@ class ResultsList(object):
         ax1.set_ylim(limY1min - extra_space1, limY1max + extra_space1)
         ax2.set_ylim(limY2min - extra_space2, limY2max + extra_space2)
         for ax in [ax1, ax2]:
-            ax.set_xlim(self.df_concat[x].min(), self.df_concat[x].max())
+            if not xmax:
+                xmax = self.df_concat[x].max()
+            ax.set_xlim(self.df_concat[x].min(), xmax)
+            #ax.set_xlim(self.df_concat[x].min(), self.df_concat[x].max())
 
         # some formating
         unity1 = self.all_units[self.all_keys.index(y1)]
@@ -1187,8 +1190,8 @@ if __name__ == "__main__":
                      filename = filename, path = summary_path, format=plot_format, date_format='%Y-%m-%d %H:%M:%S')
             if not args.mute:
                 if args.param:
-                    results.animated_plot(y2=args.param, y3=None)
+                    results.animated_plot(y2=args.param, y3=None, xmax = xmax)
                 elif args.fit:
-                    results.animated_plot(y3='dtc-baseline', y2='fitted data')
+                    results.animated_plot(y3='dtc-baseline', y2='fitted data', xmax = xmax)
                 else:
-                    results.animated_plot()
+                    results.animated_plot(xmax = xmax)
