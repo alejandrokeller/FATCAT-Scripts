@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import sys
 from scipy.special import erf
 from scipy.optimize import minimize,leastsq, curve_fit
@@ -25,7 +26,7 @@ def _5gauss(x, A0, x0, s0, A1, x1, s1, A2, x2, s2, A3, x3, s3, A4, x4, s4):
 def _6gauss(x, A0, x0, s0, A1, x1, s1, A2, x2, s2, A3, x3, s3, A4, x4, s4, A5, x5, s5):
     return _5gauss(x, A0, x0, s0, A1, x1, s1, A2, x2, s2, A3, x3, s3, A4, x4, s4) + A5 / s5 * gauss( ( x - x5 ) / s5 )
 
-def my_fit(xdata, ydata, p0 = False, npeaks = 5):
+def my_fit(xdata, ydata, p0 = False, npeaks = 5, x_limit = False):
                                 
     nparameters = 3
 
@@ -44,17 +45,20 @@ def my_fit(xdata, ydata, p0 = False, npeaks = 5):
                 (np.inf, np.inf, 20, np.inf, np.inf, 20))
         peak_function = _2gauss
     elif npeaks == 3:
-        if not p0:
-            p0 = (10., 15., 3., 8., 33., 7., 6., 53., 8. )
-            #      A0,  x0, s0, A1,  x1, s1, A2,  x2, s2
+#        if not p0:
+#            p0 = (10., 15., 3., 8., 33., 7., 6., 53., 8. )
+#                  A0,  x0, s0, A1,  x1, s1, A2,  x2, s2
 #        bounds=((0, 0, 0, 0, 0, 0, 0, 0, 0),
 #                (np.inf, 80, np.inf, np.inf, 80, np.inf, np.inf, 80, 20))
 ## Before Aerotox--- used for Schimmelstrasse in ZH
-        bounds=(     (0,  0, 1.5,      0, 28,  1.5,      0, 40,  1.5),
-                (np.inf, 20, 5, np.inf, 40, 10, np.inf, 60, 10))
-## FOR JFJ
-#        bounds=(     (0,  0, 1.5,      0, 17,  1.5,      0, 40,  1.5),
+#        bounds=(     (0,  0, 1.5,      0, 28,  1.5,      0, 40,  1.5),
 #                (np.inf, 20, 5, np.inf, 40, 10, np.inf, 60, 10))
+## FOR JFJ
+        if not p0:
+            p0 = (10., 15., 3., 8., 27., 7., 6., 45., 6. )
+#                  A0, x0,  s0, A1,  x1, s1, A2,  x2, s2
+        bounds=(     (0,  0, 1.5,      0, 0,  1.5,      0, 38,  2),
+                (np.inf, 30, 9, np.inf, 30, 9, np.inf, 70, 30))
 
 ## Very constrained peaks
 ##        bounds=(     (0,  0, 1.5,    0, 35,  1.5,    0, 55,  1.5),
@@ -85,8 +89,16 @@ def my_fit(xdata, ydata, p0 = False, npeaks = 5):
         peak_function = _6gauss
     else:
         print("number of peaks not defined in fitting function: {}".format(npeaks), file = sys.stderr)
+        
+    if x_limit:
+        xdata_fit = xdata[xdata <= x_limit]
+        ydata_fit = ydata.truncate(after = len(xdata_fit))
+    else:
+        xdata_fit = xdata
+        ydata_fit = ydata
+        
 
-    fitResult, ier = curve_fit( peak_function, xdata, ydata, p0=p0, bounds = bounds )
+    fitResult, ier = curve_fit( peak_function, xdata_fit, ydata_fit, p0=p0, bounds = bounds )
         
     perr = np.sqrt(np.diag(ier))
     fit_coeff = []
