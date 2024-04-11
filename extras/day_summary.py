@@ -252,6 +252,12 @@ def simple_day_plot(df, df_list, average_df, tc_column = 'tc', filename = "day_o
         for j in i[dtc_column]:
             row.append(round(j,3))
         Zcontour.append(row)
+    ## Create a dataframe for export to csv
+    csv_data = pd.DataFrame(Zcontour, columns = y_contour_values['elapsed-time'].values.tolist())
+    csv_data.insert(0, "date/time", x, True)
+    with open(os.path.join(os.path.dirname(filename), "contour_plot_data.csv"), 'w') as f:
+        csv_data.to_csv(f, index=False) #, header=False)
+        f.close()
     ## Now transpose the Zcontour
     ## replaced by Python3.9 version
     Zcontour = list(zip(*Zcontour))
