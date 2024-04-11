@@ -32,6 +32,16 @@ def replace_in_list(a, old, new):
             a[n] = new
     return a
 
+def restricted_lod(x):
+    try:
+        x = float(x)
+    except ValueError:
+        raise argparse.ArgumentTypeError("%r not a floating-point literal" % (x,))
+
+    if x < 0.0:
+        raise argparse.ArgumentTypeError("%r not positive"%(x,))
+    return x
+
 class Datafile(object):
     def __init__(self, datafile, output_path = 'data/events/graph/', recalculate_co2 = False, tmax=0, npeak = 5): # datafile is a valid filepointer
         
@@ -936,6 +946,8 @@ if __name__ == "__main__":
     parser.add_argument('--individual-plots', help='Stop at individual event plots [slow]', action='store_true')
     parser.add_argument('--fit', dest='fit', help='Fit gaussian functions to data', action='store_true')
     parser.add_argument('--show-fit-error', dest='ferror', help='Show fit error on bubble graph', action='store_true')
+    parser.add_argument('--lod', dest='lod', type=restricted_lod, default=0.0,
+                        help='Hide fit-componets with small contribution in bubble graph (LoD = lower Area limit in ug)', )
     parser.add_argument('--fix-co2', dest='fix', help='fix the co2-event in the event file', action='store_true')
     parser.add_argument('--mute-graphs', dest='mute', help='Do not plot the data to screen', action='store_true')
     parser.add_argument('--fit-components', dest='fitComponents', help='Fit and display individual fitted curves on graph', action='store_true')
@@ -956,7 +968,7 @@ if __name__ == "__main__":
     # activated --fit rutines if --fit-components was selectes 
     if args.fitComponents:
         args.fit = True
-    
+
     config_file = args.INI
     if os.path.exists(config_file):
         config = configparser.ConfigParser()
@@ -1170,16 +1182,22 @@ if __name__ == "__main__":
             yerror = []
             label = []
             for i in range(results.npeak):
-                xdata.append(results.coeff_df['sigma{}'.format(i)])
-                xerror.append(results.coeff_df['sigmaStDevErr{}'.format(i)])
-                ydata.append(results.coeff_df['xc{}'.format(i)])
-                yerror.append(results.coeff_df['xcStDevErr{}'.format(i)])
-                size.append(results.coeff_df['A{}'.format(i)]*1000)
-                label.append("peak{}".format(i))
+                # filter out if coefficient A is smaller than the limit of detection (lod)
+                # also filters out curves wider than 12 seconds
+                rslt_df = results.coeff_df[(results.coeff_df['A{}'.format(i)] > args.lod) &
+                                           (results.coeff_df['sigma{}'.format(i)] < 12)]
+                xdata.append(rslt_df['sigma{}'.format(i)])
+                xerror.append(rslt_df['sigmaStDevErr{}'.format(i)])
+                ydata.append(rslt_df['xc{}'.format(i)])
+                yerror.append(rslt_df['xcStDevErr{}'.format(i)])
+                size.append(rslt_df['A{}'.format(i)]*1000)
+                label.append("C{}".format(i))
             color = ['tab:blue', 'tab:orange', 'tab:green', 'tab:grey', 'tab:olive' ]
             color = color[0 : results.npeak]
             filename = fit_file.replace('.','_') + '-FitCoeffPlot'
-            bubble_plot(xdata, ydata, axisnames = ["sigma", "xc"], units = ["s", "s"], title="Fitted parameters", size = size, color = color,
+            bubble_plot(xdata, ydata, axisnames = ["$\sigma$", "$x_c$"], units = ["s", "s"],
+                        title="Fitted parameters (diameter ~ TC area)",
+                        size = size, color = color,
                         label = label, xerror = xerror, yerror = yerror,
                         path = summary_path, filename = filename, format=plot_format, show_error = args.ferror)
         
