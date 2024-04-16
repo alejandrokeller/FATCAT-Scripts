@@ -66,12 +66,19 @@ def my_fit(xdata, ydata, p0 = False, npeaks = 5, x_limit = False):
         peak_function = _3gauss
     elif npeaks == 4:
         if not p0:
-            p0 = ( 100., 15., 3.,   22., 19., 5.,   80., 33., 8.,  30., 51., 8. )
+#            p0 = ( 100., 15., 3.,   22., 19., 5.,   80., 33., 8.,  30., 51., 8. )
+#            #       A0,  x0, s0,     A1,  x1, s1,    A2,  x2, s2,   A3,  x3, s3
+###        bounds=((0, 0, 0, 0, 20, 0, 0, 27.5, 0, 0, 40, 0),
+###                (np.inf, 20, 20, np.inf, 27.5, 20, np.inf, 40, 20, np.inf, 60, 20))
+#        bounds=((     0,  0, 1.5,      0, 17, 1.5,      0, 28, 1.5,     0, 40, 1.5),
+#                (np.inf, 19,   6, np.inf, 25,   8, np.inf, 37, 20, np.inf, 60, 10))
+## FOR JFJ
+            p0 = (  10., 15., 3.,    8., 20., 4.,    1., 27., 6.,   6., 45., 6. )
             #       A0,  x0, s0,     A1,  x1, s1,    A2,  x2, s2,   A3,  x3, s3
 ##        bounds=((0, 0, 0, 0, 20, 0, 0, 27.5, 0, 0, 40, 0),
 ##                (np.inf, 20, 20, np.inf, 27.5, 20, np.inf, 40, 20, np.inf, 60, 20))
-        bounds=((     0,  0, 1.5,      0, 17, 1.5,      0, 28, 1.5,     0, 40, 1.5),
-                (np.inf, 19,   6, np.inf, 25,   8, np.inf, 37, 20, np.inf, 60, 10))
+        bounds=((     0,  0, 1.5,      0,  0, 1.5,      0, 20, 2.0,      0, 40, 4.0),
+                (np.inf, 21,   9, np.inf, 21,   9, np.inf, 35,   15, np.inf, 70,  30))
         peak_function = _4gauss
     elif npeaks == 5:
         if not p0:
