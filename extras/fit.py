@@ -26,7 +26,7 @@ def _5gauss(x, A0, x0, s0, A1, x1, s1, A2, x2, s2, A3, x3, s3, A4, x4, s4):
 def _6gauss(x, A0, x0, s0, A1, x1, s1, A2, x2, s2, A3, x3, s3, A4, x4, s4, A5, x5, s5):
     return _5gauss(x, A0, x0, s0, A1, x1, s1, A2, x2, s2, A3, x3, s3, A4, x4, s4) + A5 / s5 * gauss( ( x - x5 ) / s5 )
 
-def my_fit(xdata, ydata, p0 = False, npeaks = 5, x_limit = False):
+def my_fit(xdata, ydata, p0 = False, bounds = False, npeaks = 5, x_limit = False):
                                 
     nparameters = 3
 
@@ -34,15 +34,17 @@ def my_fit(xdata, ydata, p0 = False, npeaks = 5, x_limit = False):
         if not p0:
             p0 = (10., 18., 3.)
             #      A0,  x0, s0
-        bounds=((0, 0, 0),
-                (np.inf, np.inf, np.inf))
+        if not bounds:
+            bounds=((0, 0, 0),
+                    (np.inf, np.inf, np.inf))
         peak_function = _1gauss
     elif npeaks == 2:
         if not p0:
             p0 = (10., 18., 3., 8., 28., 7.)
             #      A0,  x0, s0, A1,  x1, s1
-        bounds=((0, 0, 0, 0, 0, 0),
-                (np.inf, np.inf, 20, np.inf, np.inf, 20))
+        if not bounds:
+            bounds=((0, 0, 0, 0, 0, 0),
+                    (np.inf, np.inf, 20, np.inf, np.inf, 20))
         peak_function = _2gauss
     elif npeaks == 3:
 #        if not p0:
@@ -57,8 +59,9 @@ def my_fit(xdata, ydata, p0 = False, npeaks = 5, x_limit = False):
         if not p0:
             p0 = (10., 15., 3., 8., 27., 7., 6., 45., 6. )
 #                  A0, x0,  s0, A1,  x1, s1, A2,  x2, s2
-        bounds=(     (0,  0, 1.5,      0, 0,  1.5,      0, 38,  2),
-                (np.inf, 30, 9, np.inf, 30, 9, np.inf, 70, 30))
+        if not bounds:
+            bounds=(     (0,  0, 1.5,      0, 0,  1.5,      0, 38,  2),
+                    (np.inf, 30, 9, np.inf, 30, 9, np.inf, 70, 30))
 
 ## Very constrained peaks
 ##        bounds=(     (0,  0, 1.5,    0, 35,  1.5,    0, 55,  1.5),
@@ -77,22 +80,25 @@ def my_fit(xdata, ydata, p0 = False, npeaks = 5, x_limit = False):
             #       A0,  x0, s0,     A1,  x1, s1,    A2,  x2, s2,   A3,  x3, s3
 ##        bounds=((0, 0, 0, 0, 20, 0, 0, 27.5, 0, 0, 40, 0),
 ##                (np.inf, 20, 20, np.inf, 27.5, 20, np.inf, 40, 20, np.inf, 60, 20))
-        bounds=((     0,  0, 1.5,      0,  0, 1.5,      0, 20, 2.0,      0, 40, 4.0),
-                (np.inf, 21,   9, np.inf, 21,   9, np.inf, 35,   15, np.inf, 70,  30))
+        if not bounds:
+            bounds=((     0,  0, 1.5,      0,  0, 1.5,      0, 20, 2.0,      0, 40, 4.0),
+                    (np.inf, 21,   9, np.inf, 21,   9, np.inf, 35,   15, np.inf, 70,  30))
         peak_function = _4gauss
     elif npeaks == 5:
         if not p0:
             p0 = ( 100., 15., 3.,  22., 22., 5., 22., 35., 5.,  80., 30., 5.,   30., 51., 5. )
             #        A0, x0, s0,   A1,  x1,  s1,  A2, x2, s2,   A3,  x3, s3,     A4, x4, s4
-        bounds=((     0,  0, 1.5,      0, 19, 1.5,      0, 28, 1.5,      0, 28, 1.5,      0, 48, 1.5),
-                (np.inf, 19,   8, np.inf, 25,   8, np.inf, 35,   8, np.inf, 37,  10, np.inf, 60, 10))
+        if not bounds:
+            bounds=((     0,  0, 1.5,      0, 19, 1.5,      0, 28, 1.5,      0, 28, 1.5,      0, 48, 1.5),
+                    (np.inf, 19,   8, np.inf, 25,   8, np.inf, 35,   8, np.inf, 37,  10, np.inf, 60, 10))
         peak_function = _5gauss
     elif npeaks == 6:
         if not p0:
             p0 = (100., 15., 3., 22., 22., 5., 10., 27., 5., 22., 34., 6., 80., 46., 8., 30., 54., 8. )
             #       A0,  x0, s0,  A1,  x1, s1,  A2,  x2, s2,  A3,  x3, s3,  A4,  x4, s4,  A5,  x5, s5
-        bounds=((     0,  0, 1.5,      0, 17, 1.5,      0, 22, 1.5,      0, 28, 1.5,      0, 37, 1.5,      0, 46, 1.5),
-                (np.inf, 19,   6, np.inf, 23,   7, np.inf, 32,   8, np.inf, 40,  10, np.inf, 50,  10, np.inf, 60, 10))
+        if not bounds:
+            bounds=((     0,  0, 1.5,      0, 17, 1.5,      0, 22, 1.5,      0, 28, 1.5,      0, 37, 1.5,      0, 46, 1.5),
+                    (np.inf, 19,   6, np.inf, 23,   7, np.inf, 32,   8, np.inf, 40,  10, np.inf, 50,  10, np.inf, 60, 10))
         peak_function = _6gauss
     else:
         print("number of peaks not defined in fitting function: {}".format(npeaks), file = sys.stderr)

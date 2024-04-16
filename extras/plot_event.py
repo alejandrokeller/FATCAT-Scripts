@@ -219,7 +219,7 @@ class Datafile(object):
         except ValueError:
             return '-'
 
-    def add_baseline(self, baseline, fit = False, p0=False):
+    def add_baseline(self, baseline, fit = False, p0=False, bounds=False):
         if 'dtc' in baseline:
             self.keys.append('baseline') # add a new column with the baseline values
             self.units.append('ug/min')
@@ -962,12 +962,10 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--param",
                         help="Plots also an additional parameter (e.g., {})".format("toven, pco2, co2, flow, countdown, co2-event, dtc, elapsed-time, baseline, dtc-baseline"),
                         dest='param')
+    parser.add_argument('--fitparam', required=False, dest='fit_file',
+                        help="File with fit constrains")
     
     args = parser.parse_args()
-
-    # activated --fit rutines if --fit-components was selectes 
-    if args.fitComponents:
-        args.fit = True
 
     config_file = args.INI
     if os.path.exists(config_file):
@@ -1004,6 +1002,23 @@ if __name__ == "__main__":
         tempmax = False
         log_message('Could not find the configuration file {0}'.format(config_file))
         npeak = 5
+        
+    # activated --fit rutines if --fit-components was selectes 
+    if args.fitComponents:
+        args.fit = True
+    if args.fit_file:
+        if os.path.exists(args.fit_file):
+           fitParser =  configparser.ConfigParser()
+           fitParser.read(args.fit_file)
+           npeak     = eval(fitParser['FIT']['NPEAK'])
+           p0        = eval(fitParser['FIT']['P0'])
+           bounds    = eval(fitParser['FIT']['BOUNDS'])
+        else:
+           log_message("Not a valid file: {}".format(args.fit_file))
+           exit()
+    else:
+        p0 = False
+        bounds = False
 
     summary_full_path = summary_path + summary_file
     fit_full_path = summary_path + fit_file
@@ -1079,8 +1094,9 @@ if __name__ == "__main__":
         # if only one file, then show the diagram per default
         if len(list(args.datafile)) == 1 and not args.mute:
                args.individual_plots = True
-        # Uses the default first guess for fitting
-        p0 = False
+# now defined during parameter read
+#        # Uses the default first guess for fitting
+#        p0 = False
 
         sn = False
         for f in args.datafile:
@@ -1096,7 +1112,7 @@ if __name__ == "__main__":
                 baseline_df = default_baseline
             if 'dtc' in baseline_df:
                 box_y = 'tc-baseline'
-                mydata.add_baseline(baseline = baseline_df, fit = args.fit, p0=p0)
+                mydata.add_baseline(baseline = baseline_df, fit = args.fit, p0=p0, bounds=bounds)
                 # Use current result as starting guess for next fitting iteration
                 if args.fit and False:
                     p0 = []
