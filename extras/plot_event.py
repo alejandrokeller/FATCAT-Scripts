@@ -1190,13 +1190,13 @@ if __name__ == "__main__":
                 xerror.append(rslt_df['sigmaStDevErr{}'.format(i)])
                 ydata.append(rslt_df['xc{}'.format(i)])
                 yerror.append(rslt_df['xcStDevErr{}'.format(i)])
-                size.append(rslt_df['A{}'.format(i)]*1000)
+                size.append((rslt_df['A{}'.format(i)]**(1/2))*1000)
                 label.append("C{}".format(i))
             color = ['tab:blue', 'tab:orange', 'tab:green', 'tab:grey', 'tab:olive' ]
             color = color[0 : results.npeak]
             filename = fit_file.replace('.','_') + '-FitCoeffPlot'
             bubble_plot(xdata, ydata, axisnames = ["$\sigma$", "$x_c$"], units = ["s", "s"],
-                        title="Fitted parameters (diameter ~ TC area)",
+                        title="Fitted parameters (Circle area ~ TC contribution)",
                         size = size, color = color,
                         label = label, xerror = xerror, yerror = yerror,
                         path = summary_path, filename = filename, format=plot_format, show_error = args.ferror)
