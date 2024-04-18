@@ -197,9 +197,14 @@ class Rawfile(object):
                 events.append(index)
             if event_flag:
                   event_flag = False
-                  self.resultsDf = self.resultsDf.append(
-                      {self.eventKeys[0]: int(index), self.eventKeys[1]: row['Time'], self.eventKeys[2]: row['Daytime']},
-                      ignore_index=True).fillna(0)
+                  self.resultsDf = pd.concat([self.resultsDf,
+                                              pd.DataFrame([{self.eventKeys[0]: int(index),
+                                                             self.eventKeys[1]: row['Time'],
+                                                             self.eventKeys[2]: row['Daytime']}])
+                                              ], ignore_index=True).fillna(0)
+#                  self.resultsDf = self.resultsDf.append(
+#                      {self.eventKeys[0]: int(index), self.eventKeys[1]: row['Time'], self.eventKeys[2]: row['Daytime']},
+#                      ignore_index=True).fillna(0)
 
         return events
 
@@ -242,7 +247,7 @@ class Rawfile(object):
             self.csvfile.seek(0, 0)
             self.df = pd.read_csv(self.csvfile, skiprows = self.skiprows, sep='\t',
                                   parse_dates=True, header = None, names=columns,
-                                  usecols = self.keys, error_bad_lines = False,
+                                  usecols = self.keys, on_bad_lines='skip',
                                   dtype = self.dtypeDict
                                   )
             self.numSamples = len(self.df.index)
@@ -256,7 +261,7 @@ class Rawfile(object):
                 newDict[key]=conv
             self.df = pd.read_csv(self.csvfile, skiprows = self.skiprows, sep='\t',
                                   parse_dates=True, header = None, names=columns,
-                                  usecols = self.keys, error_bad_lines = False,
+                                  usecols = self.keys, on_bad_lines='skip',
                                   converters = newDict
                                   )
             self.numSamples = len(self.df.index)
