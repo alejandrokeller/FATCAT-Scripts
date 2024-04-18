@@ -3,5 +3,10 @@
 # navigate to home directory, then to this directory, then execute python script, then back home
 
 cd /FATCAT-scripts/commands
+# Set these states:
+#   Internal pump:  off
+#   Internal valve: off
+#   External pump:  on
+#   External valve: off
 ./fatcat_select_mode.py --sample
 cd /
