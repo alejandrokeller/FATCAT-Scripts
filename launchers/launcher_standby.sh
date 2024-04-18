@@ -9,7 +9,8 @@ cd /FATCAT-scripts/commands
 #   Internal valve: on
 #   External pump:  off
 #   External valve: off
-./fatcat_select_mode.py --standby
+# --analysis is ignored due to --standby
+./fatcat_select_mode.py --standby --analysis
 # Set these states:
 #   Internal valve: off
 #   External pump:  off
