@@ -921,13 +921,29 @@ def read_baseline_dictionary(baseline_path, baseline_filename):
             baseline_dictionary[k[0][1:-1]] = Datafile(f).df
     return baseline_dictionary
 
+
+def nt_is_valid_file(parser, arg):
+    # windows is unable to process wild cards
+    # use this type check function to expand wildcards using python
+    files = glob.glob(arg)
+    if len(files) == 0:
+        parser.error("The file %s does not exist!" % arg)
+    else:
+        return files
+
 if __name__ == "__main__":
 
     config_file = os.path.abspath(os.path.abspath(os.path.dirname(sys.argv[0])) + "/../config.ini")
     
     parser = argparse.ArgumentParser(description='Graph generator for fatcat event files.')
-    parser.add_argument('datafile', metavar='file', type=argparse.FileType('r'),
-                        nargs='*', help='List of event files to be processed. Leave empty for newest file')
+    # windows is unable to process wild cards, use a type check function to expand wildcards using python
+    if os.name == 'nt':
+        print("Running Windows.")
+        parser.add_argument('datafile', metavar='file', type=lambda x: nt_is_valid_file(parser, x),
+                            nargs='*', help='List of event files to be processed. Leave empty for newest file')
+    else:
+        parser.add_argument('datafile', metavar='file', type=argparse.FileType('r'),
+                            nargs='*', help='List of event files to be processed. Leave empty for newest file')
     parser.add_argument("-l", "--last",
                         help="Latest events to consider, must be larger than 1 (e.g., 10files, 5days, 72hours). Overrides 'datafile'.",
                         dest='LAST', type=get_newest_events)
@@ -968,6 +984,11 @@ if __name__ == "__main__":
                         help="File with fit constrains")
     
     args = parser.parse_args()
+    
+    # windows is unable to process wildcards
+    # convert the list of files into read only files
+    if os.name == 'nt' and args.datafile:
+        args.datafile = list(map(lambda x: open(x, 'r'), args.datafile[0]))
 
     config_file = args.INI
     if os.path.exists(config_file):

@@ -56,7 +56,7 @@ def get_newest_events(value):
                 file_list.insert(0,e)
             else:
                 break
-        
+
     return file_list
 
 if __name__ == "__main__":
