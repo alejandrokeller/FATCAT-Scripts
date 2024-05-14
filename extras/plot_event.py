@@ -249,7 +249,9 @@ class Datafile(object):
                     self.units.append(r'$\mu$g-C/min')
                     self.df['fitted data'], self.fit_coeff, self.r_squared = my_fit(self.df['elapsed-time'],
                                                                                     self.df['dtc-baseline'],
-                                                                                    p0 = p0, npeaks = self.npeak)
+                                                                                    p0 = p0,
+                                                                                    bounds = bounds,
+                                                                                    npeaks = self.npeak)
                 except Exception as err:
                     log_message("error fitting the event: {}".format(err))
                     self.df['fitted data'] = np.nan
