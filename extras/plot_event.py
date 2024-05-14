@@ -989,7 +989,10 @@ if __name__ == "__main__":
     # windows is unable to process wildcards
     # convert the list of files into read only files
     if os.name == 'nt' and args.datafile:
-        args.datafile = list(map(lambda x: open(x, 'r'), args.datafile[0]))
+        # flatten the list in case that more than one argument was given
+        args.datafile = list(itertools.chain.from_iterable(args.datafile))
+        # transform the list from names to read only open files
+        args.datafile = list(map(lambda x: open(x, 'r'), args.datafile))
 
     config_file = args.INI
     if os.path.exists(config_file):
