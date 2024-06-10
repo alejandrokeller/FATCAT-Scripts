@@ -171,7 +171,7 @@ def day_plot(df, df_list, tc_column = 'tc', filename = "day_overview", path = ".
     return complete_overview
 
 def simple_day_plot(df, df_list, average_df, tc_column = 'tc', filename = "day_overview",
-                    title = "Day Overview", style='ggplot', format='svg', tmax = False):
+                    title = "Day Overview", style='ggplot', format='svg', tmax = False, levels = False):
     plt.style.use('ggplot')
 
     # definitions for the axes
@@ -261,7 +261,10 @@ def simple_day_plot(df, df_list, average_df, tc_column = 'tc', filename = "day_o
     ## Now transpose the Zcontour
     ## replaced by Python3.9 version
     Zcontour = list(zip(*Zcontour))
-    cf = ax_contour.contourf(Xcontour, Ycontour, Zcontour)
+    if levels:
+        cf = ax_contour.contourf(Xcontour, Ycontour, Zcontour, levels)
+    else:
+        cf = ax_contour.contourf(Xcontour, Ycontour, Zcontour)
     ax_contour.set(ylabel='Time since heating start (s)')
     ax_contour.set_title(r'Total Carbon [$\Delta TC$] ($\mu$g-C/minute)')
     # create an axes on the right side of ax. The width of cax will be 5%
@@ -316,18 +319,19 @@ if __name__ == "__main__":
     if os.path.exists(config_file):
         config = configparser.ConfigParser()
         config.read(config_file)
-        events_path   = eval(config['GENERAL_SETTINGS']['EVENTS_PATH']) + '/'
-        output_path   = eval(config['GENERAL_SETTINGS']['EVENTS_PATH']) + '/graph/'
-        plot_style    = eval(config['GRAPH_SETTINGS']['PLOT_STYLE'])
-        plot_format   = eval(config['GRAPH_SETTINGS']['FILE_FORMAT'])
+        events_path    = eval(config['GENERAL_SETTINGS']['EVENTS_PATH']) + '/'
+        output_path    = eval(config['GENERAL_SETTINGS']['EVENTS_PATH']) + '/graph/'
+        plot_style     = eval(config['GRAPH_SETTINGS']['PLOT_STYLE'])
+        plot_format    = eval(config['GRAPH_SETTINGS']['FILE_FORMAT'])
         error_interval = eval(config['GRAPH_SETTINGS']['ERROR_EVERY'])
-        graphmax      = eval(config['GRAPH_SETTINGS']['XMAX'])
-        report_name   = eval(config['GRAPH_SETTINGS']['LATEST_NAME'])
-        time_axis     = eval(config['GRAPH_SETTINGS']['DATE_AXIS'])
-        baseline_path = eval(config['DATA_ANALYSIS']['BASELINE_PATH']) + '/'
-        baseline_file = eval(config['DATA_ANALYSIS']['BASELINE_FILE'])
-        summary_path = eval(config['DATA_ANALYSIS']['SUMMARY_PATH']) + '/'
-        summary_file = eval(config['DATA_ANALYSIS']['SUMMARY_FILE'])
+        graphmax       = eval(config['GRAPH_SETTINGS']['XMAX'])
+        report_name    = eval(config['GRAPH_SETTINGS']['LATEST_NAME'])
+        time_axis      = eval(config['GRAPH_SETTINGS']['DATE_AXIS'])
+        contour_levels = eval(config['GRAPH_SETTINGS']['LEVELS'])
+        baseline_path  = eval(config['DATA_ANALYSIS']['BASELINE_PATH']) + '/'
+        baseline_file  = eval(config['DATA_ANALYSIS']['BASELINE_FILE'])
+        summary_path   = eval(config['DATA_ANALYSIS']['SUMMARY_PATH']) + '/'
+        summary_file   = eval(config['DATA_ANALYSIS']['SUMMARY_FILE'])
         tmax = eval(config['DATA_ANALYSIS']['INTEGRAL_LENGTH'])
         flowrate = float(eval(config['DATA_ANALYSIS']['FLOW_RATE']))
         sampling_time = float(eval(config['DATA_ANALYSIS']['SAMPLING_TIME']))
@@ -533,8 +537,10 @@ if __name__ == "__main__":
             if args.mute_graphs:
                 plt.close(overview)
         if args.simple:
-            simple_overview = simple_day_plot(results.summary, results.df_list, tc_column = tc_column, title = graph_title, filename = summary_full_path,
-                     format=plot_format, average_df = results.build_average_df(), tmax = graphmax)
+            simple_overview = simple_day_plot(results.summary, results.df_list, tc_column = tc_column,
+                                              title = graph_title, filename = summary_full_path,
+                                              format=plot_format, average_df = results.build_average_df(),
+                                              tmax = graphmax, levels = contour_levels)
             if args.mute_graphs:
                 plt.close(simple_overview)
         if not args.mute_graphs:

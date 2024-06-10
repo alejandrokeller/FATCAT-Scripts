@@ -983,6 +983,7 @@ if __name__ == "__main__":
                         dest='param')
     parser.add_argument('--fitparam', required=False, dest='fit_file',
                         help="File with fit constrains")
+    parser.add_argument('--mute-raw', dest='muteRaw', help='Hide the raw dTC data in the simple plot', action='store_true')
     
     args = parser.parse_args()
     
@@ -1172,8 +1173,14 @@ if __name__ == "__main__":
                                            style=plot_style, format=plot_format, mute = not args.individual_plots,
                                            fitComponents = components, xmax = xmax, y2max = ymax, y1max = tempmax)
                 else:
-                    legend = {'y2' : "raw".format(npeak), 'y3' : 'baseline corrected'}
-                    mydata.create_dualplot(style=plot_style, format=plot_format, mute = not args.individual_plots,
+                    if args.muteRaw:
+                        legend = {'y2' : r'$\Delta$TC'}
+                        mydata.create_dualplot(style=plot_style, format=plot_format, mute = not args.individual_plots,
+                                               legend = legend, axeslabel = axeslabel, xmax = xmax, y2max = ymax, y1max = tempmax,
+                                               y2='dtc-baseline', y3=False)
+                    else:
+                        legend = {'y2' : "raw", 'y3' : 'baseline corrected'}
+                        mydata.create_dualplot(style=plot_style, format=plot_format, mute = not args.individual_plots,
                                            legend = legend, axeslabel = axeslabel, xmax = xmax, y2max = ymax, y1max = tempmax)
             else:
                 axeslabel = {'y' : r'$\Delta$TC'}
@@ -1184,7 +1191,7 @@ if __name__ == "__main__":
                                        axeslabel = axeslabel, legend = legend, fitComponents = components,
                                        xmax = xmax, ymax = ymax)
                 else:
-                    legend = {'y' : "raw".format(npeak), 'y2' : 'baseline corrected'}
+                    legend = {'y' : "raw", 'y2' : 'baseline corrected'}
                     mydata.create_plot(style=plot_style, format=plot_format, mute = not args.individual_plots,
                                        axeslabel = axeslabel, legend = legend,
                                        xmax = xmax, ymax = ymax)
