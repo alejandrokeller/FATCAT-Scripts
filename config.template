@@ -31,6 +31,7 @@ XMAX: False
 YMAX: False
 LATEST_NAME: False
 DATE_AXIS: 'Date'
+LEVELS: False
 
 [DATA_ANALYSIS]
 BASELINE_PATH: '/home/pi/fatcat-files/data/baseline'
