@@ -26,6 +26,12 @@ def _5gauss(x, A0, x0, s0, A1, x1, s1, A2, x2, s2, A3, x3, s3, A4, x4, s4):
 def _6gauss(x, A0, x0, s0, A1, x1, s1, A2, x2, s2, A3, x3, s3, A4, x4, s4, A5, x5, s5):
     return _5gauss(x, A0, x0, s0, A1, x1, s1, A2, x2, s2, A3, x3, s3, A4, x4, s4) + A5 / s5 * gauss( ( x - x5 ) / s5 )
 
+def _7gauss(x, A0, x0, s0, A1, x1, s1, A2, x2, s2, A3, x3, s3, A4, x4, s4, A5, x5, s5, A6, x6, s6):
+    return _6gauss(x, A0, x0, s0, A1, x1, s1, A2, x2, s2, A3, x3, s3, A4, x4, s4, A5, x5, s5) + A6 / s6 * gauss( ( x - x6 ) / s6 )
+
+def _8gauss(x, A0, x0, s0, A1, x1, s1, A2, x2, s2, A3, x3, s3, A4, x4, s4, A5, x5, s5, A6, x6, s6, A7, x7, s7):
+    return _7gauss(x, A0, x0, s0, A1, x1, s1, A2, x2, s2, A3, x3, s3, A4, x4, s4, A5, x5, s5, A6, x6, s6) + A7 / s7 * gauss( ( x - x7 ) / s7 )
+
 def my_fit(xdata, ydata, p0 = False, bounds = False, npeaks = 5, x_limit = False):
                                 
     nparameters = 3
@@ -100,6 +106,20 @@ def my_fit(xdata, ydata, p0 = False, bounds = False, npeaks = 5, x_limit = False
             bounds=((     0,  0, 1.5,      0, 17, 1.5,      0, 22, 1.5,      0, 28, 1.5,      0, 37, 1.5,      0, 46, 1.5),
                     (np.inf, 19,   6, np.inf, 23,   7, np.inf, 32,   8, np.inf, 40,  10, np.inf, 50,  10, np.inf, 60, 10))
         peak_function = _6gauss
+    elif npeaks == 7:
+        if not p0:
+            p0 =     (   10., 10., 3.0,     8., 15., 3.,     1.,  23, 3.0,      6., 28., 3.0,    10., 36., 3.0,     8., 44.,  3.,     1., 50., 3.0)
+        if not bounds:
+            bounds= ((     0,   5, 1.1,      0, 12, 1.1,      0,  18, 1.1,       0, 24,  1.1,      0, 30., 1.1,      0, 40., 1.1,      0, 47., 1.1),
+                     (np.inf,  12, 4.0, np.inf, 18,   4, np.inf,  24, 4.0,  np.inf, 30,  4.0, np.inf, 40., 4.0, np.inf, 47.,   4, np.inf, 54., 4.0))
+        peak_function = _7gauss
+    elif npeaks == 8:
+        if not p0:
+            p0 =     (   10., 10., 3.0,     8., 15., 3.,     1.,  23, 3.0,      6., 28., 3.0,    10., 36., 3.0,     8., 44.,  3.,     1., 50., 3.0,      6., 57.,  3.0 )
+        if not bounds:
+            bounds= ((     0,   5, 1.1,      0, 12, 1.1,      0,  18, 1.1,       0, 24,  1.1,      0, 30., 1.1,      0, 40., 1.1,      0, 47., 1.1,       0, 54.,  1.1),
+                     (np.inf,  12, 4.0, np.inf, 18,   4, np.inf,  24, 4.0,  np.inf, 30,  4.0, np.inf, 40., 4.0, np.inf, 47.,   4, np.inf, 54., 4.0,  np.inf, 65., 20.0))
+        peak_function = _8gauss
     else:
         print("number of peaks not defined in fitting function: {}".format(npeaks), file = sys.stderr)
         

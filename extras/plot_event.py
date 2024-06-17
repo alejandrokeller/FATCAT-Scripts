@@ -822,7 +822,10 @@ def create_baseline_file(files, baseline_path, baseline_file, summary_path, tmax
     filename = os.path.join(baseline_path, baseline_file)
     with open(filename, 'w') as f:
         f.write(header)
-        results.build_average_df().to_csv(f, index=False, header=False)
+        if os.name == 'nt':
+            results.build_average_df().to_csv(f, index=False, header=False, lineterminator='\n')
+        else:
+            results.build_average_df().to_csv(f, index=False, header=False)
         f.close()
 
     # write the results table to the summary file and include the stats in file header
@@ -831,9 +834,15 @@ def create_baseline_file(files, baseline_path, baseline_file, summary_path, tmax
     header2 = "\n" + ",".join(results.summary_keys) + "\n" + ",".join(results.summary_units) + "\n"
     with open(summary_path, 'w') as f:
         f.write(header1)
-        stats_df.to_csv(f, index=True, header=True)
+        if os.name == 'nt':
+            stats_df.to_csv(f, index=True, header=True, lineterminator='\n')
+        else:
+            stats_df.to_csv(f, index=True, header=True)
         f.write(header2)
-        results.summary.to_csv(f, index=False, header=False)
+        if os.name == 'nt':
+            results.summary.to_csv(f, index=False, header=False, lineterminator='\n')
+        else:
+            results.summary.to_csv(f, index=False, header=False)
         f.close()
 
     print(stats_df.head())
@@ -1100,7 +1109,10 @@ if __name__ == "__main__":
             header = mydata.internname + "\n" + mydata.rawdata + "\n" + ",".join(mydata.keys) + "\n" + ",".join(mydata.units) + "\n"
             with open(filename, 'w') as fw:
                 fw.write(header)
-                mydata.df.to_csv(fw, index=False, header=False)
+                if os.name == 'nt':
+                    mydata.df.to_csv(fw, index=False, header=False, lineterminator='\n')
+                else:
+                    mydata.df.to_csv(fw, index=False, header=False)
                 fw.close()
 
     elif args.zero:
@@ -1207,9 +1219,15 @@ if __name__ == "__main__":
         header2 = "\n" + ",".join(results.summary_keys) + "\n" + ",".join(results.summary_units) + "\n"
         with open(summary_full_path, 'w') as f:
             f.write(header1)
-            stats_df.to_csv(f, index=True, header=True)
+            if os.name == 'nt':
+                stats_df.to_csv(f, index=True, header=True, lineterminator='\n')
+            else:
+                stats_df.to_csv(f, index=True, header=True)
             f.write(header2)
-            results.summary.to_csv(f, index=False, header=False)
+            if os.name == 'nt':
+                results.summary.to_csv(f, index=False, header=False, lineterminator='\n')
+            else:
+                results.summary.to_csv(f, index=False, header=False)
             f.close()
 
         print(stats_df.head(8))
@@ -1221,7 +1239,10 @@ if __name__ == "__main__":
             with open(fit_full_path, 'w') as f:
                 f.write(header1)
                 f.write(header2)
-                results.coeff_df.to_csv(f,index=False, header=False)
+                if os.name == 'nt':
+                    results.coeff_df.to_csv(f,index=False, header=False, lineterminator='\n')
+                else:
+                    results.coeff_df.to_csv(f,index=False, header=False)
                 f.close()
 
             # Generate a bubble plot to study the goodness of the fit
