@@ -176,14 +176,14 @@ class Visualizer(object):
         self.df = pd.concat([self.df, pd.DataFrame([zeroDict]*self.numSamples)],ignore_index=True)
             
         self.statusKeys = [
-            "valve",
-            "pump",
-            "fan",
-            "oven",
-            "band",
-            "licor",
-            "res2",
-            "res"]
+            "valve",	# Int. Valve
+            "pump",		# Int. Pump
+            "fan",		#
+            "oven",		# Induction
+            "band",		# Cat. heater
+            "licor",	# Ext. Valve (maybe LICOR is also here) 
+            "res2",		# Ext. Pump
+            "res"]		# ???
         
 #        self.statusData = namedtuple("statusData", self.statusKeys)
 #        self.statusVarsData = self.statusData._make(np.zeros((np.shape(self.statusKeys)[0],self.numSamples)))
