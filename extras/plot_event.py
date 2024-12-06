@@ -43,7 +43,8 @@ def restricted_lod(x):
     return x
 
 class Datafile(object):
-    def __init__(self, datafile, output_path = 'data/events/graph/', recalculate_co2 = False, tmax=0, npeak = 5): # datafile is a valid filepointer
+    def __init__(self, datafile, output_path = 'data/events/graph/', recalculate_co2 = False, tmax=0,
+                 npeak = 5, drift_correction = True): # datafile is a valid filepointer
         
         #init data structure
         self.datastring = ""
@@ -57,6 +58,7 @@ class Datafile(object):
         self.rawdata    = datafile.readline().rstrip('\n') # second line points to raw data
         self.fit_coeff  = [] # variable to hold the fitting results
         self.npeak      = npeak # number of fitted gausian curves (must identical in Results object)
+        self.drift_corr = drift_correction
 
         #print("loading: {}".format(datafile.name), file = sys.stderr)
 
@@ -226,7 +228,17 @@ class Datafile(object):
             self.df['baseline'] = baseline['dtc']
             self.keys.append('dtc-baseline') # add a new column with the baseline values
             self.units.append('ug/min')
-            self.df['dtc-baseline'] = self.df['dtc']-baseline['dtc']
+            #self.df['dtc-baseline'] = self.df['dtc']-baseline['dtc']
+            
+            # Thermograms show a drift from 0 at the end of the extracted data
+            # dtc-baseline should always be zero towards the end.
+            # the switch self.drift_corr activates the sequence to compensate
+            # for the drift at the end of the dtc-baseline using a linear regretion
+            if self.drift_corr:
+                m = (self.df['dtc'].iloc[-1]-baseline['dtc'].iloc[-1])/self.df['elapsed-time'].iloc[-1]
+                self.df['dtc-baseline'] = self.df['dtc']-baseline['dtc']-m*self.df['elapsed-time']
+            else:
+                self.df['dtc-baseline'] = self.df['dtc']-baseline['dtc']
 
             # calculate the integral of the newly created column
             self.tc_keys = ['elapsed-time', 'dtc', 'dtc-baseline']
