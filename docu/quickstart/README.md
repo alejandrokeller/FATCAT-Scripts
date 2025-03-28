@@ -293,13 +293,17 @@ For simplicity, we recommend the use of isobutylene as a universal reference gas
 Follow this steps:
 1. Start by turning on the OCU, setting the PID1 and PID2 pump flow to 0.5 lpm, and turning the PID sensors. For calibration purposes, the OFR, VOC heater, and humidifier may remain off during the calibration process.
 2. Start the flow of synthetic air (VOC free air) through the OCU.
-3. Wait for the system temperature to stabilize, this may take around 20 minutes if you turned the device on for the first time on that day.  Control the PID signal on the user interface to see if it is still drifting. Wait for the signal to stabilize.
+3. Wait for the system temperature to stabilize, this may take around 20 minutes if you turned the device on for the first time on that day (see sample curve below).  Control the PID signal on the user interface to see if it is still drifting. Wait for the signal to stabilize.
 3. Take note of the baseline of PID reading, this is your zero point. You can now proceed to change the air source to the reference gas mixture.
+
+|![PID calibration example](Example-Calibration.png)|
+|:--:|
+|*Sample data from the calibration of the two PID sensors of the OCU. The data shows alternate intervals of VOC free air and 100ppm of isobutylene. Once the PID is turned on, its signal will drift for approximatelly 20 minutes until the components of the PID stabilize. The basilne and span of the signal can be determine from the zero air signal and its differencéto the isobutylene signal once the PID sensor reading stabilizes.*|
 
 ### Signal span
 |![Isobutylene Span](mermaid-ocu-calibration.png)|
 |:--:|
-|*Suggested configuration for the span determination of the photoionization detectors PID1 and PID2 using a predefined concentration of Isobutylene. MFC1 and MFC2 correspond to mass flow controllers, connected to the dosing gas inlets on the back of the unit, that provide the dosing air for the two VOC bottles (i.e. VOC1 and VOC2), and OFR is the oxidation flow reactor. The thick arrows show the main experimental path, from the inlet in the front to the outlet after the oxidation flow reactor.*
+|*Suggested configuration for the span determination of the photoionization detectors PID1 and PID2 using a predefined concentration of Isobutylene. MFC1 and MFC2 correspond to mass flow controllers, connected to the dosing gas inlets on the back of the unit, that provide the dosing air for the two VOC bottles (i.e. VOC1 and VOC2), and OFR is the oxidation flow reactor. The thick arrows show the main experimental path, from the inlet in the front to the outlet after the oxidation flow reactor.*|
 
 Follow this steps:
 1. Perform the baseline determination as described in the [previos section](#signal-span).
