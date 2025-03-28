@@ -298,7 +298,7 @@ Follow this steps:
 
 |![PID calibration example](Example-Calibration.png)|
 |:--:|
-|*Sample data from the calibration of the two PID sensors of the OCU. The data shows alternate intervals of VOC free air and 100ppm of isobutylene. Once the PID is turned on, its signal will drift for approximatelly 20 minutes until the components of the PID stabilize. The basilne and span of the signal can be determine from the zero air signal and its difference to the isobutylene signal once the PID sensor reading stabilizes.*|
+|*Sample data from the calibration of the two PID sensors of the OCU. The data shows alternate intervals of VOC free air and 100ppm of isobutylene. Once the PID is turned on, its signal will drift for approximatelly 20 minutes until the components of the PID stabilize. The basilne and span of the signal can be determine from the zero air signal (dash lines) and its difference to the isobutylene signal (short-dash lines) once the PID sensor reading stabilizes.*|
 
 ### Signal span
 |![Isobutylene Span](mermaid-ocu-calibration.png)|
